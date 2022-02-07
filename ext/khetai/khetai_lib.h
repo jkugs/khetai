@@ -1,5 +1,5 @@
-#ifndef BOARD_H_INCLUDED
-#define BOARD_H_INCLUDED
+#ifndef KHET_LIB_H_INCLUDED
+#define KHET_LIB_H_INCLUDED
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -136,4 +136,4 @@ static const int reflections[4][5][4] = {
     }
 };
 
-#endif // BOARD_H_INCLUDED
+#endif // KHET_LIB_H_INCLUDED
