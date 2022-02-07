@@ -108,11 +108,11 @@ static inline int get_rotation(Move m) { return (m >> 15 & 0x3) - 2; }
 
 static inline Square rotate(Square s, int rotation)
 {
-    int o = get_orientation(s);
-    o = (o + rotation) % 4;
-    if (o < 0)
-        o += 4;
-    return (s & 0x1F) + (o << 5);
+    int orientation = get_orientation(s);
+    orientation = (orientation + rotation) % 4;
+    if (orientation < 0)
+        orientation += 4;
+    return (s & 0x1F) + (orientation << 5);
 }
 
 #define Dead -1

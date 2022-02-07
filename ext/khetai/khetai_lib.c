@@ -23,9 +23,7 @@ Move alphabeta_root(int depth)
         for (int i = 0; i < 244; i++)
         {
             if (valid_moves[i] == 0)
-            {
                 break;
-            }
             make_move(valid_moves[i]);
             int score = alphabeta(depth - 1, false, alpha, beta);
             undo_move();
@@ -36,13 +34,9 @@ Move alphabeta_root(int depth)
                 best_move = valid_moves[i];
             }
             if (score > alpha)
-            {
                 alpha = score;
-            }
             if (beta <= alpha)
-            {
                 break;
-            }
         }
     }
     else
@@ -51,9 +45,7 @@ Move alphabeta_root(int depth)
         for (int i = 0; i < 244; i++)
         {
             if (valid_moves[i] == 0)
-            {
                 break;
-            }
             make_move(valid_moves[i]);
             int score = alphabeta(depth - 1, true, alpha, beta);
             undo_move();
@@ -64,13 +56,9 @@ Move alphabeta_root(int depth)
                 best_move = valid_moves[i];
             }
             if (score < beta)
-            {
                 beta = score;
-            }
             if (beta <= alpha)
-            {
                 break;
-            }
         }
     }
     free(valid_moves);
@@ -91,25 +79,17 @@ int alphabeta(int depth, bool maximize, int alpha, int beta)
         for (int i = 0; i < 244; i++)
         {
             if (valid_moves[i] == 0)
-            {
                 break;
-            }
             make_move(valid_moves[i]);
             int score = alphabeta(depth - 1, false, alpha, beta);
             undo_move();
             whose_turn = Red;
             if (score > max)
-            {
                 max = score;
-            }
             if (score > alpha)
-            {
                 alpha = score;
-            }
             if (beta <= alpha)
-            {
                 break;
-            }
         }
         free(valid_moves);
         return max;
@@ -122,25 +102,17 @@ int alphabeta(int depth, bool maximize, int alpha, int beta)
         for (int i = 0; i < 244; i++)
         {
             if (valid_moves[i] == 0)
-            {
                 break;
-            }
             make_move(valid_moves[i]);
             int score = alphabeta(depth - 1, true, alpha, beta);
             undo_move();
             whose_turn = Silver;
             if (score < min)
-            {
                 min = score;
-            }
             if (score < beta)
-            {
                 beta = score;
-            }
             if (beta <= alpha)
-            {
                 break;
-            }
         }
         free(valid_moves);
         return min;
