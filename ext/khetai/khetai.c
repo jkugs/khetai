@@ -17,6 +17,7 @@ VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE depth)
         init_board[i] = StringValueCStr(square);
     }
 
+    reset_undo();
     setup_board(init_board);
     whose_turn = NUM2INT(player);
     Move move = alphabeta_root(NUM2INT(depth));

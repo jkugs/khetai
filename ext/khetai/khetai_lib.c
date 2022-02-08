@@ -14,13 +14,14 @@ int undo_index = 0;
 Move alphabeta_root(int depth)
 {
     Move best_move = (Move)0;
-    Move *valid_moves = find_valid_moves();
+    Move valid_moves[NUM_VALID_MOVES] = {0};
+    find_valid_moves(valid_moves);
     int alpha = -9999999;
     int beta = 9999999;
     if (whose_turn == Red)
     {
         int best_score = -9999999;
-        for (int i = 0; i < 244; i++)
+        for (int i = 0; i < NUM_VALID_MOVES; i++)
         {
             if (valid_moves[i] == 0)
                 break;
@@ -42,7 +43,7 @@ Move alphabeta_root(int depth)
     else
     {
         int best_score = 9999999;
-        for (int i = 0; i < 244; i++)
+        for (int i = 0; i < NUM_VALID_MOVES; i++)
         {
             if (valid_moves[i] == 0)
                 break;
@@ -61,7 +62,6 @@ Move alphabeta_root(int depth)
                 break;
         }
     }
-    free(valid_moves);
     return best_move;
 }
 
@@ -75,8 +75,9 @@ int alphabeta(int depth, bool maximize, int alpha, int beta)
     {
         int max = -9999999;
         whose_turn = Red;
-        Move *valid_moves = find_valid_moves();
-        for (int i = 0; i < 244; i++)
+        Move valid_moves[NUM_VALID_MOVES] = {0};
+        find_valid_moves(valid_moves);
+        for (int i = 0; i < NUM_VALID_MOVES; i++)
         {
             if (valid_moves[i] == 0)
                 break;
@@ -91,15 +92,15 @@ int alphabeta(int depth, bool maximize, int alpha, int beta)
             if (beta <= alpha)
                 break;
         }
-        free(valid_moves);
         return max;
     }
     else
     {
         int min = 9999999;
         whose_turn = Silver;
-        Move *valid_moves = find_valid_moves();
-        for (int i = 0; i < 244; i++)
+        Move valid_moves[NUM_VALID_MOVES] = {0};
+        find_valid_moves(valid_moves);
+        for (int i = 0; i < NUM_VALID_MOVES; i++)
         {
             if (valid_moves[i] == 0)
                 break;
@@ -114,7 +115,6 @@ int alphabeta(int depth, bool maximize, int alpha, int beta)
             if (beta <= alpha)
                 break;
         }
-        free(valid_moves);
         return min;
     }
 }
@@ -266,9 +266,8 @@ void undo_move()
     }
 }
 
-Move *find_valid_moves()
+void find_valid_moves(Move *valid_moves)
 {
-    Move *valid_moves = calloc(244, sizeof(Move));
     int vi = 0;
     for (int i = 0; i < 120; i++)
     {
@@ -299,7 +298,6 @@ Move *find_valid_moves()
             }
         }
     }
-    return valid_moves;
 }
 
 void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi)
@@ -500,5 +498,16 @@ void print_piece(enum Player player, enum Piece piece)
 
     default:
         break;
+    }
+}
+
+void reset_undo()
+{
+    undo_index = 0;
+    for(int i = 0; i < 25; i++)
+    {
+        undo_moves[i] = 0;
+        undo_capture_indices[i] = 0;
+        undo_capture_squares[i] = 0;
     }
 }
