@@ -504,7 +504,7 @@ void print_piece(enum Player player, enum Piece piece)
 void reset_undo()
 {
     undo_index = 0;
-    for(int i = 0; i < 25; i++)
+    for (int i = 0; i < 25; i++)
     {
         undo_moves[i] = 0;
         undo_capture_indices[i] = 0;
