@@ -39,5 +39,7 @@ move = KhetAI.move(board, whose_turn, search_depth)
 ```
 bundle exec rake compile
 bundle ecec rake build
+bundle exec rake release
+
 gem push pkg/<gem>
 ```
