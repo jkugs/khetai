@@ -19,8 +19,7 @@ VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE depth)
 
     reset_undo();
     setup_board(init_board);
-    whose_turn = NUM2INT(player);
-    Move move = alphabeta_root(NUM2INT(depth));
+    Move move = alphabeta_root(NUM2INT(depth), NUM2INT(player));
     make_move(move);
 
     VALUE out = rb_ary_new2(3);

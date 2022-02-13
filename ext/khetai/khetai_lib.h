@@ -88,8 +88,8 @@ extern void find_valid_scarab_moves(int i, Move *valid_moves, int *vi);
 extern void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi);
 extern void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi);
 
-extern Move alphabeta_root(int depth);
-extern int alphabeta(int depth, bool maximize, int alpha, int beta);
+extern Move alphabeta_root(int depth, enum Player player);
+extern int alphabeta(int depth, enum Player player, int alpha, int beta);
 extern int calculate_score();
 
 extern void make_move(Move move);
@@ -116,7 +116,13 @@ static inline Square rotate(Square s, int rotation)
     return (s & 0x1F) + (orientation << 5);
 }
 
+static inline enum Player opposite_player(enum Player player)
+{
+    return player == Red ? Silver : Red;
+}
+
 #define NUM_VALID_MOVES 122
+#define MAX_SCORE 9999999
 #define Dead -1
 #define Absorbed -2
 

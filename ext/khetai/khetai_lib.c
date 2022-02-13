@@ -11,112 +11,62 @@ int undo_capture_indices[25] = {0};
 Square undo_capture_squares[25] = {0};
 int undo_index = 0;
 
-Move alphabeta_root(int depth)
+Move alphabeta_root(int depth, enum Player player)
 {
+    whose_turn = player;
+    int best_score = -MAX_SCORE;
     Move best_move = (Move)0;
+    int alpha = -MAX_SCORE;
+    int beta = MAX_SCORE;
     Move valid_moves[NUM_VALID_MOVES] = {0};
     find_valid_moves(valid_moves);
-    int alpha = -9999999;
-    int beta = 9999999;
-    if (whose_turn == Red)
+    for (int i = 0; i < NUM_VALID_MOVES; i++)
     {
-        int best_score = -9999999;
-        for (int i = 0; i < NUM_VALID_MOVES; i++)
+        if (valid_moves[i] == 0)
+            break;
+        make_move(valid_moves[i]);
+        int score = -alphabeta(depth - 1, opposite_player(player), -beta, -alpha);
+        undo_move();
+        whose_turn = player;
+        if (score > best_score)
         {
-            if (valid_moves[i] == 0)
-                break;
-            make_move(valid_moves[i]);
-            int score = alphabeta(depth - 1, false, alpha, beta);
-            undo_move();
-            whose_turn = Red;
-            if (score > best_score)
-            {
-                best_score = score;
-                best_move = valid_moves[i];
-            }
-            if (score > alpha)
-                alpha = score;
-            if (beta <= alpha)
-                break;
+            best_score = score;
+            best_move = valid_moves[i];
         }
-    }
-    else
-    {
-        int best_score = 9999999;
-        for (int i = 0; i < NUM_VALID_MOVES; i++)
-        {
-            if (valid_moves[i] == 0)
-                break;
-            make_move(valid_moves[i]);
-            int score = alphabeta(depth - 1, true, alpha, beta);
-            undo_move();
-            whose_turn = Silver;
-            if (score < best_score)
-            {
-                best_score = score;
-                best_move = valid_moves[i];
-            }
-            if (score < beta)
-                beta = score;
-            if (beta <= alpha)
-                break;
-        }
+        if (best_score > alpha)
+            alpha = best_score;
+        if (alpha >= beta)
+            break;
     }
     return best_move;
 }
 
-int alphabeta(int depth, bool maximize, int alpha, int beta)
+int alphabeta(int depth, enum Player player, int alpha, int beta)
 {
     if (depth == 0)
     {
-        return calculate_score();
+        return player == Red ? calculate_score() : -calculate_score();
     }
-    if (maximize)
+    whose_turn = player;
+    int best_score = -MAX_SCORE;
+    Move valid_moves[NUM_VALID_MOVES] = {0};
+    find_valid_moves(valid_moves);
+    for (int i = 0; i < NUM_VALID_MOVES; i++)
     {
-        int max = -9999999;
-        whose_turn = Red;
-        Move valid_moves[NUM_VALID_MOVES] = {0};
-        find_valid_moves(valid_moves);
-        for (int i = 0; i < NUM_VALID_MOVES; i++)
-        {
-            if (valid_moves[i] == 0)
-                break;
-            make_move(valid_moves[i]);
-            int score = alphabeta(depth - 1, false, alpha, beta);
-            undo_move();
-            whose_turn = Red;
-            if (score > max)
-                max = score;
-            if (score > alpha)
-                alpha = score;
-            if (beta <= alpha)
-                break;
-        }
-        return max;
+        if (valid_moves[i] == 0)
+            break;
+        make_move(valid_moves[i]);
+        int score = -alphabeta(depth - 1, opposite_player(player), -beta, -alpha);
+        undo_move();
+        whose_turn = player;
+        if (score > best_score)
+            best_score = score;
+        if (best_score > alpha)
+            alpha = best_score;
+        if (alpha >= beta)
+            break;
     }
-    else
-    {
-        int min = 9999999;
-        whose_turn = Silver;
-        Move valid_moves[NUM_VALID_MOVES] = {0};
-        find_valid_moves(valid_moves);
-        for (int i = 0; i < NUM_VALID_MOVES; i++)
-        {
-            if (valid_moves[i] == 0)
-                break;
-            make_move(valid_moves[i]);
-            int score = alphabeta(depth - 1, true, alpha, beta);
-            undo_move();
-            whose_turn = Silver;
-            if (score < min)
-                min = score;
-            if (score < beta)
-                beta = score;
-            if (beta <= alpha)
-                break;
-        }
-        return min;
-    }
+    return best_score;
 }
 
 int calculate_score()
