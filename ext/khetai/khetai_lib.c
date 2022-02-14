@@ -80,46 +80,25 @@ int calculate_score()
     {
         if (board[i] > 0)
         {
-            if (get_owner(board[i]) == Red)
+            int value = 0;
+            switch (get_piece(board[i]))
             {
-                switch (get_piece(board[i]))
-                {
-                case Anubis:
-                    score += anubis_score;
-                    break;
-                case Pyramid:
-                    score += pyramid_score;
-                    break;
-                case Scarab:
-                    score += scarab_score;
-                    break;
-                case Pharaoh:
-                    score += pharaoh_score;
-                    break;
-                default:
-                    break;
-                }
+            case Anubis:
+                value += anubis_score;
+                break;
+            case Pyramid:
+                value += pyramid_score;
+                break;
+            case Scarab:
+                value += scarab_score;
+                break;
+            case Pharaoh:
+                value += pharaoh_score;
+                break;
+            default:
+                break;
             }
-            else
-            {
-                switch (get_piece(board[i]))
-                {
-                case Anubis:
-                    score -= anubis_score;
-                    break;
-                case Pyramid:
-                    score -= pyramid_score;
-                    break;
-                case Scarab:
-                    score -= scarab_score;
-                    break;
-                case Pharaoh:
-                    score -= pharaoh_score;
-                    break;
-                default:
-                    break;
-                }
-            }
+            score += get_owner(board[i]) == Red ? value : -value;
         }
     }
     return score + (rand() % 100);
