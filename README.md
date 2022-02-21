@@ -3,17 +3,16 @@
 ## Usage
 ```
 require 'khetai'
-move = KhetAI.move(board, whose_turn, search_depth)
+move = KhetAI.move(board, whose_turn, max_search_depth, max_time_seconds)
 ```
 
 ## Example
 ```
 require 'khetai'
 
-        # A = anubis, P = pyramid, S = scarab, X = pharaoh, L = sphinx
-        # capital letters = red, lowercase letters = silver
-        # 0 = north, 1 = east, 2 = south, 3 = west
-        # contains an extra row and column on all sides
+# A = anubis, P = pyramid, S = scarab, X = pharaoh, L = sphinx
+# capital letters = red, lowercase letters = silver
+# 0 = north, 1 = east, 2 = south, 3 = west
 board = ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--",
         "--", "L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--", "--",
         "--", "--", "--", "P2", "--", "--", "--", "--", "--", "--", "--", "--",
