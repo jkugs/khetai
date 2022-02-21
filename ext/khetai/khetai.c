@@ -3,10 +3,11 @@
 #include <time.h>
 #include "khetai_lib.h"
 
-VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE depth)
-{
-    Check_Type(board_array, T_ARRAY);
+time_t start_time;
+int max_time;
 
+VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE max_depth, VALUE _max_time)
+{
     srand((unsigned)time(NULL));
 
     char *init_board[120];
@@ -18,14 +19,27 @@ VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE depth)
     }
 
     reset_undo();
+    init_zobrist();
     setup_board(init_board);
-    Move move = alphabeta_root(NUM2INT(depth), NUM2INT(player));
-    make_move(move);
+
+    start_time = time(NULL);
+    max_time = NUM2INT(_max_time);
+
+    int depth = 2;
+    Move best_move = (Move)0;
+    Move current_move = (Move)0;
+    while ((time(NULL) - start_time < max_time) && (depth <= NUM2INT(max_depth)))
+    {
+        best_move = current_move;
+        current_move = alphabeta_root(depth, NUM2INT(player));
+        depth++;
+    }
+    make_move(best_move);
 
     VALUE out = rb_ary_new2(3);
-    rb_ary_store(out, 0, INT2NUM(get_start(move)));
-    rb_ary_store(out, 1, INT2NUM(get_end(move)));
-    rb_ary_store(out, 2, INT2NUM(get_rotation(move)));
+    rb_ary_store(out, 0, INT2NUM(get_start(best_move)));
+    rb_ary_store(out, 1, INT2NUM(get_end(best_move)));
+    rb_ary_store(out, 2, INT2NUM(get_rotation(best_move)));
 
     return out;
 }
@@ -33,5 +47,5 @@ VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE depth)
 void Init_khetai()
 {
     VALUE KhetAI = rb_define_module("KhetAI");
-    rb_define_singleton_method(KhetAI, "move", move, 3);
+    rb_define_singleton_method(KhetAI, "move", move, 4);
 }

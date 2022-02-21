@@ -7,6 +7,10 @@
 typedef uint8_t Square;
 typedef uint32_t Move;
 
+#define NUM_VALID_MOVES 125
+#define MAX_SCORE 9999999
+#define MAX_DEPTH 25
+
 enum Player
 {
     Silver,
@@ -36,9 +40,9 @@ static const int rotations[2] = {1, -1};
 static const int sphinx_loc[2] = {106, 13};
 
 extern Square board[120];
-extern Move undo_moves[25];
-extern int undo_capture_indices[25];
-extern Square undo_capture_squares[25];
+extern Move undo_moves[MAX_DEPTH];
+extern int undo_capture_indices[MAX_DEPTH];
+extern Square undo_capture_squares[MAX_DEPTH];
 extern int undo_index;
 
 static const int can_move[2][120] = {
@@ -82,7 +86,7 @@ extern void print_board();
 extern void print_piece(enum Player, enum Piece);
 extern void reset_undo();
 
-extern void find_valid_moves(Move *valid_moves);
+extern void find_valid_moves(Move *valid_moves, int *vi);
 extern void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi);
 extern void find_valid_scarab_moves(int i, Move *valid_moves, int *vi);
 extern void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi);
@@ -94,7 +98,7 @@ extern int calculate_score();
 
 extern void make_move(Move move);
 extern void undo_move();
-extern void fire_laser();
+extern void fire_laser(uint64_t *hash);
 
 static inline bool is_piece(Square s) { return s > 0; }
 
@@ -121,8 +125,6 @@ static inline enum Player opposite_player(enum Player player)
     return player == Red ? Silver : Red;
 }
 
-#define NUM_VALID_MOVES 122
-#define MAX_SCORE 9999999
 #define Dead -1
 #define Absorbed -2
 
@@ -153,5 +155,41 @@ static const int reflections[4][5][4] = {
      {North, South, North, South},
      {Dead, Dead, Dead, Dead},
      {Absorbed, Absorbed, Absorbed, Absorbed}}};
+
+extern time_t start_time;
+extern int max_time;
+extern uint64_t keys[0xFF][120];
+extern uint64_t hashes[MAX_DEPTH];
+extern uint64_t silver;
+extern int move_num;
+extern bool checkmate;
+
+extern void init_zobrist();
+static uint64_t seed = 1070372;
+static inline uint64_t random_number()
+{
+    seed ^= seed >> 12;
+    seed ^= seed << 25;
+    seed ^= seed >> 27;
+    return seed * 0x2545F4914F6CDD1DLL;
+}
+
+#define TABLE_SIZE 0x400000
+
+#define EXACT 0
+#define ALPHA 1
+#define BETA 2
+typedef struct HashEntry
+{
+    uint64_t key;
+    int depth;
+    int flag;
+    int score;
+    Move move;
+} HashEntry;
+
+extern HashEntry table[TABLE_SIZE];
+static inline HashEntry *search_table(uint64_t key) { return &table[key % TABLE_SIZE]; };
+extern void insert_table(uint64_t key, int depth, int flag, int score, Move move);
 
 #endif // KHET_LIB_H_INCLUDED
