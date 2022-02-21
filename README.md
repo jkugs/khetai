@@ -25,14 +25,14 @@ board = ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--",
         "--", "--", "--", "p3", "a0", "x0", "a0", "--", "--", "--", "l0", "--",
         "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
 
-# Red = 1, Silver = 0
+# red = 1, silver = 0
 whose_turn = 1
-
-search_depth = 4
+max_search_depth = 25
+max_time_seconds = 5
 
 # returns [start_index, end_index, rotation]
 # rotation can be 1 (clockwise), -1 (counter clockwise), or 0 (no rotation)
-move = KhetAI.move(board, whose_turn, search_depth)
+move = KhetAI.move(board, whose_turn, max_search_depth, max_time_seconds)
 ```
 
 ## Build and Deploy Commands

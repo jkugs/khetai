@@ -223,7 +223,6 @@ void fire_laser(uint64_t *hash)
                 {
                     if (get_piece(board[i]) == Pharaoh)
                         checkmate = true;
-
                     undo_capture_indices[undo_index] = i;
                     undo_capture_squares[undo_index] = board[i];
                     board[i] = (Square)0;
