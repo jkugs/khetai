@@ -79,6 +79,9 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
 
         if (alpha >= beta)
             return entry->score;
+
+        if (is_move_legal(entry->move))
+            valid_moves[vi++] = entry->move;
     }
 
     whose_turn = player;
@@ -537,4 +540,18 @@ void init_zobrist()
             keys[i][j] = random_number();
         }
     }
+}
+
+bool is_move_legal(Move move)
+{
+    int start = get_start(move);
+    int end = get_end(move);
+    if (is_piece(board[start]) && get_owner(board[start]) == whose_turn)
+    {
+        if (!is_piece(board[end]) || get_rotation(move) != 0)
+            return true;
+        else if (is_piece(board[end]) && get_piece(board[start]) == Scarab && get_piece(board[end]) < 3)
+            return true;
+    }
+    return false;
 }

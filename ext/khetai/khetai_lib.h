@@ -99,6 +99,7 @@ extern int calculate_score();
 extern void make_move(Move move);
 extern void undo_move();
 extern void fire_laser(uint64_t *hash);
+extern bool is_move_legal(Move move);
 
 static inline bool is_piece(Square s) { return s > 0; }
 
