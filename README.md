@@ -10,6 +10,7 @@ move = KhetAI.move(board, whose_turn, max_search_depth, max_time_seconds)
 ```
 require 'khetai'
 
+# initial board setup:
 # A = anubis, P = pyramid, S = scarab, X = pharaoh, L = sphinx
 # capital letters = red, lowercase letters = silver
 # 0 = north, 1 = east, 2 = south, 3 = west
@@ -24,14 +25,16 @@ board = ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--",
         "--", "--", "--", "p3", "a0", "x0", "a0", "--", "--", "--", "l0", "--",
         "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
 
-# red = 1, silver = 0
-whose_turn = 1
-max_search_depth = 25
-max_time_seconds = 5
+whose_turn = 1          # silver = 0, red = 1
+max_search_depth = 25   # must be between 2 and 25
+max_search_time = 5     # max search time in seconds
 
 # returns [start_index, end_index, rotation]
-# rotation can be 1 (clockwise), -1 (counter clockwise), or 0 (no rotation)
-move = KhetAI.move(board, whose_turn, max_search_depth, max_time_seconds)
+move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
+
+# move[0] = start index
+# move[1] = end index
+# move[2] = rotation (1, -1, 0) (clockwise, anticlockwise, none)
 ```
 
 ## Build and Deploy Commands

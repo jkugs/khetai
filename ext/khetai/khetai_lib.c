@@ -170,8 +170,7 @@ int calculate_score()
             score += get_owner(board[i]) == Red ? value : -value;
         }
     }
-    int random = rand() % 100;
-    return score += whose_turn == Red ? random : -random;
+    return score += rand() % 100;
 }
 
 void make_move(Move move)
