@@ -62,7 +62,7 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     Move valid_moves[NUM_VALID_MOVES] = {0};
     int vi = 0;
     HashEntry *entry = search_table(hashes[move_num]);
-    if (entry->key != 0 && entry->depth >= depth)
+    if (entry->key == hashes[move_num] && entry->depth >= depth)
     {
         if (entry->flag == EXACT)
             return entry->score;
