@@ -52,6 +52,7 @@ Move alphabeta_root(int depth, enum Player player)
 
 int alphabeta(int depth, enum Player player, int alpha, int beta)
 {
+    whose_turn = player;
     if (depth == 0 || checkmate)
     {
         return player == Red ? calculate_score() : -calculate_score();
@@ -83,7 +84,6 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
             valid_moves[vi++] = entry->move;
     }
 
-    whose_turn = player;
     find_valid_moves(valid_moves, &vi);
     int best_score = -MAX_SCORE;
     Move best_move = (Move)0;
@@ -149,7 +149,7 @@ int calculate_score()
     int pharaoh_score = 100000;
     for (int i = 0; i < 120; i++)
     {
-        if (is_piece(board[i]))
+        if (board[i] > 0)
         {
             int value = 0;
             switch (get_piece(board[i]))
@@ -224,7 +224,7 @@ void fire_laser(uint64_t *hash)
         i = i + directions[laser_dir];
         if (i >= 0 && i < 120 && on_board[i] == 1)
         {
-            if (is_piece(board[i]))
+            if (board[i] > 0)
             {
                 int piece = get_piece(board[i]) - 1;
                 int orientation = get_orientation(board[i]);
@@ -389,7 +389,7 @@ void setup_board(char *init_board[120])
     for (int i = 0; i < 120; i++)
     {
         board[i] = str_to_square(init_board[i]);
-        if (is_piece(board[i]))
+        if (board[i] > 0)
             hash ^= keys[board[i]][i];
     }
     hashes[0] = hash;
