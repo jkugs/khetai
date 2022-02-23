@@ -449,83 +449,80 @@ void print_board()
 {
     for (int i = 0; i < 120; i++)
     {
-        if (is_piece(board[i]))
-        {
-            enum Player player = get_owner(board[i]);
-            enum Piece piece = get_piece(board[i]);
-            print_piece(player, piece);
-
-            enum Orientation orientation = get_orientation(board[i]);
-            switch (orientation)
-            {
-            case North:
-                printf("0");
-                break;
-            case East:
-                printf("1");
-                break;
-            case South:
-                printf("2");
-                break;
-            case West:
-                printf("3");
-                break;
-            default:
-                break;
-            }
-        }
-        else
-        {
-            printf("--");
-        }
-
+        print_piece(board[i]);
         if ((i + 1) % 12 == 0)
             printf("\n");
     }
 }
 
-void print_piece(enum Player player, enum Piece piece)
+void print_piece(Square s)
 {
-    switch (piece)
+    enum Player player = get_owner(s);
+    if (is_piece(s))
     {
-    case Anubis:
-        if (player == Silver)
-            printf("a");
-        else
-            printf("A");
-        break;
+        enum Piece piece = get_piece(s);
+        enum Orientation orientation = get_orientation(s);
+        switch (piece)
+        {
+        case Anubis:
+            if (player == Silver)
+                printf("a");
+            else
+                printf("A");
+            break;
 
-    case Pyramid:
-        if (player == Silver)
-            printf("p");
-        else
-            printf("P");
-        break;
+        case Pyramid:
+            if (player == Silver)
+                printf("p");
+            else
+                printf("P");
+            break;
 
-    case Scarab:
-        if (player == Silver)
-            printf("s");
-        else
-            printf("S");
-        break;
+        case Scarab:
+            if (player == Silver)
+                printf("s");
+            else
+                printf("S");
+            break;
 
-    case Pharaoh:
-        if (player == Silver)
-            printf("x");
-        else
-            printf("X");
-        break;
+        case Pharaoh:
+            if (player == Silver)
+                printf("x");
+            else
+                printf("X");
+            break;
 
-    case Sphinx:
-        if (player == Silver)
-            printf("l");
-        else
-            printf("L");
-        break;
-
-    default:
-        break;
+        case Sphinx:
+            if (player == Silver)
+                printf("l");
+            else
+                printf("L");
+            break;
+        default:
+            printf("-");
+            break;
+        }
+        switch (orientation)
+        {
+        case North:
+            printf("0");
+            break;
+        case East:
+            printf("1");
+            break;
+        case South:
+            printf("2");
+            break;
+        case West:
+            printf("3");
+            break;
+        default:
+            printf("-");
+            break;
+        }
     }
+    else
+        printf("--");
 }
 
 void reset_undo()

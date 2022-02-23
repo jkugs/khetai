@@ -83,7 +83,7 @@ static const int on_board[120] = {
 extern void setup_board(char *init_board[120]);
 extern Square str_to_square(char *str);
 extern void print_board();
-extern void print_piece(enum Player, enum Piece);
+extern void print_piece(Square s);
 extern void reset_undo();
 
 extern void find_valid_moves(Move *valid_moves, int *vi);
