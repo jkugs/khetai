@@ -149,7 +149,7 @@ int calculate_score()
     int pharaoh_score = 100000;
     for (int i = 0; i < 120; i++)
     {
-        if (board[i] > 0)
+        if (is_piece(board[i]))
         {
             int value = 0;
             switch (get_piece(board[i]))
@@ -224,7 +224,7 @@ void fire_laser(uint64_t *hash)
         i = i + directions[laser_dir];
         if (i >= 0 && i < 120 && on_board[i] == 1)
         {
-            if (board[i] > 0)
+            if (is_piece(board[i]))
             {
                 int piece = get_piece(board[i]) - 1;
                 int orientation = get_orientation(board[i]);
@@ -389,7 +389,7 @@ void setup_board(char *init_board[120])
     for (int i = 0; i < 120; i++)
     {
         board[i] = str_to_square(init_board[i]);
-        if (board[i] > 0)
+        if (is_piece(board[i]))
             hash ^= keys[board[i]][i];
     }
     hashes[0] = hash;
@@ -449,7 +449,7 @@ void print_board()
 {
     for (int i = 0; i < 120; i++)
     {
-        if (board[i] > 0)
+        if (is_piece(board[i]))
         {
             enum Player player = get_owner(board[i]);
             enum Piece piece = get_piece(board[i]);
