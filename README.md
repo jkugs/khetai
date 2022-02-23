@@ -3,7 +3,7 @@
 ## Usage
 ```
 require 'khetai'
-move = KhetAI.move(board, whose_turn, max_search_depth, max_time_seconds)
+move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
 ```
 
 ## Example

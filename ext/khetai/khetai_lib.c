@@ -181,6 +181,7 @@ void make_move(Move move)
     uint64_t hash = hashes[move_num++];
 
     int start = get_start(move);
+    // remove starting piece
     hash ^= keys[board[start]][start];
     int end = get_end(move);
     int rotation = get_rotation(move);
@@ -188,20 +189,28 @@ void make_move(Move move)
     if (rotation != 0)
     {
         board[start] = rotate(board[start], rotation);
+        // add starting piece back with rotation
         hash ^= keys[board[start]][start];
     }
     else
     {
+        // remove ending piece if swapping
+        if (is_piece(board[end]))
+            hash ^= keys[board[end]][end];
+
         Square moving_piece = board[start];
         board[start] = board[end];
         board[end] = moving_piece;
+        // add starting piece to end location
         hash ^= keys[board[end]][end];
+
+        // add ending piece to start position if swapping
+        if (is_piece(board[start]))
+            hash ^= keys[board[start]][start];
     }
 
     undo_moves[undo_index] = new_move(end, start, -rotation);
     fire_laser(&hash);
-    if (whose_turn == Silver)
-        hash ^= silver;
     hashes[move_num] = hash;
     undo_index++;
 }
@@ -225,11 +234,11 @@ void fire_laser(uint64_t *hash)
                 {
                     if (get_piece(board[i]) == Pharaoh)
                         checkmate = true;
+                    *hash ^= keys[board[i]][i];
                     undo_capture_indices[undo_index] = i;
                     undo_capture_squares[undo_index] = board[i];
                     board[i] = (Square)0;
                     traversing = false;
-                    *hash ^= keys[board[i]][i];
                 }
                 else if (result == Absorbed)
                 {
@@ -381,7 +390,8 @@ void setup_board(char *init_board[120])
     for (int i = 0; i < 120; i++)
     {
         board[i] = str_to_square(init_board[i]);
-        hash ^= keys[board[i]][i];
+        if (board[i] > 0)
+            hash ^= keys[board[i]][i];
     }
     hashes[0] = hash;
 

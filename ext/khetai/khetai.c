@@ -25,7 +25,7 @@ VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE max_depth, VALUE _
     start_time = time(NULL);
     max_time = NUM2INT(_max_time);
 
-    int depth = 2;
+    int depth = 1;
     Move best_move = (Move)0;
     Move current_move = (Move)0;
     while ((time(NULL) - start_time < max_time) && (depth <= NUM2INT(max_depth)))
