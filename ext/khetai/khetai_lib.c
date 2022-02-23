@@ -18,7 +18,6 @@ uint64_t keys[0xFF][120] = {0};
 int undo_index = 0;
 int move_num = 0;
 bool checkmate = false;
-uint64_t silver = 0;
 
 Move alphabeta_root(int depth, enum Player player)
 {

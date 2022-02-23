@@ -161,7 +161,6 @@ extern time_t start_time;
 extern int max_time;
 extern uint64_t keys[0xFF][120];
 extern uint64_t hashes[MAX_DEPTH];
-extern uint64_t silver;
 extern int move_num;
 extern bool checkmate;
 
