@@ -541,7 +541,6 @@ void reset_undo()
 
 void init_zobrist()
 {
-    silver = random_number();
     for (int i = 0; i < 0xFF; i++)
     {
         for (int j = 0; j < 120; j++)
