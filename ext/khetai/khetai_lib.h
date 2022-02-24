@@ -161,6 +161,7 @@ extern time_t start_time;
 extern int max_time;
 extern uint64_t keys[0xFF][120];
 extern uint64_t hashes[MAX_DEPTH];
+extern uint64_t turn_key;
 extern int move_num;
 extern bool checkmate;
 
@@ -191,5 +192,6 @@ typedef struct HashEntry
 extern HashEntry table[TABLE_SIZE];
 static inline HashEntry *search_table(uint64_t key) { return &table[key % TABLE_SIZE]; };
 extern void insert_table(uint64_t key, int depth, int flag, int score, Move move);
+extern uint64_t get_board_hash();
 
-#endif // KHET_LIB_H_INCLUDED
+#endif // KHET_LIB_H_INCLUDED extern uint64_t get_board_hash();

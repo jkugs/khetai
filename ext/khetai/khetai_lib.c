@@ -14,6 +14,7 @@ Square undo_capture_squares[MAX_DEPTH] = {0};
 HashEntry table[TABLE_SIZE] = {0};
 uint64_t hashes[MAX_DEPTH] = {0};
 uint64_t keys[0xFF][120] = {0};
+uint64_t turn_key = 0;
 
 int undo_index = 0;
 int move_num = 0;
@@ -209,7 +210,10 @@ void make_move(Move move)
     }
 
     undo_moves[undo_index] = new_move(end, start, -rotation);
+
     fire_laser(&hash);
+    hash ^= turn_key;
+
     hashes[move_num] = hash;
     undo_index++;
 }
@@ -545,6 +549,7 @@ void init_zobrist()
             keys[i][j] = random_number();
         }
     }
+    turn_key = random_number();
 }
 
 bool is_move_legal(Move move)
@@ -559,4 +564,15 @@ bool is_move_legal(Move move)
             return true;
     }
     return false;
+}
+
+uint64_t get_board_hash()
+{
+    uint64_t hash = 0;
+    for (int i = 0; i < 120; i++)
+    {
+        if (board[i] > 0)
+            hash ^= keys[board[i]][i];
+    }
+    return hash;
 }
