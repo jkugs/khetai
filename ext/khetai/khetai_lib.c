@@ -150,7 +150,7 @@ int calculate_score()
     int pharaoh_score = 100000;
     for (int i = 0; i < 120; i++)
     {
-        if (board[i] > 0)
+        if (is_piece(board[i]))
         {
             int value = 0;
             switch (get_piece(board[i]))
@@ -228,7 +228,7 @@ void fire_laser(uint64_t *hash)
         i = i + directions[laser_dir];
         if (i >= 0 && i < 120 && on_board[i] == 1)
         {
-            if (board[i] > 0)
+            if (is_piece(board[i]))
             {
                 int piece = get_piece(board[i]) - 1;
                 int orientation = get_orientation(board[i]);
@@ -237,6 +237,7 @@ void fire_laser(uint64_t *hash)
                 {
                     if (get_piece(board[i]) == Pharaoh)
                         checkmate = true;
+                    // remove piece
                     *hash ^= keys[board[i]][i];
                     undo_capture_indices[undo_index] = i;
                     undo_capture_squares[undo_index] = board[i];
@@ -387,13 +388,61 @@ void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi)
     valid_moves[(*vi)++] = new_move(i, i, rotation);
 }
 
+void init_zobrist()
+{
+    for (int i = 0; i < 0xFF; i++)
+    {
+        for (int j = 0; j < 120; j++)
+        {
+            keys[i][j] = random_number();
+        }
+    }
+    turn_key = random_number();
+}
+
+uint64_t get_board_hash()
+{
+    uint64_t hash = 0;
+    for (int i = 0; i < 120; i++)
+    {
+        if (is_piece(board[i]))
+            hash ^= keys[board[i]][i];
+    }
+    return hash;
+}
+
+bool is_move_legal(Move move)
+{
+    int start = get_start(move);
+    int end = get_end(move);
+    if (is_piece(board[start]) && get_owner(board[start]) == whose_turn)
+    {
+        if (!is_piece(board[end]) || get_rotation(move) != 0)
+            return true;
+        else if (is_piece(board[end]) && get_piece(board[start]) == Scarab && get_piece(board[end]) < 3)
+            return true;
+    }
+    return false;
+}
+
+void reset_undo()
+{
+    undo_index = 0;
+    for (int i = 0; i < MAX_DEPTH; i++)
+    {
+        undo_moves[i] = 0;
+        undo_capture_indices[i] = 0;
+        undo_capture_squares[i] = 0;
+    }
+}
+
 void setup_board(char *init_board[120])
 {
     uint64_t hash = 0;
     for (int i = 0; i < 120; i++)
     {
         board[i] = str_to_square(init_board[i]);
-        if (board[i] > 0)
+        if (is_piece(board[i]))
             hash ^= keys[board[i]][i];
     }
     hashes[0] = hash;
@@ -527,52 +576,4 @@ void print_piece(Square s)
     }
     else
         printf("--");
-}
-
-void reset_undo()
-{
-    undo_index = 0;
-    for (int i = 0; i < MAX_DEPTH; i++)
-    {
-        undo_moves[i] = 0;
-        undo_capture_indices[i] = 0;
-        undo_capture_squares[i] = 0;
-    }
-}
-
-void init_zobrist()
-{
-    for (int i = 0; i < 0xFF; i++)
-    {
-        for (int j = 0; j < 120; j++)
-        {
-            keys[i][j] = random_number();
-        }
-    }
-    turn_key = random_number();
-}
-
-bool is_move_legal(Move move)
-{
-    int start = get_start(move);
-    int end = get_end(move);
-    if (is_piece(board[start]) && get_owner(board[start]) == whose_turn)
-    {
-        if (!is_piece(board[end]) || get_rotation(move) != 0)
-            return true;
-        else if (is_piece(board[end]) && get_piece(board[start]) == Scarab && get_piece(board[end]) < 3)
-            return true;
-    }
-    return false;
-}
-
-uint64_t get_board_hash()
-{
-    uint64_t hash = 0;
-    for (int i = 0; i < 120; i++)
-    {
-        if (board[i] > 0)
-            hash ^= keys[board[i]][i];
-    }
-    return hash;
 }

@@ -166,6 +166,7 @@ extern int move_num;
 extern bool checkmate;
 
 extern void init_zobrist();
+extern uint64_t get_board_hash();
 static uint64_t seed = 1070372;
 static inline uint64_t random_number()
 {
@@ -192,6 +193,5 @@ typedef struct HashEntry
 extern HashEntry table[TABLE_SIZE];
 static inline HashEntry *search_table(uint64_t key) { return &table[key % TABLE_SIZE]; };
 extern void insert_table(uint64_t key, int depth, int flag, int score, Move move);
-extern uint64_t get_board_hash();
 
 #endif // KHET_LIB_H_INCLUDED extern uint64_t get_board_hash();
