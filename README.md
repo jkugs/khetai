@@ -1,5 +1,10 @@
 # KhetAI
 
+## Install
+```
+gem install khetai
+```
+
 ## Usage
 ```
 require 'khetai'
