@@ -45,7 +45,7 @@ move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
 ## Build and Deploy Commands
 ```
 bundle exec rake compile
-bundle ecec rake build
+bundle exec rake build
 bundle exec rake release
 
 gem push pkg/<gem>

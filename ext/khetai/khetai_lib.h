@@ -33,11 +33,14 @@ enum Orientation
 };
 
 extern enum Player whose_turn;
+extern enum Player starter;
 
 // north, east, south, west, diagonals
 static const int directions[8] = {-12, 1, 12, -1, (12 + 1), (12 - 1), (-12 + 1), (-12 - 1)};
 static const int rotations[2] = {1, -1};
 static const int sphinx_loc[2] = {106, 13};
+
+extern int pharaoh_loc[2];
 
 extern Square board[120];
 extern Move undo_moves[MAX_DEPTH];
@@ -95,6 +98,7 @@ extern void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi);
 extern Move alphabeta_root(int depth, enum Player player);
 extern int alphabeta(int depth, enum Player player, int alpha, int beta);
 extern int calculate_score();
+extern int distance_from_pharaoh(int i, int p);
 
 extern void make_move(Move move);
 extern void undo_move();

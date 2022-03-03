@@ -5,7 +5,9 @@
 #include "khetai_lib.h"
 
 Square board[120] = {0};
+int pharaoh_loc[2] = {0};
 enum Player whose_turn;
+enum Player starter;
 
 Move undo_moves[MAX_DEPTH] = {0};
 int undo_capture_indices[MAX_DEPTH] = {0};
@@ -23,6 +25,7 @@ bool checkmate = false;
 Move alphabeta_root(int depth, enum Player player)
 {
     whose_turn = player;
+    starter = player;
     int best_score = -MAX_SCORE;
     Move best_move = (Move)0;
     int alpha = -MAX_SCORE;
@@ -150,19 +153,22 @@ int calculate_score()
     int pharaoh_score = 100000;
     for (int i = 0; i < 120; i++)
     {
-        if (is_piece(board[i]))
+        Square s = board[i];
+        if (is_piece(s))
         {
             int value = 0;
-            switch (get_piece(board[i]))
+            switch (get_piece(s))
             {
             case Anubis:
                 value += anubis_score;
+                value -= distance_from_pharaoh(i, pharaoh_loc[get_owner(s)]) * 10;
                 break;
             case Pyramid:
                 value += pyramid_score;
                 break;
             case Scarab:
                 value += scarab_score;
+                value += distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))]) * 10;
                 break;
             case Pharaoh:
                 value += pharaoh_score;
@@ -170,10 +176,20 @@ int calculate_score()
             default:
                 break;
             }
-            score += get_owner(board[i]) == Red ? value : -value;
+            score += get_owner(s) == Red ? value : -value;
         }
     }
-    return score += rand() % 100;
+    return score; // += rand() % 100;
+}
+
+int distance_from_pharaoh(int i, int p)
+{
+    int px = p / 10;
+    int py = p % 12;
+    int ix = i / 10;
+    int iy = i % 12;
+    int m_distance = abs(px - ix) + abs(py - iy);
+    return m_distance;
 }
 
 void make_move(Move move)
@@ -204,15 +220,21 @@ void make_move(Move move)
         // add starting piece to end location
         hash ^= keys[board[end]][end];
 
-        // add ending piece to start position if swapping
+        // add ending piece to start location if swapping
         if (is_piece(board[start]))
             hash ^= keys[board[start]][start];
+
+        if (get_piece(board[end]) == Pharaoh)
+            pharaoh_loc[whose_turn] = end;
     }
 
     undo_moves[undo_index] = new_move(end, start, -rotation);
 
     fire_laser(&hash);
     hash ^= turn_key;
+
+    // testing that hashing works properly
+    // printf("\nHASH:\t%lu\nBOARD:\t%lu\n", hash, get_board_hash());
 
     hashes[move_num] = hash;
     undo_index++;
@@ -228,19 +250,20 @@ void fire_laser(uint64_t *hash)
         i = i + directions[laser_dir];
         if (i >= 0 && i < 120 && on_board[i] == 1)
         {
-            if (is_piece(board[i]))
+            Square s = board[i];
+            if (is_piece(s))
             {
-                int piece = get_piece(board[i]) - 1;
-                int orientation = get_orientation(board[i]);
+                int piece = get_piece(s) - 1;
+                int orientation = get_orientation(s);
                 int result = reflections[laser_dir][piece][orientation];
                 if (result == Dead)
                 {
-                    if (get_piece(board[i]) == Pharaoh)
+                    if (get_piece(s) == Pharaoh)
                         checkmate = true;
                     // remove piece
-                    *hash ^= keys[board[i]][i];
+                    *hash ^= keys[s][i];
                     undo_capture_indices[undo_index] = i;
-                    undo_capture_squares[undo_index] = board[i];
+                    undo_capture_squares[undo_index] = s;
                     board[i] = (Square)0;
                     traversing = false;
                 }
@@ -408,6 +431,8 @@ uint64_t get_board_hash()
         if (is_piece(board[i]))
             hash ^= keys[board[i]][i];
     }
+    if (whose_turn == starter)
+        hash ^= turn_key;
     return hash;
 }
 
@@ -442,8 +467,18 @@ void setup_board(char *init_board[120])
     for (int i = 0; i < 120; i++)
     {
         board[i] = str_to_square(init_board[i]);
-        if (is_piece(board[i]))
-            hash ^= keys[board[i]][i];
+        Square s = board[i];
+        if (is_piece(s))
+        {
+            hash ^= keys[s][i];
+            if (get_piece(s) == Pharaoh)
+            {
+                if (get_owner(s) == Silver)
+                    pharaoh_loc[Silver] = i;
+                else if (get_owner(s) == Red)
+                    pharaoh_loc[Red] = i;
+            }
+        }
     }
     hashes[0] = hash;
 
