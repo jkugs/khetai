@@ -1,3 +1,0 @@
-/home/kuglics/workspace/khetai-gem/khetai/ext/khetai/dev/CMakeFiles/khetai.dir
-/home/kuglics/workspace/khetai-gem/khetai/ext/khetai/dev/CMakeFiles/edit_cache.dir
-/home/kuglics/workspace/khetai-gem/khetai/ext/khetai/dev/CMakeFiles/rebuild_cache.dir
