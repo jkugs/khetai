@@ -8,3 +8,8 @@
 /tmp/
 .vscode
 *.so
+/ext/khetai/test/CMakeFiles
+/ext/khetai/test/khetai
+cmake_install.cmake
+CMakeCache.txt
+Makefile
