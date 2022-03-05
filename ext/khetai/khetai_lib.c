@@ -225,7 +225,7 @@ void make_move(Move move)
             hash ^= keys[board[start]][start];
 
         if (get_piece(moving_piece) == Pharaoh)
-            pharaoh_loc[whose_turn] = end;
+            pharaoh_loc[get_owner(moving_piece)] = end;
     }
 
     undo_moves[undo_index] = new_move(end, start, -rotation);
@@ -314,7 +314,7 @@ void undo_move()
         board[end] = moving_piece;
 
         if (get_piece(moving_piece) == Pharaoh)
-            pharaoh_loc[get_owner(board[end])] = end;
+            pharaoh_loc[get_owner(moving_piece)] = end;
     }
     checkmate = false;
 }
