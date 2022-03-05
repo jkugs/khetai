@@ -167,7 +167,7 @@ int calculate_score()
                 value += rand() % 20;
                 break;
             case Scarab:
-                value += (100 / distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))])) * 10;
+                value += 100 / (distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))]) * 10);
                 value += rand() % 10;
                 break;
             case Pharaoh:
