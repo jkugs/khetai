@@ -148,7 +148,6 @@ int calculate_score()
 {
     int score = 0;
     int anubis_score = 500;
-    int scarab_score = 750;
     int pyramid_score = 1000;
     int pharaoh_score = 100000;
     for (int i = 0; i < 120; i++)
@@ -165,13 +164,14 @@ int calculate_score()
                 break;
             case Pyramid:
                 value += pyramid_score;
+                value += rand() % 20;
                 break;
             case Scarab:
-                value += scarab_score;
-                value -= distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))]) * 10;
+                value += 100 / (distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))])) * 10;
+                value += rand() % 10;
                 break;
             case Pharaoh:
-                value += pharaoh_score += rand() % 100;
+                value += pharaoh_score;
                 break;
             default:
                 break;
@@ -179,14 +179,14 @@ int calculate_score()
             score += get_owner(s) == Red ? value : -value;
         }
     }
-    return score; // += rand() % 100;
+    return score;
 }
 
 int distance_from_pharaoh(int i, int p)
 {
-    int px = p / 10;
+    int px = p / 12;
     int py = p % 12;
-    int ix = i / 10;
+    int ix = i / 12;
     int iy = i % 12;
     int m_distance = abs(px - ix) + abs(py - iy);
     return m_distance;
@@ -224,7 +224,7 @@ void make_move(Move move)
         if (is_piece(board[start]))
             hash ^= keys[board[start]][start];
 
-        if (get_piece(board[end]) == Pharaoh)
+        if (get_piece(moving_piece) == Pharaoh)
             pharaoh_loc[whose_turn] = end;
     }
 
@@ -312,6 +312,9 @@ void undo_move()
         Square moving_piece = board[start];
         board[start] = board[end];
         board[end] = moving_piece;
+
+        if (get_piece(moving_piece) == Pharaoh)
+            pharaoh_loc[get_owner(board[end])] = end;
     }
     checkmate = false;
 }
