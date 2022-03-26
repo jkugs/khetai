@@ -83,27 +83,27 @@ static const int on_board[120] = {
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-extern void setup_board(char *init_board[120]);
-extern Square str_to_square(char *str);
-extern void print_board();
-extern void print_piece(Square s);
-extern void reset_undo();
+void setup_board(char *init_board[120]);
+Square str_to_square(char *str);
+void print_board();
+void print_piece(Square s);
+void reset_undo();
 
-extern void find_valid_moves(Move *valid_moves, int *vi);
-extern void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi);
-extern void find_valid_scarab_moves(int i, Move *valid_moves, int *vi);
-extern void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi);
-extern void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi);
+void find_valid_moves(Move *valid_moves, int *vi);
+void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi);
+void find_valid_scarab_moves(int i, Move *valid_moves, int *vi);
+void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi);
+void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi);
 
-extern Move alphabeta_root(int depth, enum Player player);
-extern int alphabeta(int depth, enum Player player, int alpha, int beta);
-extern int calculate_score();
-extern int distance_from_pharaoh(int i, int p);
+Move alphabeta_root(int depth, enum Player player);
+int alphabeta(int depth, enum Player player, int alpha, int beta);
+int calculate_score();
+int distance_from_pharaoh(int i, int p);
 
-extern void make_move(Move move);
-extern void undo_move();
-extern void fire_laser(uint64_t *hash);
-extern bool is_move_legal(Move move);
+void make_move(Move move);
+void undo_move();
+void fire_laser(uint64_t *hash);
+bool is_move_legal(Move move);
 
 static inline bool is_piece(Square s) { return s > 0; }
 
