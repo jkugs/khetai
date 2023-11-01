@@ -1,9 +1,20 @@
 # KhetAI
 
-## Install
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'khetai'
 ```
-gem install khetai
-```
+
+And then execute:
+
+    $ bundle install
+
+Or install it yourself as:
+
+    $ gem install khetai
 
 ## Usage
 ```
@@ -12,7 +23,7 @@ move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
 ```
 
 ## Example
-```
+```ruby
 require 'khetai'
 
 # initial board setup:
@@ -42,11 +53,18 @@ move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
 # move[2] = rotation (1, -1, 0) (clockwise, anticlockwise, none)
 ```
 
-## Build and Deploy Commands
-```
-bundle exec rake compile
-bundle exec rake build
-bundle exec rake release
+## Development
+The internals of the gem are written in C, located in `ext/khetai`.
 
-gem push pkg/<gem>
-```
+
+## Build and Deploy Commands
+
+    $ bundle exec rake compile
+    $ bundle exec rake build
+    $ gem install pkg/khetai-<version>.gem
+
+
+To release and push to rubygems.org:
+
+    $ bundle exec rake release
+    $ gem push pkg/<gem>
