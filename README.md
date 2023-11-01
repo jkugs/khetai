@@ -2,18 +2,6 @@
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'khetai'
-```
-
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
     $ gem install khetai
 
 ## Usage
