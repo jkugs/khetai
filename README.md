@@ -5,7 +5,7 @@
     $ gem install khetai
 
 ## Usage
-```
+```ruby
 require 'khetai'
 move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
 ```
