@@ -7,5 +7,10 @@
 /spec/reports/
 /tmp/
 /build/
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+/ext/khetai/dev/khetai
+/ext/khetai/dev/Makefile
 .vscode
 *.so
