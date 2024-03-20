@@ -125,7 +125,7 @@ void insert_table(uint64_t key, int depth, int flag, int score, Move move)
     HashEntry *entry = search_table(key);
     if (entry->key != 0)
     {
-        if (depth > entry->depth)
+        if (depth < entry->depth)
         {
             entry->key = key;
             entry->depth = depth;

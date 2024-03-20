@@ -10,3 +10,5 @@
 /ext/khetai/dev/build/
 .vscode
 *.so
+*.o
+khet
