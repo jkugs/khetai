@@ -3,16 +3,22 @@
 # Compiler settings - Can be customized.
 CXX = g++
 CXXFLAGS = -std=c++11 $(shell fltk-config --cxxflags)
-LDFLAGS = $(shell fltk-config --ldflags)
+LDFLAGS = $(shell fltk-config --ldflags) -lfltk_images -lfltk_png -lfltk_z
 
 # Application name
 APP = khet
 
+# Source directory
+SRC_DIR = .
+
 # Source files
-SRC = khet.cpp
+SRC = $(wildcard $(SRC_DIR)/*.cpp)
 
 # Object files
 OBJ = $(SRC:.cpp=.o)
+
+# Header files
+DEPS = $(wildcard $(SRC_DIR)/*.h)
 
 # Default target
 all: $(APP)
@@ -22,7 +28,8 @@ $(APP): $(OBJ)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Compile source files into object files
-%.o: %.cpp
+# Include header files as dependencies
+%.o: %.cpp $(DEPS)
 	$(CXX) -c $< $(CXXFLAGS)
 
 # Clean target
