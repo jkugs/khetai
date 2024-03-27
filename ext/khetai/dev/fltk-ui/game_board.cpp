@@ -1,4 +1,5 @@
 #include "game_board.h"
+#include "image_util.h"
 
 #include <FL/fl_draw.H>
 #include <FL/Fl.H>
@@ -13,6 +14,9 @@ GameBoard::GameBoard(int X, int Y, int W, int H, const char *L) : Fl_Widget(X, Y
 
     square_selected = false;
     square_selected_num = -1;
+
+    clicked_col = -1;
+    clicked_row = -1;
 }
 
 void GameBoard::draw()
@@ -38,6 +42,7 @@ void GameBoard::draw()
         fl_line(x(), current_y, x() + w(), current_y);
     }
 
+    // highlight selected square
     if (square_selected)
     {
         fl_color(FL_BLUE);
@@ -53,6 +58,13 @@ void GameBoard::draw()
             if (piece_images[piece_index] != nullptr)
             {
                 piece_images[piece_index]->draw(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height);
+
+                // debugging image drawing                
+                /*fl_color(FL_YELLOW); // Highlight color
+                fl_rectf(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height); // Fill the cell
+                piece_images[piece_index]->draw(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height);
+                fl_color(FL_RED); // Border color for debugging
+                fl_rect(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height); // Draw the cell border*/
             }
         }
     }
@@ -88,13 +100,13 @@ int GameBoard::handle(int event)
     return Fl_Widget::handle(event);
 }
 
-void GameBoard::init(const std::vector<std::vector<std::string>>& pieces)
+void GameBoard::init(const std::vector<std::vector<std::string>> &pieces)
 {
     board_pieces = pieces;
 
-    for (const std::vector<std::string>& row : board_pieces)
+    for (const std::vector<std::string> &row : board_pieces)
     {
-        for (const std::string& piece : row)
+        for (const std::string &piece : row)
         {
             if (piece != "--")
             {
@@ -103,12 +115,15 @@ void GameBoard::init(const std::vector<std::vector<std::string>>& pieces)
 
                 auto it = GameBoard::piece_map.find(piece_type);
                 filename = it->second;
-                
-                Fl_PNG_Image* orig_image = new Fl_PNG_Image(filename.c_str());
-                // Resize the image to fit within cell dimensions
-                Fl_Image* resized_image = orig_image->copy(cell_width, cell_height);
-                delete orig_image; // Delete the original image to free memory
-                piece_images.push_back(resized_image);
+
+                Fl_PNG_Image *orig_image = new Fl_PNG_Image(filename.c_str());
+                Fl_Image *resized_image = orig_image->copy(cell_width, cell_height);
+                delete orig_image;
+                // piece_images.push_back(resized_image);
+
+                // temp rotate test
+                Fl_Image *rotated = rotate_image_90_clockwise((Fl_RGB_Image *)resized_image);
+                piece_images.push_back(rotated);
             }
             else
             {
@@ -128,5 +143,4 @@ std::unordered_map<char, std::string> GameBoard::piece_map = {
     {'a', "assets/anubis_silver.png"},
     {'x', "assets/pharaoh_silver.png"},
     {'p', "assets/pyramid_silver.png"},
-    {'s', "assets/scarab_silver.png"}
-};
+    {'s', "assets/scarab_silver.png"}};
