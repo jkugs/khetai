@@ -1,8 +1,8 @@
 #include "game_board.h"
-#include "image_util.h"
 
 #include <FL/fl_draw.H>
 #include <FL/Fl.H>
+#include <iostream>
 
 GameBoard::GameBoard(int X, int Y, int W, int H, const char *L) : Fl_Widget(X, Y, W, H, L)
 {
@@ -59,7 +59,7 @@ void GameBoard::draw()
             {
                 piece_images[piece_index]->draw(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height);
 
-                // debugging image drawing                
+                // debugging images
                 /*fl_color(FL_YELLOW); // Highlight color
                 fl_rectf(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height); // Fill the cell
                 piece_images[piece_index]->draw(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height);
@@ -111,19 +111,16 @@ void GameBoard::init(const std::vector<std::vector<std::string>> &pieces)
             if (piece != "--")
             {
                 char piece_type = piece[0];
+                int direction = piece[1] - '0';
                 std::string filename;
 
                 auto it = GameBoard::piece_map.find(piece_type);
-                filename = it->second;
+                filename = getPieceFilename(piece_type, direction);
 
                 Fl_PNG_Image *orig_image = new Fl_PNG_Image(filename.c_str());
                 Fl_Image *resized_image = orig_image->copy(cell_width, cell_height);
                 delete orig_image;
-                // piece_images.push_back(resized_image);
-
-                // temp rotate test
-                Fl_Image *rotated = rotate_image_90_clockwise((Fl_RGB_Image *)resized_image);
-                piece_images.push_back(rotated);
+                piece_images.push_back(resized_image);
             }
             else
             {
@@ -133,14 +130,26 @@ void GameBoard::init(const std::vector<std::vector<std::string>> &pieces)
     }
 }
 
+std::string GameBoard::getPieceFilename(char piece, int direction)
+{
+    static const std::string directions[] = {"_n.png", "_e.png", "_s.png", "_w.png"};
+
+    if (piece == 'X' || piece == 'x')
+    {
+        return piece_map[piece] + ".png";
+    }
+
+    return piece_map[piece] + directions[direction];
+}
+
 std::unordered_map<char, std::string> GameBoard::piece_map = {
-    {'L', "assets/laser_red.png"},
-    {'A', "assets/anubis_red.png"},
-    {'X', "assets/pharaoh_red.png"},
-    {'P', "assets/pyramid_red.png"},
-    {'S', "assets/scarab_red.png"},
-    {'l', "assets/laser_silver.png"},
-    {'a', "assets/anubis_silver.png"},
-    {'x', "assets/pharaoh_silver.png"},
-    {'p', "assets/pyramid_silver.png"},
-    {'s', "assets/scarab_silver.png"}};
+    {'L', "assets/laser_red"},
+    {'A', "assets/anubis_red"},
+    {'X', "assets/pharaoh_red"},
+    {'P', "assets/pyramid_red"},
+    {'S', "assets/scarab_red"},
+    {'l', "assets/laser_silver"},
+    {'a', "assets/anubis_silver"},
+    {'x', "assets/pharaoh_silver"},
+    {'p', "assets/pyramid_silver"},
+    {'s', "assets/scarab_silver"}};

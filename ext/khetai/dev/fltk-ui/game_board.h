@@ -14,6 +14,7 @@ public:
     void draw() override;
     int handle(int event) override;
     void init(const std::vector<std::vector<std::string>>& pieces);
+    static std::string getPieceFilename(char piece, int direction);
 
 private:
     int rows, cols, cell_width, cell_height, clicked_row, clicked_col;
