@@ -14,6 +14,7 @@ public:
     void draw() override;
     int handle(int event) override;
     void init(const std::vector<std::vector<std::string>>& pieces);
+
     static std::string getPieceFilename(char piece, int direction);
 
 private:
@@ -24,6 +25,10 @@ private:
     std::vector<Fl_Image*> piece_images;
 
     static std::unordered_map<char, std::string> piece_map;
+    static std::unordered_map<int, int> rotate_left_map;
+    static std::unordered_map<int, int> rotate_right_map;
+
+    void rotateSelectedPiece(bool clockwise);
 };
 
 #endif

@@ -45,8 +45,8 @@ void GameBoard::draw()
     // highlight selected square
     if (square_selected)
     {
-        fl_color(FL_BLUE);
-        fl_rectf(x() + clicked_col * cell_width, y() + clicked_row * cell_height, cell_width, cell_height);
+        fl_color(FL_YELLOW);
+        fl_rectf((x() + clicked_col * cell_width) + 1, (y() + clicked_row * cell_height) + 1, cell_width - 1, cell_height - 1);
     }
 
     // draw pieces
@@ -58,13 +58,6 @@ void GameBoard::draw()
             if (piece_images[piece_index] != nullptr)
             {
                 piece_images[piece_index]->draw(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height);
-
-                // debugging images
-                /*fl_color(FL_YELLOW); // Highlight color
-                fl_rectf(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height); // Fill the cell
-                piece_images[piece_index]->draw(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height);
-                fl_color(FL_RED); // Border color for debugging
-                fl_rect(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height); // Draw the cell border*/
             }
         }
     }
@@ -72,7 +65,10 @@ void GameBoard::draw()
 
 int GameBoard::handle(int event)
 {
-    if (event == FL_PUSH)
+    // std::cout << "EVENT: " event << std::endl;
+    switch (event)
+    {
+    case FL_PUSH:
     {
         int clicked_x = Fl::event_x() - x();
         int clicked_y = Fl::event_y() - y();
@@ -80,7 +76,7 @@ int GameBoard::handle(int event)
         clicked_col = clicked_x / cell_width;
         clicked_row = clicked_y / cell_height;
 
-        int clicked_num = (clicked_row * rows) + clicked_col;
+        int clicked_num = (clicked_row * cols) + clicked_col;
 
         if (square_selected && square_selected_num == clicked_num)
         {
@@ -95,6 +91,32 @@ int GameBoard::handle(int event)
 
         redraw();
         return 1;
+    }
+    case FL_KEYUP:
+    {
+        int key = Fl::event_key();
+        if (square_selected)
+        {
+            switch (key)
+            {
+            case FL_Left:
+            {
+                rotateSelectedPiece(false);
+                break;
+            }
+            case FL_Right:
+            {
+                rotateSelectedPiece(true);
+                break;
+            }
+            }
+        }
+
+        redraw();
+        return 1;
+    }
+    default:
+        break;
     }
 
     return Fl_Widget::handle(event);
@@ -114,7 +136,6 @@ void GameBoard::init(const std::vector<std::vector<std::string>> &pieces)
                 int direction = piece[1] - '0';
                 std::string filename;
 
-                auto it = GameBoard::piece_map.find(piece_type);
                 filename = getPieceFilename(piece_type, direction);
 
                 Fl_PNG_Image *orig_image = new Fl_PNG_Image(filename.c_str());
@@ -142,6 +163,44 @@ std::string GameBoard::getPieceFilename(char piece, int direction)
     return piece_map[piece] + directions[direction];
 }
 
+void GameBoard::rotateSelectedPiece(bool clockwise)
+{
+    if (square_selected_num == -1)
+        return;
+
+    delete piece_images[square_selected_num];
+    piece_images[square_selected_num] = nullptr;
+
+    int row = square_selected_num / cols;
+    int col = square_selected_num % cols;
+
+    std::string current_piece = board_pieces[row][col];
+    char piece_type = current_piece[0];
+    int current_direction = std::stoi(current_piece.substr(1));
+
+    int new_direction;
+    std::string new_piece;
+
+    if (clockwise)
+    {
+        new_direction = rotate_right_map[current_direction];
+    }
+    else
+    {
+        new_direction = rotate_left_map[current_direction];
+    }
+
+    new_piece = piece_type + std::to_string(new_direction);
+    board_pieces[row][col] = new_piece;
+
+    std::string filename;
+    filename = getPieceFilename(piece_type, new_direction);
+    Fl_PNG_Image *orig_image = new Fl_PNG_Image(filename.c_str());
+    Fl_Image *resized_image = orig_image->copy(cell_width, cell_height);
+    delete orig_image;
+    piece_images[square_selected_num] = resized_image;
+}
+
 std::unordered_map<char, std::string> GameBoard::piece_map = {
     {'L', "assets/laser_red"},
     {'A', "assets/anubis_red"},
@@ -153,3 +212,9 @@ std::unordered_map<char, std::string> GameBoard::piece_map = {
     {'x', "assets/pharaoh_silver"},
     {'p', "assets/pyramid_silver"},
     {'s', "assets/scarab_silver"}};
+
+std::unordered_map<int, int> GameBoard::rotate_left_map = {
+    {0, 3}, {3, 2}, {2, 1}, {1, 0}};
+
+std::unordered_map<int, int> GameBoard::rotate_right_map = {
+    {0, 1}, {1, 2}, {2, 3}, {3, 0}};
