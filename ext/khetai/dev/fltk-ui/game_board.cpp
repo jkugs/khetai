@@ -6,17 +6,8 @@
 
 GameBoard::GameBoard(int X, int Y, int W, int H, const char *L) : Fl_Widget(X, Y, W, H, L)
 {
-    rows = 8;
-    cols = 10;
-
     cell_width = w() / cols;
     cell_height = h() / rows;
-
-    square_selected = false;
-    square_selected_num = -1;
-
-    clicked_col = -1;
-    clicked_row = -1;
 }
 
 void GameBoard::draw()
@@ -47,6 +38,16 @@ void GameBoard::draw()
     {
         fl_color(FL_YELLOW);
         fl_rectf((x() + clicked_col * cell_width) + 1, (y() + clicked_row * cell_height) + 1, cell_width - 1, cell_height - 1);
+    }
+
+    // draw laser
+    if (laser_active)
+    {
+        fl_color(FL_RED);
+        for (auto &segment : laser_path)
+        {
+            fl_line(std::get<0>(segment), std::get<1>(segment), std::get<2>(segment), std::get<3>(segment));
+        }
     }
 
     // draw pieces
@@ -109,6 +110,9 @@ int GameBoard::handle(int event)
                 rotateSelectedPiece(true);
                 break;
             }
+            case ' ':
+                fireLaser();
+                break;
             }
         }
 
@@ -199,6 +203,61 @@ void GameBoard::rotateSelectedPiece(bool clockwise)
     Fl_Image *resized_image = orig_image->copy(cell_width, cell_height);
     delete orig_image;
     piece_images[square_selected_num] = resized_image;
+}
+
+// TODO: this function needs reflection logic...
+void GameBoard::fireLaser()
+{
+    laser_active = true;
+    laser_path.clear();
+
+    // bottom right position
+    int current_row = rows - 1;
+    int current_col = cols - 1;
+
+    // calculate the start and end points of the current segment
+    int start_x = x() + (current_col * cell_width) + (cell_width / 2);
+    int start_y = y() + (current_row * cell_height) + (cell_height / 2);
+    int end_x = start_x;
+    int end_y = start_y - laser_step;
+
+    // add the segment to the path
+    laser_path.push_back(std::make_tuple(start_x, start_y, end_x, end_y));
+    laser_y = end_y;
+
+    Fl::add_timeout(0.01, laser_timer_cb, this);
+}
+
+void GameBoard::updateLaserPosition()
+{
+    if (laser_y <= y())
+    {
+        laser_active = false;
+        laser_path.clear();
+        redraw();
+        return;
+    }
+
+    auto last_segment = laser_path.back();
+    int start_x = std::get<0>(last_segment);
+    int start_y = std::get<1>(last_segment);
+    int end_x = std::get<2>(last_segment);
+    int end_y = laser_y; // Update the end y position progressively
+
+    laser_path.push_back(std::make_tuple(end_x, start_y, end_x, end_y));
+    laser_y -= laser_step;
+
+    redraw();
+}
+
+void GameBoard::laser_timer_cb(void *data)
+{
+    GameBoard *gb = static_cast<GameBoard *>(data);
+    if (gb->laser_active)
+    {
+        gb->updateLaserPosition();
+        Fl::repeat_timeout(0.01, laser_timer_cb, data); // Repeat the timeout every 10 ms for smoother animation
+    }
 }
 
 std::unordered_map<char, std::string> GameBoard::piece_map = {
