@@ -84,6 +84,10 @@ int GameBoard::handle(int event)
             square_selected = false;
             square_selected_num = -1;
         }
+        // else if (square_selected && square_selected_num != clicked_num)
+        //{
+        //     // TODO: move piece...
+        // }
         else
         {
             square_selected = true;
@@ -111,7 +115,14 @@ int GameBoard::handle(int event)
                 break;
             }
             case ' ':
-                fireLaser();
+                if (square_selected_num == 0)
+                {
+                    fireLaser(RED);
+                }
+                else if (square_selected_num == 79)
+                {
+                    fireLaser(SILVER);
+                }
                 break;
             }
         }
@@ -205,32 +216,114 @@ void GameBoard::rotateSelectedPiece(bool clockwise)
     piece_images[square_selected_num] = resized_image;
 }
 
-// TODO: this function needs reflection logic...
-void GameBoard::fireLaser()
+void GameBoard::fireLaser(Color color)
 {
     laser_active = true;
     laser_path.clear();
 
-    // bottom right position
-    int current_row = rows - 1;
-    int current_col = cols - 1;
+    int start_x;
+    int start_y;
+    int end_x;
+    int end_y;
 
-    // calculate the start and end points of the current segment
-    int start_x = x() + (current_col * cell_width) + (cell_width / 2);
-    int start_y = y() + (current_row * cell_height) + (cell_height / 2);
-    int end_x = start_x;
-    int end_y = start_y - laser_step;
+    if (color == RED)
+    {
+        std::string piece_str = board_pieces[0][0];
+        auto [piece_type, piece_orientation] = getPieceTypeAndOrientation(piece_str);
+
+        start_x = x() + (cell_width / 2);
+        start_y = y() + (cell_height / 2);
+
+        if (piece_orientation == ORIENT_EAST)
+        {
+
+            end_x = start_x + laser_step;
+            end_y = start_y;
+            laser_direction = EAST;
+            laser_square_row = 0;
+            laser_square_col = 0;
+        }
+        else if (piece_orientation == ORIENT_SOUTH)
+        {
+
+            end_x = start_x;
+            end_y = start_y + laser_step;
+            laser_direction = SOUTH;
+            laser_square_row = 0;
+            laser_square_col = 0;
+        }
+        else
+        {
+            laser_active = false;
+            return;
+        }
+    }
+    else if (color == SILVER)
+    {
+        int current_row = rows - 1;
+        int current_col = cols - 1;
+        std::string piece_str = board_pieces[current_row][current_col];
+        auto [piece_type, piece_orientation] = getPieceTypeAndOrientation(piece_str);
+
+        if (piece_orientation == ORIENT_WEST)
+        {
+            start_x = x() + (current_col * cell_width) + (cell_width / 2);
+            start_y = y() + (current_row * cell_height) + (cell_height / 2);
+            end_x = start_x -= laser_step;
+            end_y = start_y;
+            laser_direction = WEST;
+            laser_square_row = current_row;
+            laser_square_col = current_col;
+        }
+        else if (piece_orientation == ORIENT_NORTH)
+        {
+            start_x = x() + (current_col * cell_width) + (cell_width / 2);
+            start_y = y() + (current_row * cell_height) + (cell_height / 2);
+            end_x = start_x;
+            end_y = start_y - laser_step;
+            laser_direction = NORTH;
+            laser_square_row = current_row;
+            laser_square_col = current_col;
+        }
+        else
+        {
+            laser_active = false;
+            return;
+        }
+    }
+
+    calculateLaserPathSquares();
+    
+    // TEST CODE:
+    std::cout << "laser_path_squares = [";
+    for (size_t i = 0; i < laser_path_squares.size(); ++i)
+    {
+        std::apply([](auto &&...args)
+                   {
+                       std::cout << '(';
+                       ((std::cout << args << ", "), ...);
+                       std::cout << '\b' << '\b' << ')';
+                   },
+                   laser_path_squares[i]);
+        if (i != laser_path_squares.size() - 1)
+        {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]" << std::endl;
 
     // add the segment to the path
     laser_path.push_back(std::make_tuple(start_x, start_y, end_x, end_y));
     laser_y = end_y;
+    laser_x = end_x;
 
+    redraw();
     Fl::add_timeout(0.01, laser_timer_cb, this);
 }
 
 void GameBoard::updateLaserPosition()
 {
-    if (laser_y <= y())
+    if (laser_y >= y() + (rows * cell_height) || laser_y <= y() || laser_x >= x() + (cols * cell_width) || laser_x <= x())
     {
         laser_active = false;
         laser_path.clear();
@@ -238,15 +331,32 @@ void GameBoard::updateLaserPosition()
         return;
     }
 
+    // TODO: logic to determine direction based on reflections...
+
+    if (laser_direction == NORTH)
+    {
+        laser_y -= laser_step;
+    }
+    else if (laser_direction == SOUTH)
+    {
+        laser_y += laser_step;
+    }
+    else if (laser_direction == EAST)
+    {
+        laser_x += laser_step;
+    }
+    else if (laser_direction == WEST)
+    {
+        laser_x -= laser_step;
+    }
+
     auto last_segment = laser_path.back();
-    int start_x = std::get<0>(last_segment);
-    int start_y = std::get<1>(last_segment);
-    int end_x = std::get<2>(last_segment);
-    int end_y = laser_y; // Update the end y position progressively
+    int start_x = std::get<2>(last_segment);
+    int start_y = std::get<3>(last_segment);
+    int end_x = laser_x;
+    int end_y = laser_y;
 
-    laser_path.push_back(std::make_tuple(end_x, start_y, end_x, end_y));
-    laser_y -= laser_step;
-
+    laser_path.push_back(std::make_tuple(start_x, start_y, end_x, end_y));
     redraw();
 }
 
@@ -256,8 +366,141 @@ void GameBoard::laser_timer_cb(void *data)
     if (gb->laser_active)
     {
         gb->updateLaserPosition();
-        Fl::repeat_timeout(0.01, laser_timer_cb, data); // Repeat the timeout every 10 ms for smoother animation
+        Fl::repeat_timeout(0.01, laser_timer_cb, data);
     }
+}
+
+void GameBoard::calculateLaserPathSquares()
+{
+    laser_path_squares.clear();
+
+    int current_row = laser_square_row;
+    int current_col = laser_square_col;
+    LaserDirection direction = laser_direction;
+
+    bool calculating = true;
+    while (calculating)
+    {
+        int start_row = current_row;
+        int start_col = current_col;
+        int end_row = current_row;
+        int end_col = current_col;
+
+        switch (direction)
+        {
+        case NORTH:
+            end_row -= 1;
+            break;
+        case EAST:
+            end_col += 1;
+            break;
+        case SOUTH:
+            end_row += 1;
+            break;
+        case WEST:
+            end_col -= 1;
+            break;
+        }
+
+        // out of bounds?
+        if (end_row < 0 || end_row >= rows || end_col < 0 || end_col >= cols)
+        {
+            break;
+        }
+
+        laser_path_squares.push_back(std::make_tuple(start_row, start_col, end_row, end_col));
+
+        // determine next direction...
+        current_row = end_row;
+        current_col = end_col;
+
+        std::string piece_str = board_pieces[current_row][current_col];
+
+        if (piece_str == "--")
+        {
+            continue;
+        }
+
+        // next square contains a piece... determine what happens next...
+        auto [piece_type, piece_orientation] = getPieceTypeAndOrientation(piece_str);
+        auto reflection_result = reflections_map[direction][piece_type][piece_orientation];
+
+        switch (reflection_result)
+        {
+        case RESULT_ABSORBED:
+            calculating = false;
+            break;
+        case RESULT_DEAD:
+            remove_piece = true;
+            remove_row = current_row;
+            remove_col = remove_col;
+            calculating = false;
+            break;
+        case RESULT_EAST:
+            direction = EAST;
+            break;
+        case RESULT_WEST:
+            direction = WEST;
+            break;
+        case RESULT_SOUTH:
+            direction = SOUTH;
+            break;
+        case RESULT_NORTH:
+            direction = NORTH;
+            break;
+        }
+    }
+}
+
+std::pair<GameBoard::PieceType, GameBoard::PieceOrientation> GameBoard::getPieceTypeAndOrientation(const std::string &piece_str)
+{
+
+    char piece_char = std::toupper(piece_str[0]);
+    char orient_char = piece_str[1];
+
+    PieceType piece_type;
+    PieceOrientation piece_orientation;
+
+    switch (piece_char)
+    {
+    case 'P':
+        piece_type = PYRAMID;
+        break;
+    case 'A':
+        piece_type = ANUBIS;
+        break;
+    case 'S':
+        piece_type = SCARAB;
+        break;
+    case 'X':
+        piece_type = PHARAOH;
+        break;
+    case 'L':
+        piece_type = SPHINX;
+        break;
+    default:
+        throw std::invalid_argument("Invalid piece type");
+    }
+
+    switch (orient_char)
+    {
+    case '0':
+        piece_orientation = ORIENT_NORTH;
+        break;
+    case '1':
+        piece_orientation = ORIENT_EAST;
+        break;
+    case '2':
+        piece_orientation = ORIENT_SOUTH;
+        break;
+    case '3':
+        piece_orientation = ORIENT_WEST;
+        break;
+    default:
+        throw std::invalid_argument("Invalid piece orientation");
+    }
+
+    return std::make_pair(piece_type, piece_orientation);
 }
 
 std::unordered_map<char, std::string> GameBoard::piece_map = {
@@ -277,3 +520,9 @@ std::unordered_map<int, int> GameBoard::rotate_left_map = {
 
 std::unordered_map<int, int> GameBoard::rotate_right_map = {
     {0, 1}, {1, 2}, {2, 3}, {3, 0}};
+
+std::unordered_map<GameBoard::LaserDirection, std::unordered_map<GameBoard::PieceType, std::unordered_map<GameBoard::PieceOrientation, GameBoard::ReflectionResult>>> GameBoard::reflections_map = {
+    {GameBoard::NORTH, {{GameBoard::ANUBIS, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::PYRAMID, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_EAST}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_WEST}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::SCARAB, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_WEST}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_EAST}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_WEST}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_EAST}}}, {GameBoard::PHARAOH, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::SPHINX, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_ABSORBED}}}}},
+    {GameBoard::EAST, {{GameBoard::ANUBIS, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_ABSORBED}}}, {GameBoard::PYRAMID, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_SOUTH}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_NORTH}}}, {GameBoard::SCARAB, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_SOUTH}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_NORTH}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_SOUTH}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_NORTH}}}, {GameBoard::PHARAOH, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::SPHINX, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_ABSORBED}}}}},
+    {GameBoard::SOUTH, {{GameBoard::ANUBIS, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::PYRAMID, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_EAST}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_WEST}}}, {GameBoard::SCARAB, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_EAST}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_WEST}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_EAST}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_WEST}}}, {GameBoard::PHARAOH, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::SPHINX, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_ABSORBED}}}}},
+    {GameBoard::WEST, {{GameBoard::ANUBIS, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::PYRAMID, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_NORTH}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_SOUTH}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::SCARAB, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_NORTH}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_SOUTH}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_NORTH}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_SOUTH}}}, {GameBoard::PHARAOH, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_DEAD}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_DEAD}}}, {GameBoard::SPHINX, {{GameBoard::ORIENT_NORTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_EAST, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_SOUTH, GameBoard::RESULT_ABSORBED}, {GameBoard::ORIENT_WEST, GameBoard::RESULT_ABSORBED}}}}}};

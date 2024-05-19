@@ -2,7 +2,7 @@
 
 # Compiler settings - Can be customized.
 CXX = g++
-CXXFLAGS = -std=c++11 $(shell fltk-config --cxxflags)
+CXXFLAGS = -std=c++17 $(shell fltk-config --cxxflags)
 LDFLAGS = $(shell fltk-config --ldflags) -lfltk_images -lfltk_png -lfltk_z
 
 # Application name
