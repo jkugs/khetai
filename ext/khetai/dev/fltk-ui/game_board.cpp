@@ -269,7 +269,7 @@ void GameBoard::fireLaser(Color color)
         {
             start_x = x() + (current_col * cell_width) + (cell_width / 2);
             start_y = y() + (current_row * cell_height) + (cell_height / 2);
-            end_x = start_x -= laser_step;
+            end_x = start_x - laser_step;
             end_y = start_y;
             laser_direction = WEST;
             laser_square_row = current_row;
@@ -293,7 +293,6 @@ void GameBoard::fireLaser(Color color)
     }
 
     calculateLaserPathSquares();
-    
     // TEST CODE:
     std::cout << "laser_path_squares = [";
     for (size_t i = 0; i < laser_path_squares.size(); ++i)
@@ -302,8 +301,7 @@ void GameBoard::fireLaser(Color color)
                    {
                        std::cout << '(';
                        ((std::cout << args << ", "), ...);
-                       std::cout << '\b' << '\b' << ')';
-                   },
+                       std::cout << '\b' << '\b' << ')'; },
                    laser_path_squares[i]);
         if (i != laser_path_squares.size() - 1)
         {
@@ -311,6 +309,8 @@ void GameBoard::fireLaser(Color color)
         }
     }
     std::cout << "]" << std::endl;
+
+    l_idx = 0;
 
     // add the segment to the path
     laser_path.push_back(std::make_tuple(start_x, start_y, end_x, end_y));
@@ -332,6 +332,34 @@ void GameBoard::updateLaserPosition()
     }
 
     // TODO: logic to determine direction based on reflections...
+    std::tuple<int, int, int, int> current_segment = laser_path_squares[l_idx];
+    int goal_row = std::get<2>(current_segment);
+    int goal_col = std::get<3>(current_segment);
+
+    int goal_x = x() + (goal_col * cell_width) + (cell_width / 2);
+    int goal_y = y() + (goal_row * cell_height) + (cell_height / 2);
+
+    // std::cout << laser_y << std::endl;
+    // std::cout << goal_y << std::endl;
+
+    if (laser_x == goal_x && laser_y == goal_y)
+    {
+        // determine next direction...
+        l_idx++;
+        current_segment = laser_path_squares[l_idx];
+        auto [cur_row, cur_col, end_row, end_col] = current_segment;
+
+        if (cur_row == end_row)
+        {
+            laser_direction = (cur_col < end_col) ? EAST : WEST;
+        }
+        else
+        {
+            laser_direction = (cur_row < end_row) ? SOUTH : NORTH;
+        }
+        // std::cout << "row: " << goal_row << std::endl;
+        // std::cout << "col: " << goal_col << std::endl;
+    }
 
     if (laser_direction == NORTH)
     {
@@ -433,7 +461,7 @@ void GameBoard::calculateLaserPathSquares()
         case RESULT_DEAD:
             remove_piece = true;
             remove_row = current_row;
-            remove_col = remove_col;
+            remove_col = current_col;
             calculating = false;
             break;
         case RESULT_EAST:

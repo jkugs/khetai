@@ -61,11 +61,12 @@ private:
     int cell_width, cell_height;
     bool square_selected = false;
     bool laser_active = false;
-    int laser_step = 2;
+    int laser_step = 1;
     LaserDirection laser_direction;
     float laser_y, laser_x;
     bool remove_piece = false;
     int laser_square_row, laser_square_col, remove_row, remove_col;
+    int l_idx;
     std::vector<std::vector<std::string>> board_pieces;
     std::vector<Fl_Image *> piece_images;
     std::vector<std::tuple<int, int, int, int>> laser_path;
