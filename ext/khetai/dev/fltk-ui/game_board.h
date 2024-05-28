@@ -61,7 +61,7 @@ private:
     int cell_width, cell_height;
     bool square_selected = false;
     bool laser_active = false;
-    int laser_step = 1;
+    int laser_step = 2;
     LaserDirection laser_direction;
     float laser_y, laser_x;
     bool remove_piece = false;

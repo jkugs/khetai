@@ -342,9 +342,21 @@ void GameBoard::updateLaserPosition()
     // std::cout << laser_y << std::endl;
     // std::cout << goal_y << std::endl;
 
+    // if the laser steps beyond the middle of the square,
+    // set to exactly the middle
+    if (((laser_direction == NORTH && laser_y < goal_y) ||
+         (laser_direction == SOUTH && laser_y > goal_y) ||
+         (laser_direction == EAST && laser_x > goal_x) ||
+         (laser_direction == WEST && laser_x < goal_x)) &&
+        (l_idx < laser_path_squares.size()))
+    {
+        laser_x = goal_x;
+        laser_y = goal_y;
+    }
+
+    // determine next direction if we are at the middle of a square
     if (laser_x == goal_x && laser_y == goal_y)
     {
-        // determine next direction...
         l_idx++;
         current_segment = laser_path_squares[l_idx];
         auto [cur_row, cur_col, end_row, end_col] = current_segment;
@@ -361,21 +373,20 @@ void GameBoard::updateLaserPosition()
         // std::cout << "col: " << goal_col << std::endl;
     }
 
-    if (laser_direction == NORTH)
+    switch (laser_direction)
     {
+    case NORTH:
         laser_y -= laser_step;
-    }
-    else if (laser_direction == SOUTH)
-    {
+        break;
+    case SOUTH:
         laser_y += laser_step;
-    }
-    else if (laser_direction == EAST)
-    {
+        break;
+    case EAST:
         laser_x += laser_step;
-    }
-    else if (laser_direction == WEST)
-    {
+        break;
+    case WEST:
         laser_x -= laser_step;
+        break;
     }
 
     auto last_segment = laser_path.back();
