@@ -84,11 +84,19 @@ int GameBoard::handle(int event)
             square_selected = false;
             square_selected_num = -1;
         }
-        // else if (square_selected && square_selected_num != clicked_num)
-        //{
-        //     // TODO: move piece...
-        // }
-        else
+        else if (square_selected && square_selected_num != clicked_num &&
+                 squareContainsPiece(square_selected_num) && clicked_num != 0 && clicked_num != 79)
+        {
+            if (squareContainsPiece(clicked_num))
+            {
+                swapPieces(clicked_num);
+            }
+            else
+            {
+                moveSelectedPiece(clicked_num);
+            }
+        }
+        else if (squareContainsPiece(clicked_num))
         {
             square_selected = true;
             square_selected_num = clicked_num;
@@ -214,6 +222,102 @@ void GameBoard::rotateSelectedPiece(bool clockwise)
     Fl_Image *resized_image = orig_image->copy(cell_width, cell_height);
     delete orig_image;
     piece_images[square_selected_num] = resized_image;
+}
+
+void GameBoard::swapPieces(int swap_square)
+{
+    if (square_selected_num == -1)
+        return;
+
+    if (square_selected_num == 0 || square_selected_num == 79 ||
+        swap_square == 0 || swap_square == 79)
+    {
+        square_selected = true;
+        square_selected_num = swap_square;
+        return;
+    }
+
+    delete piece_images[square_selected_num];
+    piece_images[square_selected_num] = nullptr;
+
+    delete piece_images[swap_square];
+    piece_images[swap_square] = nullptr;
+
+    int first_row = square_selected_num / cols;
+    int first_col = square_selected_num % cols;
+
+    int second_row = swap_square / cols;
+    int second_col = swap_square % cols;
+
+    auto first = board_pieces[first_row][first_col];
+    auto second = board_pieces[second_row][second_col];
+
+    board_pieces[first_row][first_col] = second;
+    board_pieces[second_row][second_col] = first;
+
+    std::string piece_one = board_pieces[first_row][first_col];
+    char piece_one_type = piece_one[0];
+    int piece_one_direction = std::stoi(piece_one.substr(1));
+
+    std::string filename_one;
+    filename_one = getPieceFilename(piece_one_type, piece_one_direction);
+    Fl_PNG_Image *orig_image_one = new Fl_PNG_Image(filename_one.c_str());
+    Fl_Image *resized_image_one = orig_image_one->copy(cell_width, cell_height);
+    delete orig_image_one;
+    piece_images[square_selected_num] = resized_image_one;
+
+    std::string piece_two = board_pieces[second_row][second_col];
+    char piece_two_type = piece_two[0];
+    int piece_two_direction = std::stoi(piece_two.substr(1));
+
+    std::string filename_two;
+    filename_two = getPieceFilename(piece_two_type, piece_two_direction);
+    Fl_PNG_Image *orig_image_two = new Fl_PNG_Image(filename_two.c_str());
+    Fl_Image *resized_image_two = orig_image_two->copy(cell_width, cell_height);
+    delete orig_image_two;
+    piece_images[swap_square] = resized_image_two;
+
+    square_selected = false;
+    square_selected_num = -1;
+}
+
+void GameBoard::moveSelectedPiece(int end_square)
+{
+    if (square_selected_num == -1)
+        return;
+
+    if (square_selected_num == 0 || square_selected_num == 79)
+    {
+        square_selected = false;
+        square_selected_num = -1;
+        return;
+    }
+
+    delete piece_images[square_selected_num];
+    piece_images[square_selected_num] = nullptr;
+
+    int start_row = square_selected_num / cols;
+    int start_col = square_selected_num % cols;
+
+    int end_row = end_square / cols;
+    int end_col = end_square % cols;
+
+    board_pieces[end_row][end_col] = board_pieces[start_row][start_col];
+    board_pieces[start_row][start_col] = "--";
+
+    std::string current_piece = board_pieces[end_row][end_col];
+    char piece_type = current_piece[0];
+    int piece_direction = std::stoi(current_piece.substr(1));
+
+    std::string filename;
+    filename = getPieceFilename(piece_type, piece_direction);
+    Fl_PNG_Image *orig_image = new Fl_PNG_Image(filename.c_str());
+    Fl_Image *resized_image = orig_image->copy(cell_width, cell_height);
+    delete orig_image;
+    piece_images[end_square] = resized_image;
+
+    square_selected = false;
+    square_selected_num = -1;
 }
 
 void GameBoard::fireLaser(Color color)
@@ -357,6 +461,14 @@ void GameBoard::updateLaserPosition()
     // determine next direction if we are at the middle of a square
     if (laser_x == goal_x && laser_y == goal_y)
     {
+        if (l_idx >= laser_path_squares.size() - 1)
+        {
+            laser_active = false;
+            laser_path.clear();
+            redraw();
+            return;
+        }
+
         l_idx++;
         current_segment = laser_path_squares[l_idx];
         auto [cur_row, cur_col, end_row, end_col] = current_segment;
@@ -540,6 +652,13 @@ std::pair<GameBoard::PieceType, GameBoard::PieceOrientation> GameBoard::getPiece
     }
 
     return std::make_pair(piece_type, piece_orientation);
+}
+
+bool GameBoard::squareContainsPiece(int square_num)
+{
+    int row = square_num / cols;
+    int col = square_num % cols;
+    return board_pieces[row][col] != "--";
 }
 
 std::unordered_map<char, std::string> GameBoard::piece_map = {

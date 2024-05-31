@@ -78,9 +78,12 @@ private:
     static std::unordered_map<int, int> rotate_right_map;
 
     void rotateSelectedPiece(bool clockwise);
+    void moveSelectedPiece(int end_square);
+    void swapPieces(int swap_square);
     void fireLaser(Color color);
     void updateLaserPosition();
     void calculateLaserPathSquares();
+    bool squareContainsPiece(int square_num);
 };
 
 #endif
