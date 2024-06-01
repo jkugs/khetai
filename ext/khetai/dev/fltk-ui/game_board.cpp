@@ -108,20 +108,24 @@ int GameBoard::handle(int event)
     case FL_KEYUP:
     {
         int key = Fl::event_key();
-        if (square_selected)
+
+        if (key == 'r')
+        {
+            resetPieces();
+        }
+        else if (square_selected)
         {
             switch (key)
             {
             case FL_Left:
-            {
                 rotateSelectedPiece(false);
                 break;
-            }
             case FL_Right:
-            {
                 rotateSelectedPiece(true);
                 break;
-            }
+            case FL_Delete:
+                deletePiece();
+                break;
             case ' ':
                 if (square_selected_num == 0)
                 {
@@ -172,6 +176,54 @@ void GameBoard::init(const std::vector<std::vector<std::string>> &pieces)
             }
         }
     }
+}
+
+void GameBoard::resetPieces()
+{
+    for (Fl_Image *image : piece_images)
+    {
+        delete image;
+    }
+    piece_images.clear();
+
+    square_selected = false;
+    square_selected_num = -1;
+
+    std::vector<std::vector<std::string>> init_board = {
+        {"L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--"},
+        {"--", "--", "P2", "--", "--", "--", "--", "--", "--", "--"},
+        {"--", "--", "--", "p3", "--", "--", "--", "--", "--", "--"},
+        {"P0", "--", "p2", "--", "S2", "S3", "--", "P1", "--", "p3"},
+        {"P1", "--", "p3", "--", "s1", "s0", "--", "P0", "--", "p2"},
+        {"--", "--", "--", "--", "--", "--", "P1", "--", "--", "--"},
+        {"--", "--", "--", "--", "--", "--", "--", "p0", "--", "--"},
+        {"--", "--", "p3", "a0", "x0", "a0", "--", "--", "--", "l0"}};
+
+    init(init_board);
+}
+
+void GameBoard::deletePiece()
+{
+    if (square_selected_num == -1)
+        return;
+
+    if (square_selected_num == 0 || square_selected_num == 79)
+    {
+        square_selected = false;
+        square_selected_num = -1;
+        return;
+    }
+
+    delete piece_images[square_selected_num];
+    piece_images[square_selected_num] = nullptr;
+
+    int row = square_selected_num / cols;
+    int col = square_selected_num % cols;
+
+    board_pieces[row][col] = "--";
+
+    square_selected = false;
+    square_selected_num = -1;
 }
 
 std::string GameBoard::getPieceFilename(char piece, int direction)
@@ -397,7 +449,7 @@ void GameBoard::fireLaser(Color color)
     }
 
     calculateLaserPathSquares();
-    // TEST CODE:
+    // print path:
     std::cout << "laser_path_squares = [";
     for (size_t i = 0; i < laser_path_squares.size(); ++i)
     {
@@ -435,16 +487,12 @@ void GameBoard::updateLaserPosition()
         return;
     }
 
-    // TODO: logic to determine direction based on reflections...
     std::tuple<int, int, int, int> current_segment = laser_path_squares[l_idx];
     int goal_row = std::get<2>(current_segment);
     int goal_col = std::get<3>(current_segment);
 
     int goal_x = x() + (goal_col * cell_width) + (cell_width / 2);
     int goal_y = y() + (goal_row * cell_height) + (cell_height / 2);
-
-    // std::cout << laser_y << std::endl;
-    // std::cout << goal_y << std::endl;
 
     // if the laser steps beyond the middle of the square,
     // set to exactly the middle
@@ -481,8 +529,6 @@ void GameBoard::updateLaserPosition()
         {
             laser_direction = (cur_row < end_row) ? SOUTH : NORTH;
         }
-        // std::cout << "row: " << goal_row << std::endl;
-        // std::cout << "col: " << goal_col << std::endl;
     }
 
     switch (laser_direction)

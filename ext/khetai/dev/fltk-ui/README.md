@@ -19,6 +19,4 @@ The KhetAI Test Harness provides a GUI for interacting with the KhetAI library. 
   - **Right Arrow**: Rotate piece clockwise
 
 ### TODO:
-- Remove pieces (manually with delete key)
-- Reset pieces to original positions
 - Request move from KhetAI

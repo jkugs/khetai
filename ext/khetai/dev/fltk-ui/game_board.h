@@ -80,6 +80,8 @@ private:
     void rotateSelectedPiece(bool clockwise);
     void moveSelectedPiece(int end_square);
     void swapPieces(int swap_square);
+    void deletePiece();
+    void resetPieces();
     void fireLaser(Color color);
     void updateLaserPosition();
     void calculateLaserPathSquares();
