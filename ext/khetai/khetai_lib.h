@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+#include <ctime>
+#endif
+
 typedef uint8_t Square;
 typedef uint32_t Move;
 
@@ -102,7 +106,6 @@ void print_board();
 #ifdef __cplusplus
 }
 #endif
-
 
 Square str_to_square(char *str);
 void print_piece(Square s);
