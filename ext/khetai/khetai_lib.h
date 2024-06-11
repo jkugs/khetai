@@ -83,11 +83,29 @@ static const int on_board[120] = {
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-void setup_board(char *init_board[120]);
-Square str_to_square(char *str);
-void print_board();
-void print_piece(Square s);
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern time_t start_time;
+extern int max_time;
+
 void reset_undo();
+void init_zobrist();
+void setup_board(char *board[]);
+Move alphabeta_root(int depth, enum Player player);
+void make_move(Move move);
+void print_board();
+
+#ifdef __cplusplus
+}
+#endif
+
+
+Square str_to_square(char *str);
+void print_piece(Square s);
 
 void find_valid_moves(Move *valid_moves, int *vi);
 void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi);
@@ -95,12 +113,10 @@ void find_valid_scarab_moves(int i, Move *valid_moves, int *vi);
 void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi);
 void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi);
 
-Move alphabeta_root(int depth, enum Player player);
 int alphabeta(int depth, enum Player player, int alpha, int beta);
 int calculate_score();
 int distance_from_pharaoh(int i, int p);
 
-void make_move(Move move);
 void undo_move();
 void fire_laser(uint64_t *hash);
 bool is_move_legal(Move move);
@@ -161,15 +177,12 @@ static const int reflections[4][5][4] = {
      {Dead, Dead, Dead, Dead},
      {Absorbed, Absorbed, Absorbed, Absorbed}}};
 
-extern time_t start_time;
-extern int max_time;
 extern uint64_t keys[0xFF][120];
 extern uint64_t hashes[MAX_DEPTH];
 extern uint64_t turn_key;
 extern int move_num;
 extern bool checkmate;
 
-void init_zobrist();
 uint64_t get_board_hash();
 static uint64_t seed = 1070372;
 static inline uint64_t random_number()

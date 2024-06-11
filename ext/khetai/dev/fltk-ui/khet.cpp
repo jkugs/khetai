@@ -1,6 +1,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include "game_board.h"
+#include "../../khetai_lib.h"
 
 int main(int argc, char **argv)
 {
