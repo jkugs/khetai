@@ -53,8 +53,8 @@ public:
     };
 
     static std::string getPieceFilename(char piece, int direction);
-    static void laser_timer_cb(void *data);
     static std::pair<PieceType, PieceOrientation> getPieceTypeAndOrientation(const std::string &piece_str);
+    static void laser_timer_cb(void *data);
 
 private:
     int rows = 8, cols = 10, clicked_row = -1, clicked_col = -1, square_selected_num = -1;
