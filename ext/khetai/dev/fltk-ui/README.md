@@ -25,5 +25,8 @@ The KhetAI Test Harness provides a GUI for interacting with the KhetAI library. 
 
 ### TODO:
 
-- Modify the depth and search time from the UI.
 - Restrict user from moving pieces into illegal positions.
+  - Label colored squares.
+
+
+![board](assets/example_board.png)

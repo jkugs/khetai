@@ -3,6 +3,7 @@
 
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_PNG_Image.H>
+#include <FL/Fl_Input.H>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -11,6 +12,7 @@ class GameBoard : public Fl_Widget
 {
 public:
     GameBoard(int X, int Y, int W, int H, const char *L = 0);
+    Fl_Input *max_time_input, *max_depth_input;
     void draw() override;
     int handle(int event) override;
     void init(const std::vector<std::vector<std::string>> &pieces);

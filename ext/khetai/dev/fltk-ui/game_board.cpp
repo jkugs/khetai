@@ -118,7 +118,28 @@ int GameBoard::handle(int event)
         }
         else if (key == FL_Enter)
         {
-            Move move = call_ai_move(board_pieces, Red, 10, 5);
+            const char *max_time_value = max_time_input->value();
+            if (!max_time_value || max_time_value[0] == '\0')
+            {
+                max_time_input->value("5");
+                max_time_value = max_time_input->value();
+            }
+            int max_time = std::atoi(max_time_value);
+
+            const char *max_depth_value = max_depth_input->value();
+            if (!max_depth_value || max_depth_value[0] == '\0')
+            {
+                max_depth_input->value("10");
+                max_depth_value = max_depth_input->value();
+            }
+            int max_depth = std::atoi(max_depth_value);
+            if (max_depth < 2)
+            {
+                max_depth_input->value("2");
+                max_depth = 2;
+            }
+
+            Move move = call_ai_move(board_pieces, Red, max_depth, max_time);
             int start = get_start(move);
             int end = get_end(move);
             int rotation = get_rotation(move);
