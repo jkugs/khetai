@@ -23,10 +23,4 @@ The KhetAI Test Harness provides a GUI for interacting with the KhetAI library. 
 
 - **Enter**: Uses khetai_lib to determine a move for Red. The pieces will move and the laser will fire automatically once it finishes.
 
-### TODO:
-
-- Restrict user from moving pieces into illegal positions.
-  - Label colored squares.
-
-
 ![board](assets/example_board.png)

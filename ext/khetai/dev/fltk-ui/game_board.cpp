@@ -36,6 +36,9 @@ void GameBoard::draw()
         fl_line(x(), current_y, x() + w(), current_y);
     }
 
+    // Draw inner squares
+    drawInnerSquares();
+
     // highlight selected square
     if (square_selected)
     {
@@ -65,6 +68,45 @@ void GameBoard::draw()
             }
         }
     }
+}
+
+void GameBoard::drawInnerSquares()
+{
+    static const Fl_Color SILVER = fl_rgb_color(160, 160, 160);
+    static const Fl_Color DARK_RED = fl_rgb_color(178, 34, 34);
+    for (int row = 0; row < rows; ++row)
+    {
+        for (int col = 0; col < cols; ++col)
+        {
+            int padding_x = cell_width / 6;
+            int padding_y = cell_height / 6;
+            int square_width = cell_width - (2 * padding_x);
+            int square_height = cell_height - (2 * padding_y);
+
+            switch (move_permissions[row][col])
+            {
+            case S:
+                fl_color(SILVER);
+                fl_line_style(FL_SOLID, 1);
+                fl_rect(x() + col * cell_width + padding_x,
+                        y() + row * cell_height + padding_y,
+                        square_width,
+                        square_height);
+                break;
+            case R:
+                fl_color(DARK_RED);
+                fl_line_style(FL_SOLID, 1);
+                fl_rect(x() + col * cell_width + padding_x,
+                        y() + row * cell_height + padding_y,
+                        square_width,
+                        square_height);
+                break;
+            case B:
+                break;
+            }
+        }
+    }
+    fl_line_style(0);
 }
 
 int GameBoard::handle(int event)
@@ -811,4 +853,15 @@ std::unordered_map<GameBoard::LaserDirection, std::unordered_map<GameBoard::Piec
         {PHARAOH, {{ORIENT_NORTH, RESULT_DEAD}, {ORIENT_EAST, RESULT_DEAD}, {ORIENT_SOUTH, RESULT_DEAD}, {ORIENT_WEST, RESULT_DEAD}}},
         {SPHINX, {{ORIENT_NORTH, RESULT_ABSORBED}, {ORIENT_EAST, RESULT_ABSORBED}, {ORIENT_SOUTH, RESULT_ABSORBED}, {ORIENT_WEST, RESULT_ABSORBED}}}
     }}
+};
+
+const GameBoard::MovePermission GameBoard::move_permissions[8][10] = {
+    {B, S, B, B, B, B, B, B, R, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, S, B, B, B, B, B, B, R, B}
 };

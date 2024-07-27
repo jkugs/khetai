@@ -33,6 +33,7 @@ Move alphabeta_root(int depth, enum Player player)
     Move valid_moves[NUM_VALID_MOVES] = {0};
     int vi = 0;
     find_valid_moves(valid_moves, &vi);
+    // qsort(valid_moves, vi, sizeof(Move), compare_moves);
     for (int i = 0; i < NUM_VALID_MOVES; i++)
     {
         if (valid_moves[i] == 0)
@@ -51,6 +52,8 @@ Move alphabeta_root(int depth, enum Player player)
         if (alpha >= beta)
             break;
     }
+
+    printf("SCORE:\t%d\n", best_score);
     return best_move;
 }
 
@@ -89,8 +92,10 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     }
 
     find_valid_moves(valid_moves, &vi);
+    // qsort(valid_moves, vi, sizeof(Move), compare_moves);
     int best_score = -MAX_SCORE;
     Move best_move = (Move)0;
+
     for (int i = 0; (i < NUM_VALID_MOVES && (time(NULL) - start_time < max_time)); i++)
     {
         if (valid_moves[i] == 0)
@@ -144,6 +149,19 @@ void insert_table(uint64_t key, int depth, int flag, int score, Move move)
     }
 }
 
+int compare_moves(const void *a, const void *b)
+{
+    Move moveA = *(const Move *)a;
+    Move moveB = *(const Move *)b;
+    return score_move(moveB) - score_move(moveA);
+}
+
+int score_move(Move move)
+{
+    // TODO: efficient function to help sort moves
+    return 0;
+}
+
 int calculate_score()
 {
     int score = 0;
@@ -167,8 +185,9 @@ int calculate_score()
                 value += rand() % 20;
                 break;
             case Scarab:
-                value += (100 / distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))])) * 10;
-                value += rand() % 10;
+                int max_distance = 16;
+                int base_score = 1000;
+                value += (max_distance - distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))])) * base_score / max_distance;
                 break;
             case Pharaoh:
                 value += pharaoh_score;
@@ -375,14 +394,7 @@ void find_valid_scarab_moves(int i, Move *valid_moves, int *vi)
         int dest = i + directions[j];
         if (can_move[whose_turn][dest])
         {
-            if (is_piece(board[dest]))
-            {
-                if (get_piece(board[dest]) == Anubis || get_piece(board[dest]) == Pyramid)
-                {
-                    valid_moves[(*vi)++] = new_move(i, dest, 0);
-                }
-            }
-            else
+            if (!is_piece(board[dest]) || get_piece(board[dest]) != Pharaoh)
             {
                 valid_moves[(*vi)++] = new_move(i, dest, 0);
             }

@@ -87,21 +87,20 @@ static const int on_board[120] = {
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-
-
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-extern time_t start_time;
-extern int max_time;
+    extern time_t start_time;
+    extern int max_time;
 
-void reset_undo();
-void init_zobrist();
-void setup_board(char *board[]);
-Move alphabeta_root(int depth, enum Player player);
-void make_move(Move move);
-void print_board();
+    void reset_undo();
+    void init_zobrist();
+    void setup_board(char *board[]);
+    Move alphabeta_root(int depth, enum Player player);
+    void make_move(Move move);
+    void print_board();
 
 #ifdef __cplusplus
 }
@@ -115,6 +114,8 @@ void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi);
 void find_valid_scarab_moves(int i, Move *valid_moves, int *vi);
 void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi);
 void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi);
+int score_move(Move move);
+int compare_moves(const void *a, const void *b);
 
 int alphabeta(int depth, enum Player player, int alpha, int beta);
 int calculate_score();

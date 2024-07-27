@@ -53,6 +53,12 @@ public:
         RESULT_SOUTH,
         RESULT_NORTH
     };
+    enum MovePermission
+    {
+        S = 1,
+        R = 2,
+        B = 3
+    };
 
     static std::string getPieceFilename(char piece, int direction);
     static std::pair<PieceType, PieceOrientation> getPieceTypeAndOrientation(const std::string &piece_str);
@@ -78,7 +84,9 @@ private:
     static std::unordered_map<char, std::string> piece_map;
     static std::unordered_map<int, int> rotate_left_map;
     static std::unordered_map<int, int> rotate_right_map;
+    static const MovePermission move_permissions[8][10];
 
+    void drawInnerSquares();
     void rotateSelectedPiece(bool clockwise);
     void moveSelectedPiece(int end_square);
     void swapPieces(int swap_square);

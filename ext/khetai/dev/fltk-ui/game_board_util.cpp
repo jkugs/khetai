@@ -72,6 +72,7 @@ Move call_ai_move(const std::vector<std::vector<std::string>> &board_pieces, Pla
     Move current_move = (Move)0;
     while ((time(NULL) - start_time < max_time) && (depth <= max_depth))
     {
+        printf("LEVEL %d\t->\t", depth);
         best_move = current_move;
         current_move = alphabeta_root(depth, player);
         depth++;
