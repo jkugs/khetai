@@ -36,7 +36,7 @@ void GameBoard::draw()
         fl_line(x(), current_y, x() + w(), current_y);
     }
 
-    // Draw inner squares
+    // label spaces that only certain colors can move onto
     drawInnerSquares();
 
     // highlight selected square
