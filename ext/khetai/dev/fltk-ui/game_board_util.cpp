@@ -70,11 +70,15 @@ Move call_ai_move(const std::vector<std::vector<std::string>> &board_pieces, Pla
     int depth = 1;
     Move best_move = (Move)0;
     Move current_move = (Move)0;
-    while ((time(NULL) - start_time < max_time) && (depth <= max_depth))
+    while (depth <= max_depth)
     {
-        printf("LEVEL %d\t->\t", depth);
-        best_move = current_move;
+        printf("LEVEL: %-3d->   ", depth);
         current_move = alphabeta_root(depth, player);
+        printf("MOVE -> START: %d, END: %d, ROTATION: %d\n\n", get_start(current_move), get_end(current_move), get_rotation(current_move));
+        if ((time(NULL) - start_time < max_time))
+            best_move = current_move;
+        else
+            break;
         depth++;
     }
     make_move(best_move);
