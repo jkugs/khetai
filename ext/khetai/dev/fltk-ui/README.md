@@ -4,6 +4,10 @@
 
 The KhetAI Test Harness provides a GUI for interacting with the KhetAI library. It is built in C++ using the Fast Light Toolkit (FLTK).
 
+### Hot Reloading (in progress)
+
+Now compiling the Khet AI (C) functionality into a shared object and using that to call the AI from the GUI. The next step is to add a way to recompile it while the GUI is running.
+
 ### Select and Move Piece
 
 - **Click** a square with a piece on it.

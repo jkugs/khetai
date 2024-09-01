@@ -41,9 +41,11 @@ move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
 # move[2] = rotation (1, -1, 0) (clockwise, anticlockwise, none)
 ```
 
-## Development
-The internals of the gem are written in C, located in `ext/khetai`.
+The representation of the board gets converted an array of 8-bit integers once it is passed to the gem.
 
+## Development
+
+The internals of the gem are written in C, located in `ext/khetai`.
 
 ## Build and Deploy Commands
 
@@ -56,3 +58,11 @@ To release and push to rubygems.org:
 
     $ bundle exec rake release
     $ gem push pkg/<gem>
+
+## Manual Testing
+
+There is a GUI test harness written in C++ using FLTK available in the `ext/khetai/dev/fltk-ui` directory.
+
+### Why does this exist?
+
+To learn, build, and have fun.
