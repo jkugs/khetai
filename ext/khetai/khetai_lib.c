@@ -631,7 +631,6 @@ void print_piece(Square s)
         printf("--");
 }
 
-
 int get_start_wrapper(Move move) { return get_start(move); }
 int get_end_wrapper(Move move) { return get_end(move); }
 int get_rotation_wrapper(Move move) { return get_rotation(move); }

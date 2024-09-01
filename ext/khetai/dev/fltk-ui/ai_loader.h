@@ -18,15 +18,15 @@ public:
     void (*get_set_time_parameters())(int, time_t);
     Move (*get_alphabeta_root())(int, enum Player);
     void (*get_make_move())(Move);
-    int(*get_get_start())(Move);
-    int(*get_get_end())(Move);
-    int(*get_get_rotation())(Move);
+    int (*get_get_start())(Move);
+    int (*get_get_end())(Move);
+    int (*get_get_rotation())(Move);
     void reload_library(const std::string &lib_path);
 
 private:
     void *handle;
-    void load_library(const std::string& lib_path);
-    void *get_symbol(const std::string& symbol_name);
+    void load_library(const std::string &lib_path);
+    void *get_symbol(const std::string &symbol_name);
     void check_error();
 };
 
