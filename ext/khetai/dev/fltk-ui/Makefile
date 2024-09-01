@@ -3,9 +3,9 @@
 # Compiler settings - Can be customized.
 CXX = g++
 CC = gcc
-CXXFLAGS = -std=c++17 $(shell fltk-config --cxxflags)
-CFLAGS = -std=c11
-LDFLAGS = $(shell fltk-config --ldflags) -lfltk_images -lfltk_png -lfltk_z
+CXXFLAGS = -std=c++17 $(shell fltk-config --cxxflags) -fPIC
+CFLAGS = -std=c11 -fPIC
+LDFLAGS = $(shell fltk-config --ldflags) -lfltk_images -lfltk_png -lfltk_z -ldl
 
 # Application name
 APP = khet
@@ -30,8 +30,11 @@ OBJ = $(OBJ_CPP) $(OBJ_C)
 # Header files
 DEPS = $(wildcard $(SRC_DIR)/*.h) ../../khetai_lib.h
 
+# AI Library
+AI_LIB = libkhetai.so
+
 # Default target
-all: $(BUILD_DIR) $(APP)
+all: $(BUILD_DIR) $(APP) $(AI_LIB)
 
 # Create the build directory
 $(BUILD_DIR):
@@ -50,9 +53,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEPS)
 $(BUILD_DIR)/%.o: ../../%.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
+# Compile AI library
+$(AI_LIB): $(OBJ_C)
+	$(CC) -shared -o $@ $^ $(CFLAGS)
+
 # Clean target
 clean:
-	rm -f $(OBJ) $(APP)
+	rm -f $(OBJ) $(APP) $(AI_LIB)
 	rm -rf $(BUILD_DIR)
 
 .PHONY: all clean

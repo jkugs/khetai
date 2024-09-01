@@ -3,8 +3,8 @@
 #include <iostream>
 #include <cstring>
 
-time_t start_time;
-int max_time;
+//time_t start_time;
+//int max_time;
 
 std::vector<std::string> flatten_2d_vector_with_buffer(const std::vector<std::vector<std::string>> &vec2d)
 {
@@ -54,8 +54,17 @@ void free_c_array(char **c_array, size_t size)
     delete[] c_array;
 }
 
-Move call_ai_move(const std::vector<std::vector<std::string>> &board_pieces, Player player, int max_depth, int _max_time)
+Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string>> &board_pieces, Player player, int max_depth, int _max_time)
 {
+    auto init_zobrist = ai_loader.get_init_zobrist();
+    auto setup_board = ai_loader.get_setup_board();
+    auto print_board = ai_loader.get_print_board();
+    auto alphabeta_root = ai_loader.get_alphabeta_root();
+    auto make_move = ai_loader.get_make_move();
+    auto get_start = ai_loader.get_get_start();
+    auto get_end = ai_loader.get_get_end();
+    auto get_rotation = ai_loader.get_get_rotation();
+
     char **c_board = vector_to_c_array(flatten_2d_vector_with_buffer(board_pieces));
 
     init_zobrist();

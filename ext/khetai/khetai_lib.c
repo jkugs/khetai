@@ -4,6 +4,12 @@
 #include <time.h>
 #include "khetai_lib.h"
 
+__attribute__((visibility("default"))) int max_time;
+__attribute__((visibility("default"))) time_t start_time;
+__attribute__((visibility("default"))) int get_start_wrapper(Move move) { return get_start(move); }
+__attribute__((visibility("default"))) int get_end_wrapper(Move move) { return get_end(move); }
+__attribute__((visibility("default"))) int get_rotation_wrapper(Move move) { return get_rotation(move); }
+
 Square board[120] = {0};
 int pharaoh_loc[2] = {0};
 enum Player whose_turn;
@@ -33,7 +39,7 @@ Move alphabeta_root(int depth, enum Player player)
     Move valid_moves[NUM_VALID_MOVES] = {0};
     int vi = 0;
     find_valid_moves(valid_moves, &vi);
-    //qsort(valid_moves, vi, sizeof(Move), compare_moves);
+    // qsort(valid_moves, vi, sizeof(Move), compare_moves);
     for (int i = 0; i < NUM_VALID_MOVES; i++)
     {
         if (valid_moves[i] == 0)
@@ -92,7 +98,7 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     }
 
     find_valid_moves(valid_moves, &vi);
-    //qsort(valid_moves, vi, sizeof(Move), compare_moves);
+    // qsort(valid_moves, vi, sizeof(Move), compare_moves);
     int best_score = -MAX_SCORE;
     Move best_move = (Move)0;
 

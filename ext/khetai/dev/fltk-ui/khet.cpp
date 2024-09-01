@@ -4,7 +4,6 @@
 #include <FL/Fl_Int_Input.H>
 #include <FL/Fl_Box.H>
 #include "game_board.h"
-#include "../../khetai_lib.h"
 
 class PositiveIntInput : public Fl_Int_Input
 {

@@ -7,7 +7,9 @@
 #include <iostream>
 #include <cstring>
 
-GameBoard::GameBoard(int X, int Y, int W, int H, const char *L) : Fl_Widget(X, Y, W, H, L)
+GameBoard::GameBoard(int X, int Y, int W, int H, const char *L)
+    : Fl_Widget(X, Y, W, H, L),
+      ai_loader("./libkhetai.so")
 {
     cell_width = w() / cols;
     cell_height = h() / rows;
@@ -181,7 +183,7 @@ int GameBoard::handle(int event)
                 max_depth = 2;
             }
 
-            Move move = call_ai_move(board_pieces, Red, max_depth, max_time);
+            Move move = call_ai_move(ai_loader, board_pieces, Red, max_depth, max_time);
             int start = get_start(move);
             int end = get_end(move);
             int rotation = get_rotation(move);

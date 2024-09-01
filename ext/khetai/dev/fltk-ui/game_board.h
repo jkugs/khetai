@@ -1,6 +1,8 @@
 #ifndef GAMEBOARD_H
 #define GAMEBOARD_H
 
+#include "ai_loader.h"
+
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Input.H>
@@ -65,11 +67,12 @@ public:
     static void laser_timer_cb(void *data);
 
 private:
+    AILoader ai_loader;
     int rows = 8, cols = 10, clicked_row = -1, clicked_col = -1, square_selected_num = -1;
     int cell_width, cell_height;
     bool square_selected = false;
     bool laser_active = false;
-    int laser_step = 2;
+    int laser_step = 3;
     LaserDirection laser_direction;
     float laser_y, laser_x;
     bool remove_piece = false;

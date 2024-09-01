@@ -136,6 +136,17 @@ static inline int get_start(Move m) { return m >> 1 & 0x7F; }
 static inline int get_end(Move m) { return m >> 8 & 0x7F; }
 static inline int get_rotation(Move m) { return (m >> 15 & 0x3) - 2; }
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+    __attribute__((visibility("default"))) int get_start_wrapper(Move move);
+    __attribute__((visibility("default"))) int get_end_wrapper(Move move);
+    __attribute__((visibility("default"))) int get_rotation_wrapper(Move move);
+#ifdef __cplusplus
+}
+#endif
+
 static inline Square rotate(Square s, int rotation)
 {
     int orientation = get_orientation(s);
