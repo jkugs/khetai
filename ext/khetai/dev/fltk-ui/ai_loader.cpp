@@ -62,6 +62,11 @@ void (*AILoader::get_print_board())()
     return reinterpret_cast<void (*)()>(get_symbol("print_board"));
 }
 
+void (*AILoader::get_set_time_parameters())(int, time_t)
+{
+    return reinterpret_cast<void (*)(int, time_t)>(get_symbol("set_time_parameters"));
+}
+
 Move (*AILoader::get_alphabeta_root())(int, enum Player)
 {
     return reinterpret_cast<Move (*)(int, enum Player)>(get_symbol("alphabeta_root"));

@@ -15,6 +15,7 @@ public:
     void (*get_init_zobrist())();
     void (*get_setup_board())(char **);
     void (*get_print_board())();
+    void (*get_set_time_parameters())(int, time_t);
     Move (*get_alphabeta_root())(int, enum Player);
     void (*get_make_move())(Move);
     int(*get_get_start())(Move);

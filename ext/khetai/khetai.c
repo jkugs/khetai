@@ -3,9 +3,6 @@
 #include <time.h>
 #include "khetai_lib.h"
 
-time_t start_time;
-int max_time;
-
 VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE max_depth, VALUE _max_time)
 {
     srand((unsigned)time(NULL));
@@ -22,8 +19,9 @@ VALUE move(VALUE self, VALUE board_array, VALUE player, VALUE max_depth, VALUE _
     init_zobrist();
     setup_board(init_board);
 
-    start_time = time(NULL);
-    max_time = NUM2INT(_max_time);
+    time_t start_time = time(NULL);
+    int max_time = NUM2INT(_max_time);
+    set_time_parameters(max_time, start_time);
 
     int depth = 1;
     Move best_move = (Move)0;

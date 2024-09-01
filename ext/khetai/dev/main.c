@@ -15,9 +15,6 @@ char *init_board[120] =
      "--", "--", "--", "p3", "a0", "x0", "a0", "--", "--", "--", "l0", "--",
      "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"};
 
-time_t start_time;
-int max_time;
-
 int main()
 {
     init_zobrist();
@@ -26,8 +23,9 @@ int main()
     setup_board(init_board);
     print_board();
 
-    start_time = time(NULL);
-    max_time = 5;
+    time_t start_time = time(NULL);
+    int max_time = 5;
+    set_time_parameters(max_time, start_time);
     int max_depth = 25;
 
     int depth = 1;

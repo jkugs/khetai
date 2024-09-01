@@ -4,11 +4,8 @@
 #include <time.h>
 #include "khetai_lib.h"
 
-__attribute__((visibility("default"))) int max_time;
-__attribute__((visibility("default"))) time_t start_time;
-__attribute__((visibility("default"))) int get_start_wrapper(Move move) { return get_start(move); }
-__attribute__((visibility("default"))) int get_end_wrapper(Move move) { return get_end(move); }
-__attribute__((visibility("default"))) int get_rotation_wrapper(Move move) { return get_rotation(move); }
+int max_time;
+time_t start_time;
 
 Square board[120] = {0};
 int pharaoh_loc[2] = {0};
@@ -632,4 +629,15 @@ void print_piece(Square s)
     }
     else
         printf("--");
+}
+
+
+int get_start_wrapper(Move move) { return get_start(move); }
+int get_end_wrapper(Move move) { return get_end(move); }
+int get_rotation_wrapper(Move move) { return get_rotation(move); }
+
+void set_time_parameters(int _max_time, time_t _start_time)
+{
+    max_time = _max_time;
+    start_time = _start_time;
 }

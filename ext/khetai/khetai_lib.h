@@ -87,14 +87,15 @@ static const int on_board[120] = {
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+extern time_t start_time;
+extern int max_time;
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    extern time_t start_time;
-    extern int max_time;
-
+    void set_time_parameters(int _max_time, time_t _start_time);
     void reset_undo();
     void init_zobrist();
     void setup_board(char *board[]);
@@ -140,9 +141,9 @@ static inline int get_rotation(Move m) { return (m >> 15 & 0x3) - 2; }
 extern "C"
 {
 #endif
-    __attribute__((visibility("default"))) int get_start_wrapper(Move move);
-    __attribute__((visibility("default"))) int get_end_wrapper(Move move);
-    __attribute__((visibility("default"))) int get_rotation_wrapper(Move move);
+    int get_start_wrapper(Move move);
+    int get_end_wrapper(Move move);
+    int get_rotation_wrapper(Move move);
 #ifdef __cplusplus
 }
 #endif

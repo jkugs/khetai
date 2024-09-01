@@ -1,7 +1,6 @@
 #ifndef GAME_BOARD_UTIL_H
 #define GAME_BOARD_UTIL_H
 
-#include "../../khetai_lib.h"
 #include "ai_loader.h"
 
 #include <vector>
