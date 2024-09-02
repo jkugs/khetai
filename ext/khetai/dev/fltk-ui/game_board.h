@@ -99,6 +99,7 @@ private:
     void updateLaserPosition();
     void calculateLaserPathSquares();
     bool squareContainsPiece(int square_num);
+    void rebuildReloadKhetAILib();
 };
 
 #endif

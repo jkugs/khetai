@@ -8,6 +8,8 @@
 /tmp/
 /build/
 /ext/khetai/dev/build/
+/ext/khetai/dev/fltk-ui/build/
+/ext/khetai/dev/fltk-ui/build_khetai/
 .vscode
 *.so
 *.o

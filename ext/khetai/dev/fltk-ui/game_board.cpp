@@ -155,6 +155,7 @@ int GameBoard::handle(int event)
     case FL_KEYUP:
     {
         int key = Fl::event_key();
+        int state = Fl::event_state();
 
         if (key == 'r')
         {
@@ -212,6 +213,11 @@ int GameBoard::handle(int event)
             }
 
             fireLaser(RED);
+        }
+        else if (key == 'k' && (state & FL_SHIFT))
+        {
+            rebuildReloadKhetAILib();
+            return 1;
         }
         else if (square_selected)
         {
@@ -807,6 +813,28 @@ bool GameBoard::squareContainsPiece(int square_num)
     return board_pieces[row][col] != "--";
 }
 
+void GameBoard::rebuildReloadKhetAILib()
+{
+    std::cout << "\nRebuilding and reloading KhetAI lib..." << std::endl;
+
+    int build_result = system("./build_khetai.sh");
+    if (build_result != 0)
+    {
+        std::cerr << "Failed to rebuild KhetAI" << std::endl;
+        return;
+    }
+
+    try
+    {
+        ai_loader.reload_library("./libkhetai.so");
+        std::cout << "KhetAI lib reloaded successfully" << std::endl;
+    }
+    catch (const std::runtime_error &e)
+    {
+        std::cerr << "Failed to reload KhetAI: " << e.what() << std::endl;
+    }
+}
+
 std::unordered_map<char, std::string> GameBoard::piece_map = {
     {'L', "assets/laser_red"},
     {'A', "assets/anubis_red"},
@@ -824,6 +852,16 @@ std::unordered_map<int, int> GameBoard::rotate_left_map = {
 
 std::unordered_map<int, int> GameBoard::rotate_right_map = {
     {0, 1}, {1, 2}, {2, 3}, {3, 0}};
+
+const GameBoard::MovePermission GameBoard::move_permissions[8][10] = {
+    {B, S, B, B, B, B, B, B, R, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, S, B, B, B, B, B, B, R, B}};
 
 // clang-format off
 std::unordered_map<GameBoard::LaserDirection, std::unordered_map<GameBoard::PieceType, std::unordered_map<GameBoard::PieceOrientation, GameBoard::ReflectionResult>>> GameBoard::reflections_map = {
@@ -855,15 +893,4 @@ std::unordered_map<GameBoard::LaserDirection, std::unordered_map<GameBoard::Piec
         {PHARAOH, {{ORIENT_NORTH, RESULT_DEAD}, {ORIENT_EAST, RESULT_DEAD}, {ORIENT_SOUTH, RESULT_DEAD}, {ORIENT_WEST, RESULT_DEAD}}},
         {SPHINX, {{ORIENT_NORTH, RESULT_ABSORBED}, {ORIENT_EAST, RESULT_ABSORBED}, {ORIENT_SOUTH, RESULT_ABSORBED}, {ORIENT_WEST, RESULT_ABSORBED}}}
     }}
-};
-
-const GameBoard::MovePermission GameBoard::move_permissions[8][10] = {
-    {B, S, B, B, B, B, B, B, R, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, S, B, B, B, B, B, B, R, B}
 };
