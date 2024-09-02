@@ -820,7 +820,7 @@ void GameBoard::rebuildReloadKhetAILib()
     int build_result = system("./build_khetai.sh");
     if (build_result != 0)
     {
-        std::cerr << "Failed to rebuild KhetAI" << std::endl;
+        std::cerr << "Failed to rebuild KhetAI lib" << std::endl;
         return;
     }
 
@@ -831,7 +831,7 @@ void GameBoard::rebuildReloadKhetAILib()
     }
     catch (const std::runtime_error &e)
     {
-        std::cerr << "Failed to reload KhetAI: " << e.what() << std::endl;
+        std::cerr << "Failed to reload KhetAI lib: " << e.what() << std::endl;
     }
 }
 
