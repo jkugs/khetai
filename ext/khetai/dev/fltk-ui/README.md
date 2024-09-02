@@ -4,9 +4,9 @@
 
 The KhetAI Test Harness provides a GUI for interacting with the KhetAI library. It is built in C++ using the Fast Light Toolkit (FLTK).
 
-### Hot Reloading (in progress)
+### Hot Reload KhetAI Lib
 
-Now compiling the Khet AI (C) functionality into a shared object and using that to call the AI from the GUI. The next step is to add a way to recompile it while the GUI is running.
+- While the GUI is running, you can edit the AI code and reload it into the app by pressing: `Shift + k`
 
 ### Select and Move Piece
 
@@ -16,15 +16,19 @@ Now compiling the Khet AI (C) functionality into a shared object and using that 
 ### Rotate Piece
 
 - **Arrow Keys**: Rotate a piece after it has been clicked. Use the following keys to rotate the selected piece:
-  - **Left Arrow**: Rotate piece counter-clockwise
-  - **Right Arrow**: Rotate piece clockwise
+  - `Left Arrow`: Rotate piece counter-clockwise
+  - `Right Arrow`: Rotate piece clockwise
 
 ### Fire the Laser
 
-- **Space**: Fires the laser from whichever is selected. This is just used for visualization purposes.
+- `Space`: Fires the laser from whichever is selected. This is just used for visualization purposes.
 
 ### Request AI Move
 
-- **Enter**: Uses khetai_lib to determine a move for Red. The pieces will move and the laser will fire automatically once it finishes.
+- `Enter`: Uses `khetai_lib` to determine a move for Red. The pieces will move and the laser will fire automatically once it finishes.
+
+### Reset Pieces
+
+- Reset all pieces back to their original places by pressing: `r`
 
 ![board](assets/example_board.png)
