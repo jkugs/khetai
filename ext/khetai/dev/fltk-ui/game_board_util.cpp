@@ -79,7 +79,7 @@ Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string
     Move current_move = (Move)0;
     while (depth <= max_depth)
     {
-        printf("\DEPTH: %-3d->   ", depth);
+        printf("\nDEPTH: %-3d->   ", depth);
         current_move = alphabeta_root(depth, player);
         printf("MOVE -> START: %d, END: %d, ROTATION: %d\n", get_start(current_move), get_end(current_move), get_rotation(current_move));
         if ((time(NULL) - start_time < max_time))

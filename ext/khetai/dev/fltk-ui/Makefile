@@ -1,10 +1,10 @@
-# Makefile for Khet FLTK Application
+# Makefile for both the C++ FLTK GUI and the KhetAI lib as a shared object
 
-# Compiler settings - Can be customized.
+# Compiler settings
 CXX = g++
 CC = gcc
-CXXFLAGS = -std=c++17 $(shell fltk-config --cxxflags) -fPIC
-CFLAGS = -std=c11 -fPIC
+CXXFLAGS = -std=c++17 $(shell fltk-config --cxxflags) -fPIC -MMD -MP
+CFLAGS = -std=c11 -fPIC -MMD -MP
 LDFLAGS = $(shell fltk-config --ldflags) -lfltk_images -lfltk_png -lfltk_z -ldl
 
 # Application name
@@ -27,9 +27,6 @@ OBJ_C = $(patsubst ../../%.c,$(BUILD_DIR)/%.o,$(SRC_C))
 # All object files
 OBJ = $(OBJ_CPP) $(OBJ_C)
 
-# Header files
-DEPS = $(wildcard $(SRC_DIR)/*.h) ../../khetai_lib.h
-
 # AI Library
 AI_LIB = libkhetai.so
 
@@ -45,8 +42,7 @@ $(APP): $(OBJ)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Compile C++ source files into object files
-# Include header files as dependencies
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEPS)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS)
 
 # Compile C source files into object files
@@ -57,9 +53,13 @@ $(BUILD_DIR)/%.o: ../../%.c
 $(AI_LIB): $(OBJ_C)
 	$(CC) -shared -o $@ $^ $(CFLAGS)
 
+# Include generated dependency files
+-include $(OBJ_CPP:.o=.d)
+-include $(OBJ_C:.o=.d)
+
 # Clean target
 clean:
-	rm -f $(OBJ) $(APP) $(AI_LIB)
+	rm -f $(OBJ) $(APP) $(AI_LIB) $(BUILD_DIR)/*.d
 	rm -rf $(BUILD_DIR)
 
 .PHONY: all clean
