@@ -69,6 +69,7 @@ Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string
     srand((unsigned)time(NULL));
 
     setup_board(c_board);
+    printf("\nStarting Board:\n");
     print_board();
 
     time_t start_time = time(NULL);
