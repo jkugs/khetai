@@ -56,6 +56,7 @@ Move alphabeta_root(int depth, enum Player player)
             break;
     }
 
+    // testing purposes (remove):
     printf("SCORE: %-10d\n", best_score);
     return best_move;
 }
