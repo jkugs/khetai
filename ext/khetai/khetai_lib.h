@@ -115,8 +115,6 @@ void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi);
 void find_valid_scarab_moves(int i, Move *valid_moves, int *vi);
 void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi);
 void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi);
-int score_move(Move move);
-int compare_moves(const void *a, const void *b);
 
 int alphabeta(int depth, enum Player player, int alpha, int beta);
 int calculate_score();
