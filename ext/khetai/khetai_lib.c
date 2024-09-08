@@ -36,7 +36,6 @@ Move alphabeta_root(int depth, enum Player player)
     Move valid_moves[NUM_VALID_MOVES] = {0};
     int vi = 0;
     find_valid_moves(valid_moves, &vi);
-    // qsort(valid_moves, vi, sizeof(Move), compare_moves);
     for (int i = 0; i < NUM_VALID_MOVES; i++)
     {
         if (valid_moves[i] == 0)
@@ -56,8 +55,8 @@ Move alphabeta_root(int depth, enum Player player)
             break;
     }
 
-    // testing purposes (remove):
-    printf("SCORE: %-10d\n", best_score);
+    // print final score for testing purposes:
+    // printf("SCORE: %-10d\n", best_score);
     return best_move;
 }
 
@@ -96,7 +95,6 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     }
 
     find_valid_moves(valid_moves, &vi);
-    // qsort(valid_moves, vi, sizeof(Move), compare_moves);
     int best_score = -MAX_SCORE;
     Move best_move = (Move)0;
 
@@ -151,19 +149,6 @@ void insert_table(uint64_t key, int depth, int flag, int score, Move move)
         entry->score = score;
         entry->move = move;
     }
-}
-
-int compare_moves(const void *a, const void *b)
-{
-    Move moveA = *(const Move *)a;
-    Move moveB = *(const Move *)b;
-    return score_move(moveB) - score_move(moveA);
-}
-
-int score_move(Move move)
-{
-    // TODO: function to help sort moves
-    return 0;
 }
 
 int calculate_score()

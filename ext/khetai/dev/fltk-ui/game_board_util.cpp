@@ -92,6 +92,7 @@ Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string
     make_move(best_move);
 
     printf("\n========================\n\n");
+    printf("Ending Board:\n");
     print_board();
 
     printf("\nDEPTH: %d\n", depth - 1);
