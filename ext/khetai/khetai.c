@@ -40,7 +40,7 @@ VALUE move(VALUE self, VALUE board_array, VALUE _player, VALUE _max_depth, VALUE
         VALUE element = rb_ary_entry(board_array, i);
         if (!RB_TYPE_P(element, T_STRING) || RSTRING_LEN(element) != 2)
         {
-            rb_raise(rb_eArgError, "each element in the board_array must be 2 characters");
+            rb_raise(rb_eArgError, "each element in board_array must be 2 characters");
         }
 
         // check if element in board_array is a valid string
@@ -56,7 +56,7 @@ VALUE move(VALUE self, VALUE board_array, VALUE _player, VALUE _max_depth, VALUE
         }
         if (!is_valid)
         {
-            rb_raise(rb_eArgError, "each element in the board_array must be a valid piece (example: 'p1') or empty ('--')");
+            rb_raise(rb_eArgError, "each element in board_array must be a valid piece (example: 'p1') or empty ('--')");
         }
     }
 
