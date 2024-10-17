@@ -10,5 +10,5 @@ board = ["L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--",
          "--", "--", "p3", "a0", "x0", "a0", "--", "--", "--", "l0"]
 
 
-move = KhetAI.move(board, 1, 6, 5)
+move = KhetAI.move(board, 1, 25, 5)
 puts move.to_s
