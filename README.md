@@ -51,16 +51,19 @@ The internals of the gem are written in C, located in `ext/khetai`.
     $ bundle exec rake build
     $ gem install pkg/khetai-<version>.gem
 
-Once tested and verified, bump the version number in `lib/khetai/version.rb`
+Once tested and verified, bump the version number in `lib/khetai/version.rb` and commit changes.
 
 To release and push to rubygems.org:
 
     $ bundle exec rake release
+
+To push a pre-built gem manually:
+
     $ gem push pkg/<gem>
 
 ## Manual Testing
 
-There is a GUI test harness written in C++ using FLTK available in the `ext/khetai/dev/fltk-ui` directory.
+There is a GUI test harness written in C++ using FLTK available in the [ext/khetai/dev/fltk-ui](/ext/khetai/dev/fltk-ui) directory.
 
 ### Why does this exist?
 
