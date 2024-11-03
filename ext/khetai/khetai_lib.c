@@ -11,6 +11,7 @@ Square board[120] = {0};
 int pharaoh_loc[2] = {0};
 enum Player whose_turn;
 enum Player starter;
+int initial_depth = 0;
 
 Move undo_moves[MAX_DEPTH] = {0};
 int undo_capture_indices[MAX_DEPTH] = {0};
@@ -29,6 +30,7 @@ Move alphabeta_root(int depth, enum Player player)
 {
     whose_turn = player;
     starter = player;
+    initial_depth = depth;
     int best_score = -MAX_SCORE;
     Move best_move = (Move)0;
     int alpha = -MAX_SCORE;
@@ -71,8 +73,10 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     int alpha_orig = alpha;
     Move valid_moves[NUM_VALID_MOVES] = {0};
     int vi = 0;
+
+    int table_depth = initial_depth - depth;
     HashEntry *entry = search_table(hashes[move_num]);
-    if (entry->key == hashes[move_num] && entry->depth >= depth)
+    if (entry->key == hashes[move_num] && entry->depth > table_depth)
     {
         if (entry->flag == EXACT)
             return entry->score;
@@ -123,19 +127,19 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     else if (best_score >= beta)
         flag = ALPHA;
 
-    insert_table(hashes[move_num], depth, flag, best_score, best_move);
+    
+    insert_table(entry, hashes[move_num], table_depth, flag, best_score, best_move);
     return best_score;
 }
 
-void insert_table(uint64_t key, int depth, int flag, int score, Move move)
+void insert_table(HashEntry *entry, uint64_t key, int table_depth, int flag, int score, Move move)
 {
-    HashEntry *entry = search_table(key);
     if (entry->key != 0)
     {
-        if (depth < entry->depth)
+        if (table_depth > entry->depth)
         {
             entry->key = key;
-            entry->depth = depth;
+            entry->depth = table_depth;
             entry->flag = flag;
             entry->score = score;
             entry->move = move;
@@ -144,7 +148,7 @@ void insert_table(uint64_t key, int depth, int flag, int score, Move move)
     else
     {
         entry->key = key;
-        entry->depth = depth;
+        entry->depth = table_depth;
         entry->flag = flag;
         entry->score = score;
         entry->move = move;
@@ -154,7 +158,7 @@ void insert_table(uint64_t key, int depth, int flag, int score, Move move)
 int calculate_score()
 {
     int score = 0;
-    int anubis_score = 500;
+    int anubis_score = 800;
     int pyramid_score = 1000;
     int pharaoh_score = 100000;
     for (int i = 0; i < 120; i++)

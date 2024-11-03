@@ -38,6 +38,7 @@ enum Orientation
 
 extern enum Player whose_turn;
 extern enum Player starter;
+extern int initial_depth;
 
 // north, east, south, west, diagonals
 static const int directions[8] = {-12, 1, 12, -1, (12 + 1), (12 - 1), (-12 + 1), (-12 - 1)};
@@ -223,6 +224,6 @@ typedef struct HashEntry
 
 extern HashEntry table[TABLE_SIZE];
 static inline HashEntry *search_table(uint64_t key) { return &table[key % TABLE_SIZE]; };
-void insert_table(uint64_t key, int depth, int flag, int score, Move move);
+void insert_table(HashEntry *entry, uint64_t key, int depth, int flag, int score, Move move);
 
 #endif // KHET_LIB_H_INCLUDED
