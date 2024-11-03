@@ -51,7 +51,7 @@ The internals of the gem are written in C, located in `ext/khetai`.
     $ bundle exec rake build
     $ gem install pkg/khetai-<version>.gem
 
-Once tested and verified, bump the version number in `Gemfile.lock`
+Once tested and verified, bump the version number in `lib/khetai/version.rb`
 
 To release and push to rubygems.org:
 
