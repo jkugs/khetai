@@ -23,7 +23,7 @@ uint64_t keys[0xFF][120] = {0};
 uint64_t turn_key = 0;
 
 int undo_index = 0;
-int move_num = 0;
+int hashes_index = 0;
 bool checkmate = false;
 
 Move alphabeta_root(int depth, enum Player player)
@@ -75,8 +75,8 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     int vi = 0;
 
     int table_depth = initial_depth - depth;
-    HashEntry *entry = search_table(hashes[move_num]);
-    if (entry->key == hashes[move_num] && entry->depth > table_depth)
+    HashEntry *entry = search_table(hashes[hashes_index]);
+    if (entry->key == hashes[hashes_index] && entry->depth > table_depth)
     {
         if (entry->flag == EXACT)
             return entry->score;
@@ -128,7 +128,7 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
         flag = ALPHA;
 
     
-    insert_table(entry, hashes[move_num], table_depth, flag, best_score, best_move);
+    insert_table(entry, hashes[hashes_index], table_depth, flag, best_score, best_move);
     return best_score;
 }
 
@@ -206,7 +206,7 @@ int distance_from_pharaoh(int i, int p)
 
 void make_move(Move move)
 {
-    uint64_t hash = hashes[move_num++];
+    uint64_t hash = hashes[hashes_index++];
 
     int start = get_start(move);
     // remove starting piece
@@ -248,7 +248,7 @@ void make_move(Move move)
     // testing that hashing works properly
     // printf("\nHASH:\t%lu\nBOARD:\t%lu\n", hash, get_board_hash());
 
-    hashes[move_num] = hash;
+    hashes[hashes_index] = hash;
     undo_index++;
 }
 
@@ -298,7 +298,7 @@ void fire_laser(uint64_t *hash)
 
 void undo_move()
 {
-    move_num--;
+    hashes_index--;
     undo_index--;
 
     Square captured = (Square)undo_capture_squares[undo_index];
@@ -471,7 +471,7 @@ void reset_undo()
 
 void setup_board(char *init_board[120])
 {
-    move_num = 0;
+    hashes_index = 0;
     uint64_t hash = 0;
     for (int i = 0; i < 120; i++)
     {
@@ -489,7 +489,7 @@ void setup_board(char *init_board[120])
             }
         }
     }
-    hashes[0] = hash;
+    hashes[hashes_index] = hash;
 
     for (int i = 0; i < TABLE_SIZE; i++)
     {

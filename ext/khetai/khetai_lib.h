@@ -195,7 +195,7 @@ static const int reflections[4][5][4] = {
 extern uint64_t keys[0xFF][120];
 extern uint64_t hashes[MAX_DEPTH];
 extern uint64_t turn_key;
-extern int move_num;
+extern int hashes_index;
 extern bool checkmate;
 
 uint64_t get_board_hash();
