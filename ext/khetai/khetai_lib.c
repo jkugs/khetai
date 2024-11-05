@@ -471,6 +471,7 @@ void reset_undo()
 
 void setup_board(char *init_board[120])
 {
+    move_num = 0;
     uint64_t hash = 0;
     for (int i = 0; i < 120; i++)
     {

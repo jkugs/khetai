@@ -54,6 +54,7 @@ void free_c_array(char **c_array, size_t size)
 Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string>> &board_pieces, Player player, int max_depth, int max_time)
 {
     auto init_zobrist = ai_loader.get_init_zobrist();
+    auto reset_undo = ai_loader.get_reset_undo();
     auto setup_board = ai_loader.get_setup_board();
     auto print_board = ai_loader.get_print_board();
     auto set_time_parameters = ai_loader.get_set_time_parameters();
@@ -65,6 +66,7 @@ Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string
 
     char **c_board = vector_to_c_array(flatten_2d_vector_with_buffer(board_pieces));
 
+    reset_undo();
     init_zobrist();
     srand((unsigned)time(NULL));
 
