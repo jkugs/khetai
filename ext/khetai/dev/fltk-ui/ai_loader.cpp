@@ -52,6 +52,11 @@ void (*AILoader::get_init_zobrist())()
     return reinterpret_cast<void (*)()>(get_symbol("init_zobrist"));
 }
 
+void (*AILoader::get_reset_undo())()
+{
+    return reinterpret_cast<void (*)()>(get_symbol("reset_undo"));
+}
+
 void (*AILoader::get_setup_board())(char **)
 {
     return reinterpret_cast<void (*)(char **)>(get_symbol("setup_board"));

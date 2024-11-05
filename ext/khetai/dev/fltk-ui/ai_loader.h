@@ -13,6 +13,7 @@ public:
     ~AILoader();
 
     void (*get_init_zobrist())();
+    void (*get_reset_undo())();
     void (*get_setup_board())(char **);
     void (*get_print_board())();
     void (*get_set_time_parameters())(int, time_t);
