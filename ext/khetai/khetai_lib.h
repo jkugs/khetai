@@ -208,11 +208,11 @@ static inline uint64_t random_number()
     return seed * 0x2545F4914F6CDD1DLL;
 }
 
-#define TABLE_SIZE 0x400000
+#define TABLE_SIZE 0x3FFFFF
 
 #define EXACT 0
-#define ALPHA 1
-#define BETA 2
+#define LOWERBOUND 1
+#define UPPERBOUND 2
 typedef struct HashEntry
 {
     uint64_t key;
@@ -225,5 +225,14 @@ typedef struct HashEntry
 extern HashEntry table[TABLE_SIZE];
 static inline HashEntry *search_table(uint64_t key) { return &table[key % TABLE_SIZE]; };
 void insert_table(HashEntry *entry, uint64_t key, int depth, int flag, int score, Move move);
+
+#define EPT 255
+typedef struct PieceTracker
+{
+    uint8_t positions[13];
+    uint8_t board_idx_position[120];
+} PieceTracker;
+extern PieceTracker piece_trackers[2];
+void init_piece_trackers();
 
 #endif // KHET_LIB_H_INCLUDED

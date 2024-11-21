@@ -17,6 +17,8 @@ Move undo_moves[MAX_DEPTH] = {0};
 int undo_capture_indices[MAX_DEPTH] = {0};
 Square undo_capture_squares[MAX_DEPTH] = {0};
 
+PieceTracker piece_trackers[2] = {0};
+
 HashEntry table[TABLE_SIZE] = {0};
 uint64_t hashes[MAX_DEPTH] = {0};
 uint64_t keys[0xFF][120] = {0};
@@ -76,26 +78,19 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
 
     int table_depth = initial_depth - depth;
     HashEntry *entry = search_table(hashes[hashes_index]);
-    if (entry->key == hashes[hashes_index] && entry->depth > table_depth)
+    if (entry->key == hashes[hashes_index] && entry->depth > table_depth && is_move_legal(entry->move))
     {
+        valid_moves[vi++] = entry->move;
+
         if (entry->flag == EXACT)
             return entry->score;
-        else if (entry->flag == ALPHA)
-        {
-            if (entry->score > alpha)
-                alpha = entry->score;
-        }
-        else
-        {
-            if (entry->score < beta)
-                beta = entry->score;
-        }
+        else if (entry->flag == LOWERBOUND && entry->score > alpha)
+            alpha = entry->score;
+        else if (entry->flag == UPPERBOUND && entry->score < beta)
+            beta = entry->score;
 
         if (alpha >= beta)
             return entry->score;
-
-        if (is_move_legal(entry->move))
-            valid_moves[vi++] = entry->move;
     }
 
     find_valid_moves(valid_moves, &vi);
@@ -123,29 +118,17 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
 
     int flag = EXACT;
     if (best_score <= alpha_orig)
-        flag = BETA;
+        flag = UPPERBOUND;
     else if (best_score >= beta)
-        flag = ALPHA;
+        flag = LOWERBOUND;
 
-    
     insert_table(entry, hashes[hashes_index], table_depth, flag, best_score, best_move);
     return best_score;
 }
 
 void insert_table(HashEntry *entry, uint64_t key, int table_depth, int flag, int score, Move move)
 {
-    if (entry->key != 0)
-    {
-        if (table_depth > entry->depth)
-        {
-            entry->key = key;
-            entry->depth = table_depth;
-            entry->flag = flag;
-            entry->score = score;
-            entry->move = move;
-        }
-    }
-    else
+    if (entry->key == 0 || table_depth > entry->depth)
     {
         entry->key = key;
         entry->depth = table_depth;
@@ -175,7 +158,6 @@ int calculate_score()
                 break;
             case Pyramid:
                 value += pyramid_score;
-                value += rand() % 20;
                 break;
             case Scarab:
                 int max_distance = 16;
@@ -222,7 +204,7 @@ void make_move(Move move)
     }
     else
     {
-        // remove ending piece if swapping
+        // remove ending piece
         if (is_piece(board[end]))
             hash ^= keys[board[end]][end];
 
@@ -232,9 +214,25 @@ void make_move(Move move)
         // add starting piece to end location
         hash ^= keys[board[end]][end];
 
+        // TODO: moving player piece tracker
+        enum Player moving_player = get_owner(moving_piece);
+        uint8_t pos = piece_trackers[moving_player].board_idx_position[start];
+        piece_trackers[moving_player].positions[pos] = end;
+        piece_trackers[moving_player].board_idx_position[start] = EPT;
+        piece_trackers[moving_player].board_idx_position[end] = pos;
+
         // add ending piece to start location if swapping
         if (is_piece(board[start]))
+        {
             hash ^= keys[board[start]][start];
+
+            // TODO: swapping player piece tracker
+            enum Player swapping_player = get_owner(board[start]);
+            uint8_t pos = piece_trackers[swapping_player].board_idx_position[end];
+            piece_trackers[swapping_player].positions[pos] = start;
+            piece_trackers[swapping_player].board_idx_position[end] = EPT;
+            piece_trackers[swapping_player].board_idx_position[start] = pos;
+        }
 
         if (get_piece(moving_piece) == Pharaoh)
             pharaoh_loc[get_owner(moving_piece)] = end;
@@ -274,6 +272,13 @@ void fire_laser(uint64_t *hash)
                         checkmate = true;
                     // remove piece
                     *hash ^= keys[s][i];
+
+                    // TODO: remove from get_owner(s) piece tracker
+                    enum Player remove_player = get_owner(s);
+                    uint8_t pos = piece_trackers[remove_player].board_idx_position[i];
+                    piece_trackers[remove_player].positions[pos] = EPT;
+                    piece_trackers[remove_player].board_idx_position[i] = EPT;
+
                     undo_capture_indices[undo_index] = i;
                     undo_capture_squares[undo_index] = s;
                     board[i] = (Square)0;
@@ -305,8 +310,19 @@ void undo_move()
     undo_capture_squares[undo_index] = 0;
     if (captured > 0)
     {
-        board[undo_capture_indices[undo_index]] = captured;
+        uint8_t board_pos = undo_capture_indices[undo_index];
+        board[board_pos] = captured;
         undo_capture_indices[undo_index] = 0;
+
+        // TODO: add to get_owner(captured) piece tracker
+        enum Player captured_player = get_owner(captured);
+        uint8_t *p = piece_trackers[captured_player].positions;
+        uint8_t *bip = piece_trackers[captured_player].board_idx_position;
+        int tracker_idx = 0;
+        while (p[tracker_idx] != EPT && tracker_idx < 13)
+            tracker_idx++;
+        p[tracker_idx] = board_pos;
+        bip[board_pos] = tracker_idx;
     }
 
     Move move = undo_moves[undo_index];
@@ -325,6 +341,22 @@ void undo_move()
         board[start] = board[end];
         board[end] = moving_piece;
 
+        // TODO: move get_owner(start) piece tracker
+        enum Player moving_player = get_owner(moving_piece);
+        uint8_t pos = piece_trackers[moving_player].board_idx_position[start];
+        piece_trackers[moving_player].positions[pos] = end;
+        piece_trackers[moving_player].board_idx_position[start] = EPT;
+        piece_trackers[moving_player].board_idx_position[end] = pos;
+        // if end has a piece, then it was a swap - move get_owner(end) piece tracker
+        if (board[start] != 0)
+        {
+            enum Player other_player = get_owner(board[start]);
+            uint8_t pos = piece_trackers[other_player].board_idx_position[end];
+            piece_trackers[other_player].positions[pos] = start;
+            piece_trackers[other_player].board_idx_position[end] = EPT;
+            piece_trackers[other_player].board_idx_position[start] = pos;
+        }
+
         if (get_piece(moving_piece) == Pharaoh)
             pharaoh_loc[get_owner(moving_piece)] = end;
     }
@@ -333,29 +365,28 @@ void undo_move()
 
 void find_valid_moves(Move *valid_moves, int *vi)
 {
-    for (int i = 0; i < 120; i++)
+    for (int i = 0; i < 13; i++)
     {
-        Square s = board[i];
-        enum Player piece_color = get_owner(s);
-        if (is_piece(s) && piece_color == whose_turn)
+        uint8_t board_pos = piece_trackers[whose_turn].positions[i];
+        if (board_pos != EPT)
         {
-            enum Piece piece = get_piece(s);
+            enum Piece piece = get_piece(board[board_pos]);
             switch (piece)
             {
             case Anubis:
-                find_valid_anubis_pyramid_moves(i, valid_moves, vi);
+                find_valid_anubis_pyramid_moves(board_pos, valid_moves, vi);
                 break;
             case Pyramid:
-                find_valid_anubis_pyramid_moves(i, valid_moves, vi);
+                find_valid_anubis_pyramid_moves(board_pos, valid_moves, vi);
                 break;
             case Scarab:
-                find_valid_scarab_moves(i, valid_moves, vi);
+                find_valid_scarab_moves(board_pos, valid_moves, vi);
                 break;
             case Pharaoh:
-                find_valid_pharaoh_moves(i, valid_moves, vi);
+                find_valid_pharaoh_moves(board_pos, valid_moves, vi);
                 break;
             case Sphinx:
-                find_valid_sphinx_moves(i, valid_moves, vi);
+                find_valid_sphinx_moves(board_pos, valid_moves, vi);
                 break;
             default:
                 break;
@@ -444,6 +475,37 @@ uint64_t get_board_hash()
     return hash;
 }
 
+void init_piece_trackers()
+{
+    int si = 0;
+    int ri = 0;
+
+    for (int i = 0; i < 120; i++)
+    {
+        Square s = board[i];
+        if (is_piece(s))
+        {
+            if (get_owner(s) == Silver)
+            {
+                piece_trackers[Silver].positions[si] = i;
+                piece_trackers[Silver].board_idx_position[i] = si;
+                si++;
+            }
+            else if (get_owner(s) == Red)
+            {
+                piece_trackers[Red].positions[ri] = i;
+                piece_trackers[Red].board_idx_position[i] = ri;
+                ri++;
+            }
+            else
+            {
+                piece_trackers[Silver].board_idx_position[i] = EPT;
+                piece_trackers[Red].board_idx_position[i] = EPT;
+            }
+        }
+    }
+}
+
 bool is_move_legal(Move move)
 {
     int start = get_start(move);
@@ -452,7 +514,7 @@ bool is_move_legal(Move move)
     {
         if (!is_piece(board[end]) || get_rotation(move) != 0)
             return true;
-        else if (is_piece(board[end]) && get_piece(board[start]) == Scarab && get_piece(board[end]) < 3)
+        else if (is_piece(board[end]) && get_piece(board[start]) == Scarab && get_piece(board[end]) <= 3)
             return true;
     }
     return false;
@@ -499,6 +561,8 @@ void setup_board(char *init_board[120])
         table[i].score = 0;
         table[i].move = 0;
     }
+
+    init_piece_trackers();
 }
 
 Square str_to_square(char *str)
