@@ -17,23 +17,23 @@ typedef uint32_t Move;
 
 enum Player
 {
-    Silver,
-    Red
+    SILVER,
+    RED
 };
 enum Piece
 {
-    Anubis = 1,
-    Pyramid = 2,
-    Scarab = 3,
-    Pharaoh = 4,
-    Sphinx = 5
+    ANUBIS = 1,
+    PYRAMID = 2,
+    SCARAB = 3,
+    PHARAOH = 4,
+    SPHINX = 5
 };
 enum Orientation
 {
-    North,
-    East,
-    South,
-    West
+    NORTH,
+    EAST,
+    SOUTH,
+    WEST
 };
 
 extern enum Player whose_turn;
@@ -158,39 +158,39 @@ static inline Square rotate(Square s, int rotation)
 
 static inline enum Player opposite_player(enum Player player)
 {
-    return player == Red ? Silver : Red;
+    return player == RED ? SILVER : RED;
 }
 
-#define Dead -1
-#define Absorbed -2
+#define DEAD -1
+#define ABSORBED -2
 
 // [laser direciton][piece type][piece orientation] = reflection result
 // anubis, pyramid, scarab, pharaoh, sphinx
 static const int reflections[4][5][4] = {
     {// North
-     {Dead, Dead, Absorbed, Dead},
-     {Dead, East, West, Dead},
-     {West, East, West, East},
-     {Dead, Dead, Dead, Dead},
-     {Absorbed, Absorbed, Absorbed, Absorbed}},
+     {DEAD, DEAD, ABSORBED, DEAD},
+     {DEAD, EAST, WEST, DEAD},
+     {WEST, EAST, WEST, EAST},
+     {DEAD, DEAD, DEAD, DEAD},
+     {ABSORBED, ABSORBED, ABSORBED, ABSORBED}},
     {// East
-     {Dead, Dead, Dead, Absorbed},
-     {Dead, Dead, South, North},
-     {South, North, South, North},
-     {Dead, Dead, Dead, Dead},
-     {Absorbed, Absorbed, Absorbed, Absorbed}},
+     {DEAD, DEAD, DEAD, ABSORBED},
+     {DEAD, DEAD, SOUTH, NORTH},
+     {SOUTH, NORTH, SOUTH, NORTH},
+     {DEAD, DEAD, DEAD, DEAD},
+     {ABSORBED, ABSORBED, ABSORBED, ABSORBED}},
     {// South
-     {Absorbed, Dead, Dead, Dead},
-     {East, Dead, Dead, West},
-     {East, West, East, West},
-     {Dead, Dead, Dead, Dead},
-     {Absorbed, Absorbed, Absorbed, Absorbed}},
+     {ABSORBED, DEAD, DEAD, DEAD},
+     {EAST, DEAD, DEAD, WEST},
+     {EAST, WEST, EAST, WEST},
+     {DEAD, DEAD, DEAD, DEAD},
+     {ABSORBED, ABSORBED, ABSORBED, ABSORBED}},
     {// West
-     {Dead, Absorbed, Dead, Dead},
-     {North, South, Dead, Dead},
-     {North, South, North, South},
-     {Dead, Dead, Dead, Dead},
-     {Absorbed, Absorbed, Absorbed, Absorbed}}};
+     {DEAD, ABSORBED, DEAD, DEAD},
+     {NORTH, SOUTH, DEAD, DEAD},
+     {NORTH, SOUTH, NORTH, SOUTH},
+     {DEAD, DEAD, DEAD, DEAD},
+     {ABSORBED, ABSORBED, ABSORBED, ABSORBED}}};
 
 extern uint64_t keys[0xFF][120];
 extern uint64_t hashes[MAX_DEPTH];

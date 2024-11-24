@@ -184,7 +184,7 @@ int GameBoard::handle(int event)
                 max_depth = 2;
             }
 
-            Move move = call_ai_move(ai_loader, board_pieces, Red, max_depth, max_time);
+            Move move = call_ai_move(ai_loader, board_pieces, Player::RED, max_depth, max_time);
             int start = get_start(move);
             int end = get_end(move);
             int rotation = get_rotation(move);

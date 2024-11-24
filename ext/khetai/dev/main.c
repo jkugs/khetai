@@ -33,7 +33,7 @@ int main()
     Move current_move = (Move)0;
     while (depth <= max_depth)
     {
-        current_move = alphabeta_root(depth, Red);
+        current_move = alphabeta_root(depth, RED);
         if (time(NULL) - start_time < max_time)
             best_move = current_move;
         else

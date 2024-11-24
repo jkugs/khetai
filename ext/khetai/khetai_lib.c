@@ -69,7 +69,7 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     whose_turn = player;
     if (depth == 0 || checkmate)
     {
-        return player == Red ? calculate_score() : -calculate_score();
+        return player == RED ? calculate_score() : -calculate_score();
     }
 
     int alpha_orig = alpha;
@@ -152,25 +152,25 @@ int calculate_score()
             int value = 0;
             switch (get_piece(s))
             {
-            case Anubis:
+            case ANUBIS:
                 value += anubis_score;
                 value -= distance_from_pharaoh(i, pharaoh_loc[get_owner(s)]) * 10;
                 break;
-            case Pyramid:
+            case PYRAMID:
                 value += pyramid_score;
                 break;
-            case Scarab:
+            case SCARAB:
                 int max_distance = 16;
                 int base_score = 1000;
                 value += (max_distance - distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))])) * base_score / max_distance;
                 break;
-            case Pharaoh:
+            case PHARAOH:
                 value += pharaoh_score;
                 break;
             default:
                 break;
             }
-            score += get_owner(s) == Red ? value : -value;
+            score += get_owner(s) == RED ? value : -value;
         }
     }
     return score;
@@ -196,6 +196,10 @@ void make_move(Move move)
     int end = get_end(move);
     int rotation = get_rotation(move);
 
+    // TODO: use these for piece tracker
+    Square start_piece = board[start];
+    Square end_piece = board[end];
+
     if (rotation != 0)
     {
         board[start] = rotate(board[start], rotation);
@@ -214,7 +218,6 @@ void make_move(Move move)
         // add starting piece to end location
         hash ^= keys[board[end]][end];
 
-        // TODO: moving player piece tracker
         enum Player moving_player = get_owner(moving_piece);
         uint8_t pos = piece_trackers[moving_player].board_idx_position[start];
         piece_trackers[moving_player].positions[pos] = end;
@@ -226,7 +229,6 @@ void make_move(Move move)
         {
             hash ^= keys[board[start]][start];
 
-            // TODO: swapping player piece tracker
             enum Player swapping_player = get_owner(board[start]);
             uint8_t pos = piece_trackers[swapping_player].board_idx_position[end];
             piece_trackers[swapping_player].positions[pos] = start;
@@ -234,7 +236,7 @@ void make_move(Move move)
             piece_trackers[swapping_player].board_idx_position[start] = pos;
         }
 
-        if (get_piece(moving_piece) == Pharaoh)
+        if (get_piece(moving_piece) == PHARAOH)
             pharaoh_loc[get_owner(moving_piece)] = end;
     }
 
@@ -266,14 +268,13 @@ void fire_laser(uint64_t *hash)
                 int piece = get_piece(s) - 1;
                 int orientation = get_orientation(s);
                 int result = reflections[laser_dir][piece][orientation];
-                if (result == Dead)
+                if (result == DEAD)
                 {
-                    if (get_piece(s) == Pharaoh)
+                    if (get_piece(s) == PHARAOH)
                         checkmate = true;
                     // remove piece
                     *hash ^= keys[s][i];
 
-                    // TODO: remove from get_owner(s) piece tracker
                     enum Player remove_player = get_owner(s);
                     uint8_t pos = piece_trackers[remove_player].board_idx_position[i];
                     piece_trackers[remove_player].positions[pos] = EPT;
@@ -284,7 +285,7 @@ void fire_laser(uint64_t *hash)
                     board[i] = (Square)0;
                     traversing = false;
                 }
-                else if (result == Absorbed)
+                else if (result == ABSORBED)
                 {
                     traversing = false;
                 }
@@ -303,6 +304,7 @@ void fire_laser(uint64_t *hash)
 
 void undo_move()
 {
+
     hashes_index--;
     undo_index--;
 
@@ -314,7 +316,6 @@ void undo_move()
         board[board_pos] = captured;
         undo_capture_indices[undo_index] = 0;
 
-        // TODO: add to get_owner(captured) piece tracker
         enum Player captured_player = get_owner(captured);
         uint8_t *p = piece_trackers[captured_player].positions;
         uint8_t *bip = piece_trackers[captured_player].board_idx_position;
@@ -331,6 +332,10 @@ void undo_move()
     int end = get_end(move);
     int rotation = get_rotation(move);
 
+    // TODO: use these for piece tracker
+    Square start_piece = board[start];
+    Square end_piece = board[end];
+
     if (rotation != 0)
     {
         board[start] = rotate(board[start], rotation);
@@ -341,13 +346,11 @@ void undo_move()
         board[start] = board[end];
         board[end] = moving_piece;
 
-        // TODO: move get_owner(start) piece tracker
         enum Player moving_player = get_owner(moving_piece);
         uint8_t pos = piece_trackers[moving_player].board_idx_position[start];
         piece_trackers[moving_player].positions[pos] = end;
         piece_trackers[moving_player].board_idx_position[start] = EPT;
         piece_trackers[moving_player].board_idx_position[end] = pos;
-        // if end has a piece, then it was a swap - move get_owner(end) piece tracker
         if (board[start] != 0)
         {
             enum Player other_player = get_owner(board[start]);
@@ -357,7 +360,7 @@ void undo_move()
             piece_trackers[other_player].board_idx_position[start] = pos;
         }
 
-        if (get_piece(moving_piece) == Pharaoh)
+        if (get_piece(moving_piece) == PHARAOH)
             pharaoh_loc[get_owner(moving_piece)] = end;
     }
     checkmate = false;
@@ -373,19 +376,19 @@ void find_valid_moves(Move *valid_moves, int *vi)
             enum Piece piece = get_piece(board[board_pos]);
             switch (piece)
             {
-            case Anubis:
+            case ANUBIS:
                 find_valid_anubis_pyramid_moves(board_pos, valid_moves, vi);
                 break;
-            case Pyramid:
+            case PYRAMID:
                 find_valid_anubis_pyramid_moves(board_pos, valid_moves, vi);
                 break;
-            case Scarab:
+            case SCARAB:
                 find_valid_scarab_moves(board_pos, valid_moves, vi);
                 break;
-            case Pharaoh:
+            case PHARAOH:
                 find_valid_pharaoh_moves(board_pos, valid_moves, vi);
                 break;
-            case Sphinx:
+            case SPHINX:
                 find_valid_sphinx_moves(board_pos, valid_moves, vi);
                 break;
             default:
@@ -418,7 +421,7 @@ void find_valid_scarab_moves(int i, Move *valid_moves, int *vi)
         int dest = i + directions[j];
         if (can_move[whose_turn][dest])
         {
-            if (!is_piece(board[dest]) || get_piece(board[dest]) != Pharaoh)
+            if (!is_piece(board[dest]) || (get_owner(board[dest]) != whose_turn && get_piece(board[dest]) != PHARAOH))
             {
                 valid_moves[(*vi)++] = new_move(i, dest, 0);
             }
@@ -446,7 +449,7 @@ void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi)
 {
     enum Player player = get_owner(board[i]);
     enum Orientation orientation = get_orientation(board[i]);
-    int rotation = player == Silver ? (orientation == North ? -1 : 1) : (orientation == South ? -1 : 1);
+    int rotation = player == SILVER ? (orientation == NORTH ? -1 : 1) : (orientation == SOUTH ? -1 : 1);
     valid_moves[(*vi)++] = new_move(i, i, rotation);
 }
 
@@ -477,6 +480,12 @@ uint64_t get_board_hash()
 
 void init_piece_trackers()
 {
+    for (int i = 0; i < 13; i++)
+    {
+        piece_trackers[SILVER].positions[i] = EPT;
+        piece_trackers[RED].positions[i] = EPT;
+    }
+
     int si = 0;
     int ri = 0;
 
@@ -485,23 +494,23 @@ void init_piece_trackers()
         Square s = board[i];
         if (is_piece(s))
         {
-            if (get_owner(s) == Silver)
+            if (get_owner(s) == SILVER)
             {
-                piece_trackers[Silver].positions[si] = i;
-                piece_trackers[Silver].board_idx_position[i] = si;
+                piece_trackers[SILVER].positions[si] = i;
+                piece_trackers[SILVER].board_idx_position[i] = si;
                 si++;
             }
-            else if (get_owner(s) == Red)
+            else if (get_owner(s) == RED)
             {
-                piece_trackers[Red].positions[ri] = i;
-                piece_trackers[Red].board_idx_position[i] = ri;
+                piece_trackers[RED].positions[ri] = i;
+                piece_trackers[RED].board_idx_position[i] = ri;
                 ri++;
             }
-            else
-            {
-                piece_trackers[Silver].board_idx_position[i] = EPT;
-                piece_trackers[Red].board_idx_position[i] = EPT;
-            }
+        }
+        else
+        {
+            piece_trackers[SILVER].board_idx_position[i] = EPT;
+            piece_trackers[RED].board_idx_position[i] = EPT;
         }
     }
 }
@@ -514,7 +523,7 @@ bool is_move_legal(Move move)
     {
         if (!is_piece(board[end]) || get_rotation(move) != 0)
             return true;
-        else if (is_piece(board[end]) && get_piece(board[start]) == Scarab && get_piece(board[end]) <= 3)
+        else if (is_piece(board[end]) && get_piece(board[start]) == SCARAB && get_piece(board[end]) <= 3)
             return true;
     }
     return false;
@@ -542,12 +551,12 @@ void setup_board(char *init_board[120])
         if (is_piece(s))
         {
             hash ^= keys[s][i];
-            if (get_piece(s) == Pharaoh)
+            if (get_piece(s) == PHARAOH)
             {
-                if (get_owner(s) == Silver)
-                    pharaoh_loc[Silver] = i;
-                else if (get_owner(s) == Red)
-                    pharaoh_loc[Red] = i;
+                if (get_owner(s) == SILVER)
+                    pharaoh_loc[SILVER] = i;
+                else if (get_owner(s) == RED)
+                    pharaoh_loc[RED] = i;
             }
         }
     }
@@ -574,31 +583,31 @@ Square str_to_square(char *str)
     if (str[0] != '-')
     {
         if (islower(str[0]))
-            player = Silver;
+            player = SILVER;
         else
-            player = Red;
+            player = RED;
 
         char p = tolower(str[0]);
         if (p == 'a')
-            piece = Anubis;
+            piece = ANUBIS;
         else if (p == 'p')
-            piece = Pyramid;
+            piece = PYRAMID;
         else if (p == 's')
-            piece = Scarab;
+            piece = SCARAB;
         else if (p == 'x')
-            piece = Pharaoh;
+            piece = PHARAOH;
         else
-            piece = Sphinx;
+            piece = SPHINX;
 
         char o = str[1];
         if (o == '0')
-            orientation = North;
+            orientation = NORTH;
         else if (o == '1')
-            orientation = East;
+            orientation = EAST;
         else if (o == '2')
-            orientation = South;
+            orientation = SOUTH;
         else
-            orientation = West;
+            orientation = WEST;
 
         return (Square)((int)player << 1 | (int)piece << 2 | (int)orientation << 5);
     }
@@ -625,36 +634,36 @@ void print_piece(Square s)
         enum Orientation orientation = get_orientation(s);
         switch (piece)
         {
-        case Anubis:
-            if (player == Silver)
+        case ANUBIS:
+            if (player == SILVER)
                 printf("a");
             else
                 printf("A");
             break;
 
-        case Pyramid:
-            if (player == Silver)
+        case PYRAMID:
+            if (player == SILVER)
                 printf("p");
             else
                 printf("P");
             break;
 
-        case Scarab:
-            if (player == Silver)
+        case SCARAB:
+            if (player == SILVER)
                 printf("s");
             else
                 printf("S");
             break;
 
-        case Pharaoh:
-            if (player == Silver)
+        case PHARAOH:
+            if (player == SILVER)
                 printf("x");
             else
                 printf("X");
             break;
 
-        case Sphinx:
-            if (player == Silver)
+        case SPHINX:
+            if (player == SILVER)
                 printf("l");
             else
                 printf("L");
@@ -665,16 +674,16 @@ void print_piece(Square s)
         }
         switch (orientation)
         {
-        case North:
+        case NORTH:
             printf("0");
             break;
-        case East:
+        case EAST:
             printf("1");
             break;
-        case South:
+        case SOUTH:
             printf("2");
             break;
-        case West:
+        case WEST:
             printf("3");
             break;
         default:
