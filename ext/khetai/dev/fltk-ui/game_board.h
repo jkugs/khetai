@@ -3,51 +3,45 @@
 
 #include "ai_loader.h"
 
-#include <FL/Fl_Widget.H>
-#include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_PNG_Image.H>
+#include <FL/Fl_Widget.H>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
-class GameBoard : public Fl_Widget
-{
-public:
+class GameBoard : public Fl_Widget {
+  public:
     GameBoard(int X, int Y, int W, int H, const char *L = 0);
     Fl_Input *max_time_input, *max_depth_input;
     void draw() override;
     int handle(int event) override;
     void init(const std::vector<std::vector<std::string>> &pieces);
 
-    enum Color
-    {
+    enum Color {
         SILVER = 1,
         RED = 2
     };
-    enum LaserDirection
-    {
+    enum LaserDirection {
         NORTH = 1,
         EAST = 2,
         SOUTH = 3,
         WEST = 4
     };
-    enum PieceType
-    {
+    enum PieceType {
         ANUBIS,
         PYRAMID,
         SCARAB,
         PHARAOH,
         SPHINX
     };
-    enum PieceOrientation
-    {
+    enum PieceOrientation {
         ORIENT_NORTH,
         ORIENT_EAST,
         ORIENT_SOUTH,
         ORIENT_WEST
     };
-    enum ReflectionResult
-    {
+    enum ReflectionResult {
         RESULT_DEAD,
         RESULT_ABSORBED,
         RESULT_EAST,
@@ -55,8 +49,7 @@ public:
         RESULT_SOUTH,
         RESULT_NORTH
     };
-    enum MovePermission
-    {
+    enum MovePermission {
         S = 1,
         R = 2,
         B = 3
@@ -66,7 +59,7 @@ public:
     static std::pair<PieceType, PieceOrientation> getPieceTypeAndOrientation(const std::string &piece_str);
     static void laser_timer_cb(void *data);
 
-private:
+  private:
     AILoader ai_loader;
     int rows = 8, cols = 10, clicked_row = -1, clicked_col = -1, square_selected_num = -1;
     int cell_width, cell_height;

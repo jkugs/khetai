@@ -1,7 +1,7 @@
+#include "../khetai_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "../khetai_lib.h"
 
 char *init_board[120] =
     {"--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--",
@@ -15,8 +15,7 @@ char *init_board[120] =
      "--", "--", "--", "p3", "a0", "x0", "a0", "--", "--", "--", "l0", "--",
      "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"};
 
-int main()
-{
+int main() {
     init_zobrist();
     srand((unsigned)time(NULL));
 
@@ -31,8 +30,7 @@ int main()
     int depth = 1;
     Move best_move = (Move)0;
     Move current_move = (Move)0;
-    while (depth <= max_depth)
-    {
+    while (depth <= max_depth) {
         current_move = alphabeta_root(depth, RED);
         if (time(NULL) - start_time < max_time)
             best_move = current_move;

@@ -1,24 +1,20 @@
+#include "game_board.h"
 #include <FL/Fl.H>
+#include <FL/Fl_Box.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Int_Input.H>
-#include <FL/Fl_Box.H>
-#include "game_board.h"
 
-class PositiveIntInput : public Fl_Int_Input
-{
-public:
+class PositiveIntInput : public Fl_Int_Input {
+  public:
     PositiveIntInput(int X, int Y, int W, int H, const char *L = 0)
         : Fl_Int_Input(X, Y, W, H, L) {}
 
-    int handle(int event) override
-    {
+    int handle(int event) override {
         int result = Fl_Int_Input::handle(event);
-        if (event == FL_KEYDOWN || event == FL_KEYUP || event == FL_PASTE)
-        {
+        if (event == FL_KEYDOWN || event == FL_KEYUP || event == FL_PASTE) {
             const char *value = this->value();
-            if (value[0] == '-')
-            {
+            if (value[0] == '-') {
                 this->value("");
             }
         }
@@ -26,8 +22,7 @@ public:
     }
 };
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     Fl_Double_Window *window = new Fl_Double_Window(800, 600, "Khet AI");
     GameBoard *board = new GameBoard(50, 50, 700, 504);
 

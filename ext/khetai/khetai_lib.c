@@ -1,8 +1,7 @@
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <time.h>
 #include "khetai_lib.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int max_time;
 time_t start_time;
@@ -28,8 +27,7 @@ int undo_index = 0;
 int hashes_index = 0;
 bool checkmate = false;
 
-Move alphabeta_root(int depth, enum Player player)
-{
+Move alphabeta_root(int depth, enum Player player) {
     whose_turn = player;
     starter = player;
     initial_depth = depth;
@@ -40,16 +38,14 @@ Move alphabeta_root(int depth, enum Player player)
     Move valid_moves[NUM_VALID_MOVES] = {0};
     int vi = 0;
     find_valid_moves(valid_moves, &vi);
-    for (int i = 0; i < NUM_VALID_MOVES; i++)
-    {
+    for (int i = 0; i < NUM_VALID_MOVES; i++) {
         if (valid_moves[i] == 0)
             break;
         make_move(valid_moves[i]);
         int score = -alphabeta(depth - 1, opposite_player(player), -beta, -alpha);
         undo_move();
         whose_turn = player;
-        if (score > best_score)
-        {
+        if (score > best_score) {
             best_score = score;
             best_move = valid_moves[i];
         }
@@ -64,11 +60,9 @@ Move alphabeta_root(int depth, enum Player player)
     return best_move;
 }
 
-int alphabeta(int depth, enum Player player, int alpha, int beta)
-{
+int alphabeta(int depth, enum Player player, int alpha, int beta) {
     whose_turn = player;
-    if (depth == 0 || checkmate)
-    {
+    if (depth == 0 || checkmate) {
         return player == RED ? calculate_score() : -calculate_score();
     }
 
@@ -78,8 +72,7 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
 
     int table_depth = initial_depth - depth;
     HashEntry *entry = search_table(hashes[hashes_index]);
-    if (entry->key == hashes[hashes_index] && entry->depth > table_depth && is_move_legal(entry->move))
-    {
+    if (entry->key == hashes[hashes_index] && entry->depth > table_depth && is_move_legal(entry->move)) {
         valid_moves[vi++] = entry->move;
 
         if (entry->flag == EXACT)
@@ -97,16 +90,14 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     int best_score = -MAX_SCORE;
     Move best_move = (Move)0;
 
-    for (int i = 0; (i < NUM_VALID_MOVES && (time(NULL) - start_time < max_time)); i++)
-    {
+    for (int i = 0; (i < NUM_VALID_MOVES && (time(NULL) - start_time < max_time)); i++) {
         if (valid_moves[i] == 0)
             break;
         make_move(valid_moves[i]);
         int score = -alphabeta(depth - 1, opposite_player(player), -beta, -alpha);
         undo_move();
         whose_turn = player;
-        if (score > best_score)
-        {
+        if (score > best_score) {
             best_score = score;
             best_move = valid_moves[i];
         }
@@ -126,10 +117,8 @@ int alphabeta(int depth, enum Player player, int alpha, int beta)
     return best_score;
 }
 
-void insert_table(HashEntry *entry, uint64_t key, int table_depth, int flag, int score, Move move)
-{
-    if (entry->key == 0 || table_depth > entry->depth)
-    {
+void insert_table(HashEntry *entry, uint64_t key, int table_depth, int flag, int score, Move move) {
+    if (entry->key == 0 || table_depth > entry->depth) {
         entry->key = key;
         entry->depth = table_depth;
         entry->flag = flag;
@@ -138,25 +127,20 @@ void insert_table(HashEntry *entry, uint64_t key, int table_depth, int flag, int
     }
 }
 
-int calculate_score()
-{
+int calculate_score() {
     int score = 0;
     int anubis_score = 800;
     int pyramid_score = 1000;
     int pharaoh_score = 100000;
 
-    for (int j = 0; j < 2; j++)
-    {
+    for (int j = 0; j < 2; j++) {
         enum Player player = j;
-        for (int k = 0; k < 13; k++)
-        {
+        for (int k = 0; k < 13; k++) {
             int i = get_board_index(player, k);
-            if (i != EPT)
-            {
+            if (i != EPT) {
                 Square s = board[i];
                 int value = 0;
-                switch (get_piece(s))
-                {
+                switch (get_piece(s)) {
                 case ANUBIS:
                     value += anubis_score;
                     value -= distance_from_pharaoh(i, pharaoh_loc[player]) * 10;
@@ -183,8 +167,7 @@ int calculate_score()
     return score;
 }
 
-int distance_from_pharaoh(int i, int p)
-{
+int distance_from_pharaoh(int i, int p) {
     int px = p / 12;
     int py = p % 12;
     int ix = i / 12;
@@ -193,8 +176,7 @@ int distance_from_pharaoh(int i, int p)
     return m_distance;
 }
 
-void make_move(Move move)
-{
+void make_move(Move move) {
     uint64_t hash = hashes[hashes_index++];
 
     int start = get_start(move);
@@ -203,14 +185,11 @@ void make_move(Move move)
     int end = get_end(move);
     int rotation = get_rotation(move);
 
-    if (rotation != 0)
-    {
+    if (rotation != 0) {
         board[start] = rotate(board[start], rotation);
         // add starting piece back with rotation
         hash ^= keys[board[start]][start];
-    }
-    else
-    {
+    } else {
         // remove ending piece
         if (is_piece(board[end]))
             hash ^= keys[board[end]][end];
@@ -225,8 +204,7 @@ void make_move(Move move)
         update_piece_tracker(moving_player, start, end);
 
         // add ending piece to start location if swapping
-        if (is_piece(board[start]))
-        {
+        if (is_piece(board[start])) {
             hash ^= keys[board[start]][start];
 
             enum Player other_player = get_owner(board[start]);
@@ -249,24 +227,19 @@ void make_move(Move move)
     undo_index++;
 }
 
-void fire_laser(uint64_t *hash)
-{
+void fire_laser(uint64_t *hash) {
     int i = sphinx_loc[whose_turn];
     int laser_dir = get_orientation(board[i]);
     bool traversing = true;
-    while (traversing)
-    {
+    while (traversing) {
         i = i + directions[laser_dir];
-        if (i >= 0 && i < 120 && on_board[i] == 1)
-        {
+        if (i >= 0 && i < 120 && on_board[i] == 1) {
             Square s = board[i];
-            if (is_piece(s))
-            {
+            if (is_piece(s)) {
                 int piece = get_piece(s) - 1;
                 int orientation = get_orientation(s);
                 int result = reflections[laser_dir][piece][orientation];
-                if (result == DEAD)
-                {
+                if (result == DEAD) {
                     if (get_piece(s) == PHARAOH)
                         checkmate = true;
                     // remove piece
@@ -279,33 +252,25 @@ void fire_laser(uint64_t *hash)
                     undo_capture_squares[undo_index] = s;
                     board[i] = (Square)0;
                     traversing = false;
-                }
-                else if (result == ABSORBED)
-                {
+                } else if (result == ABSORBED) {
                     traversing = false;
-                }
-                else
-                {
+                } else {
                     laser_dir = result;
                 }
             }
-        }
-        else
-        {
+        } else {
             traversing = false;
         }
     }
 }
 
-void undo_move()
-{
+void undo_move() {
     hashes_index--;
     undo_index--;
 
     Square captured = (Square)undo_capture_squares[undo_index];
     undo_capture_squares[undo_index] = 0;
-    if (captured > 0)
-    {
+    if (captured > 0) {
         uint8_t board_pos = undo_capture_indices[undo_index];
         board[board_pos] = captured;
         undo_capture_indices[undo_index] = 0;
@@ -320,12 +285,9 @@ void undo_move()
     int end = get_end(move);
     int rotation = get_rotation(move);
 
-    if (rotation != 0)
-    {
+    if (rotation != 0) {
         board[start] = rotate(board[start], rotation);
-    }
-    else
-    {
+    } else {
         Square moving_piece = board[start];
         board[start] = board[end];
         board[end] = moving_piece;
@@ -333,8 +295,7 @@ void undo_move()
         enum Player moving_player = get_owner(moving_piece);
         update_piece_tracker(moving_player, start, end);
 
-        if (board[start] != 0)
-        {
+        if (board[start] != 0) {
             enum Player other_player = get_owner(board[start]);
             update_piece_tracker(other_player, end, start);
         }
@@ -345,16 +306,12 @@ void undo_move()
     checkmate = false;
 }
 
-void find_valid_moves(Move *valid_moves, int *vi)
-{
-    for (int i = 0; i < 13; i++)
-    {
+void find_valid_moves(Move *valid_moves, int *vi) {
+    for (int i = 0; i < 13; i++) {
         uint8_t board_pos = piece_trackers[whose_turn].positions[i];
-        if (board_pos != EPT)
-        {
+        if (board_pos != EPT) {
             enum Piece piece = get_piece(board[board_pos]);
-            switch (piece)
-            {
+            switch (piece) {
             case ANUBIS:
                 find_valid_anubis_pyramid_moves(board_pos, valid_moves, vi);
                 break;
@@ -377,78 +334,60 @@ void find_valid_moves(Move *valid_moves, int *vi)
     }
 }
 
-void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi)
-{
-    for (int j = 0; j < 8; j++)
-    {
+void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi) {
+    for (int j = 0; j < 8; j++) {
         int dest = i + directions[j];
-        if (!is_piece(board[dest]) && can_move[whose_turn][dest])
-        {
+        if (!is_piece(board[dest]) && can_move[whose_turn][dest]) {
             valid_moves[(*vi)++] = new_move(i, dest, 0);
         }
     }
-    for (int j = 0; j < 2; j++)
-    {
+    for (int j = 0; j < 2; j++) {
         valid_moves[(*vi)++] = new_move(i, i, rotations[j]);
     }
 }
 
-void find_valid_scarab_moves(int i, Move *valid_moves, int *vi)
-{
-    for (int j = 0; j < 8; j++)
-    {
+void find_valid_scarab_moves(int i, Move *valid_moves, int *vi) {
+    for (int j = 0; j < 8; j++) {
         int dest = i + directions[j];
-        if (can_move[whose_turn][dest])
-        {
-            if (!is_piece(board[dest]) || (get_owner(board[dest]) != whose_turn && get_piece(board[dest]) != PHARAOH))
-            {
+        if (can_move[whose_turn][dest]) {
+            if (!is_piece(board[dest]) || (get_owner(board[dest]) != whose_turn && get_piece(board[dest]) != PHARAOH)) {
                 valid_moves[(*vi)++] = new_move(i, dest, 0);
             }
         }
     }
-    for (int j = 0; j < 2; j++)
-    {
+    for (int j = 0; j < 2; j++) {
         valid_moves[(*vi)++] = new_move(i, i, rotations[j]);
     }
 }
 
-void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi)
-{
-    for (int j = 0; j < 8; j++)
-    {
+void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi) {
+    for (int j = 0; j < 8; j++) {
         int dest = i + directions[j];
-        if (!is_piece(board[dest]) && can_move[whose_turn][dest])
-        {
+        if (!is_piece(board[dest]) && can_move[whose_turn][dest]) {
             valid_moves[(*vi)++] = new_move(i, dest, 0);
         }
     }
 }
 
-void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi)
-{
+void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi) {
     enum Player player = get_owner(board[i]);
     enum Orientation orientation = get_orientation(board[i]);
     int rotation = player == SILVER ? (orientation == NORTH ? -1 : 1) : (orientation == SOUTH ? -1 : 1);
     valid_moves[(*vi)++] = new_move(i, i, rotation);
 }
 
-void init_zobrist()
-{
-    for (int i = 0; i < 0xFF; i++)
-    {
-        for (int j = 0; j < 120; j++)
-        {
+void init_zobrist() {
+    for (int i = 0; i < 0xFF; i++) {
+        for (int j = 0; j < 120; j++) {
             keys[i][j] = random_number();
         }
     }
     turn_key = random_number();
 }
 
-uint64_t get_board_hash()
-{
+uint64_t get_board_hash() {
     uint64_t hash = 0;
-    for (int i = 0; i < 120; i++)
-    {
+    for (int i = 0; i < 120; i++) {
         if (is_piece(board[i]))
             hash ^= keys[board[i]][i];
     }
@@ -457,10 +396,8 @@ uint64_t get_board_hash()
     return hash;
 }
 
-void init_piece_trackers()
-{
-    for (int i = 0; i < 13; i++)
-    {
+void init_piece_trackers() {
+    for (int i = 0; i < 13; i++) {
         piece_trackers[SILVER].positions[i] = EPT;
         piece_trackers[RED].positions[i] = EPT;
     }
@@ -468,38 +405,29 @@ void init_piece_trackers()
     int si = 0;
     int ri = 0;
 
-    for (int i = 0; i < 120; i++)
-    {
+    for (int i = 0; i < 120; i++) {
         Square s = board[i];
-        if (is_piece(s))
-        {
-            if (get_owner(s) == SILVER)
-            {
+        if (is_piece(s)) {
+            if (get_owner(s) == SILVER) {
                 piece_trackers[SILVER].positions[si] = i;
                 piece_trackers[SILVER].board_idx_position[i] = si;
                 si++;
-            }
-            else if (get_owner(s) == RED)
-            {
+            } else if (get_owner(s) == RED) {
                 piece_trackers[RED].positions[ri] = i;
                 piece_trackers[RED].board_idx_position[i] = ri;
                 ri++;
             }
-        }
-        else
-        {
+        } else {
             piece_trackers[SILVER].board_idx_position[i] = EPT;
             piece_trackers[RED].board_idx_position[i] = EPT;
         }
     }
 }
 
-bool is_move_legal(Move move)
-{
+bool is_move_legal(Move move) {
     int start = get_start(move);
     int end = get_end(move);
-    if (is_piece(board[start]) && get_owner(board[start]) == whose_turn)
-    {
+    if (is_piece(board[start]) && get_owner(board[start]) == whose_turn) {
         if (!is_piece(board[end]) || get_rotation(move) != 0)
             return true;
         else if (is_piece(board[end]) && get_piece(board[start]) == SCARAB && get_piece(board[end]) <= 3)
@@ -508,30 +436,24 @@ bool is_move_legal(Move move)
     return false;
 }
 
-void reset_undo()
-{
+void reset_undo() {
     undo_index = 0;
-    for (int i = 0; i < MAX_DEPTH; i++)
-    {
+    for (int i = 0; i < MAX_DEPTH; i++) {
         undo_moves[i] = 0;
         undo_capture_indices[i] = 0;
         undo_capture_squares[i] = 0;
     }
 }
 
-void setup_board(char *init_board[120])
-{
+void setup_board(char *init_board[120]) {
     hashes_index = 0;
     uint64_t hash = 0;
-    for (int i = 0; i < 120; i++)
-    {
+    for (int i = 0; i < 120; i++) {
         board[i] = str_to_square(init_board[i]);
         Square s = board[i];
-        if (is_piece(s))
-        {
+        if (is_piece(s)) {
             hash ^= keys[s][i];
-            if (get_piece(s) == PHARAOH)
-            {
+            if (get_piece(s) == PHARAOH) {
                 if (get_owner(s) == SILVER)
                     pharaoh_loc[SILVER] = i;
                 else if (get_owner(s) == RED)
@@ -541,8 +463,7 @@ void setup_board(char *init_board[120])
     }
     hashes[hashes_index] = hash;
 
-    for (int i = 0; i < TABLE_SIZE; i++)
-    {
+    for (int i = 0; i < TABLE_SIZE; i++) {
         table[i].key = 0;
         table[i].depth = 0;
         table[i].flag = 0;
@@ -553,14 +474,12 @@ void setup_board(char *init_board[120])
     init_piece_trackers();
 }
 
-Square str_to_square(char *str)
-{
+Square str_to_square(char *str) {
     enum Player player;
     enum Piece piece;
     enum Orientation orientation;
 
-    if (str[0] != '-')
-    {
+    if (str[0] != '-') {
         if (islower(str[0]))
             player = SILVER;
         else
@@ -594,25 +513,20 @@ Square str_to_square(char *str)
     return (Square)0;
 }
 
-void print_board()
-{
-    for (int i = 0; i < 120; i++)
-    {
+void print_board() {
+    for (int i = 0; i < 120; i++) {
         print_piece(board[i]);
         if ((i + 1) % 12 == 0)
             printf("\n");
     }
 }
 
-void print_piece(Square s)
-{
+void print_piece(Square s) {
     enum Player player = get_owner(s);
-    if (is_piece(s))
-    {
+    if (is_piece(s)) {
         enum Piece piece = get_piece(s);
         enum Orientation orientation = get_orientation(s);
-        switch (piece)
-        {
+        switch (piece) {
         case ANUBIS:
             if (player == SILVER)
                 printf("a");
@@ -651,8 +565,7 @@ void print_piece(Square s)
             printf("-");
             break;
         }
-        switch (orientation)
-        {
+        switch (orientation) {
         case NORTH:
             printf("0");
             break;
@@ -669,8 +582,7 @@ void print_piece(Square s)
             printf("-");
             break;
         }
-    }
-    else
+    } else
         printf("--");
 }
 
@@ -678,8 +590,7 @@ int get_start_wrapper(Move move) { return get_start(move); }
 int get_end_wrapper(Move move) { return get_end(move); }
 int get_rotation_wrapper(Move move) { return get_rotation(move); }
 
-void set_time_parameters(int _max_time, time_t _start_time)
-{
+void set_time_parameters(int _max_time, time_t _start_time) {
     max_time = _max_time;
     start_time = _start_time;
 }
