@@ -144,33 +144,40 @@ int calculate_score()
     int anubis_score = 800;
     int pyramid_score = 1000;
     int pharaoh_score = 100000;
-    for (int i = 0; i < 120; i++)
+
+    for (int j = 0; j < 2; j++)
     {
-        Square s = board[i];
-        if (is_piece(s))
+        enum Player player = j;
+        for (int k = 0; k < 13; k++)
         {
-            int value = 0;
-            switch (get_piece(s))
+            int i = get_board_index(player, k);
+            if (i != EPT)
             {
-            case ANUBIS:
-                value += anubis_score;
-                value -= distance_from_pharaoh(i, pharaoh_loc[get_owner(s)]) * 10;
-                break;
-            case PYRAMID:
-                value += pyramid_score;
-                break;
-            case SCARAB:
-                int max_distance = 16;
-                int base_score = 1000;
-                value += (max_distance - distance_from_pharaoh(i, pharaoh_loc[opposite_player(get_owner(s))])) * base_score / max_distance;
-                break;
-            case PHARAOH:
-                value += pharaoh_score;
-                break;
-            default:
-                break;
+                Square s = board[i];
+                int value = 0;
+                switch (get_piece(s))
+                {
+                case ANUBIS:
+                    value += anubis_score;
+                    value -= distance_from_pharaoh(i, pharaoh_loc[player]) * 10;
+                    break;
+                case PYRAMID:
+                    value += pyramid_score;
+                    value += (rand() % 51) - 25;
+                    break;
+                case SCARAB:
+                    int max_distance = 16;
+                    int base_score = 1000;
+                    value += (max_distance - distance_from_pharaoh(i, pharaoh_loc[opposite_player(player)])) * base_score / max_distance;
+                    break;
+                case PHARAOH:
+                    value += pharaoh_score;
+                    break;
+                default:
+                    break;
+                }
+                score += get_owner(s) == RED ? value : -value;
             }
-            score += get_owner(s) == RED ? value : -value;
         }
     }
     return score;
@@ -196,10 +203,6 @@ void make_move(Move move)
     int end = get_end(move);
     int rotation = get_rotation(move);
 
-    // TODO: use these for piece tracker
-    Square start_piece = board[start];
-    Square end_piece = board[end];
-
     if (rotation != 0)
     {
         board[start] = rotate(board[start], rotation);
@@ -219,21 +222,15 @@ void make_move(Move move)
         hash ^= keys[board[end]][end];
 
         enum Player moving_player = get_owner(moving_piece);
-        uint8_t pos = piece_trackers[moving_player].board_idx_position[start];
-        piece_trackers[moving_player].positions[pos] = end;
-        piece_trackers[moving_player].board_idx_position[start] = EPT;
-        piece_trackers[moving_player].board_idx_position[end] = pos;
+        update_piece_tracker(moving_player, start, end);
 
         // add ending piece to start location if swapping
         if (is_piece(board[start]))
         {
             hash ^= keys[board[start]][start];
 
-            enum Player swapping_player = get_owner(board[start]);
-            uint8_t pos = piece_trackers[swapping_player].board_idx_position[end];
-            piece_trackers[swapping_player].positions[pos] = start;
-            piece_trackers[swapping_player].board_idx_position[end] = EPT;
-            piece_trackers[swapping_player].board_idx_position[start] = pos;
+            enum Player other_player = get_owner(board[start]);
+            update_piece_tracker(other_player, end, start);
         }
 
         if (get_piece(moving_piece) == PHARAOH)
@@ -276,9 +273,7 @@ void fire_laser(uint64_t *hash)
                     *hash ^= keys[s][i];
 
                     enum Player remove_player = get_owner(s);
-                    uint8_t pos = piece_trackers[remove_player].board_idx_position[i];
-                    piece_trackers[remove_player].positions[pos] = EPT;
-                    piece_trackers[remove_player].board_idx_position[i] = EPT;
+                    remove_from_piece_tracker(remove_player, i);
 
                     undo_capture_indices[undo_index] = i;
                     undo_capture_squares[undo_index] = s;
@@ -304,7 +299,6 @@ void fire_laser(uint64_t *hash)
 
 void undo_move()
 {
-
     hashes_index--;
     undo_index--;
 
@@ -317,13 +311,7 @@ void undo_move()
         undo_capture_indices[undo_index] = 0;
 
         enum Player captured_player = get_owner(captured);
-        uint8_t *p = piece_trackers[captured_player].positions;
-        uint8_t *bip = piece_trackers[captured_player].board_idx_position;
-        int tracker_idx = 0;
-        while (p[tracker_idx] != EPT && tracker_idx < 13)
-            tracker_idx++;
-        p[tracker_idx] = board_pos;
-        bip[board_pos] = tracker_idx;
+        add_to_piece_tracker(captured_player, board_pos);
     }
 
     Move move = undo_moves[undo_index];
@@ -331,10 +319,6 @@ void undo_move()
     int start = get_start(move);
     int end = get_end(move);
     int rotation = get_rotation(move);
-
-    // TODO: use these for piece tracker
-    Square start_piece = board[start];
-    Square end_piece = board[end];
 
     if (rotation != 0)
     {
@@ -347,17 +331,12 @@ void undo_move()
         board[end] = moving_piece;
 
         enum Player moving_player = get_owner(moving_piece);
-        uint8_t pos = piece_trackers[moving_player].board_idx_position[start];
-        piece_trackers[moving_player].positions[pos] = end;
-        piece_trackers[moving_player].board_idx_position[start] = EPT;
-        piece_trackers[moving_player].board_idx_position[end] = pos;
+        update_piece_tracker(moving_player, start, end);
+
         if (board[start] != 0)
         {
             enum Player other_player = get_owner(board[start]);
-            uint8_t pos = piece_trackers[other_player].board_idx_position[end];
-            piece_trackers[other_player].positions[pos] = start;
-            piece_trackers[other_player].board_idx_position[end] = EPT;
-            piece_trackers[other_player].board_idx_position[start] = pos;
+            update_piece_tracker(other_player, end, start);
         }
 
         if (get_piece(moving_piece) == PHARAOH)

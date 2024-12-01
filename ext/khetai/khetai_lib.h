@@ -226,7 +226,7 @@ extern HashEntry table[TABLE_SIZE];
 static inline HashEntry *search_table(uint64_t key) { return &table[key % TABLE_SIZE]; };
 void insert_table(HashEntry *entry, uint64_t key, int depth, int flag, int score, Move move);
 
-#define EPT 255
+#define EPT 0xFF
 typedef struct PieceTracker
 {
     uint8_t positions[13];
@@ -234,5 +234,29 @@ typedef struct PieceTracker
 } PieceTracker;
 extern PieceTracker piece_trackers[2];
 void init_piece_trackers();
+
+static inline uint8_t get_board_index(enum Player player, uint8_t pos_idx) { return piece_trackers[player].positions[pos_idx]; }
+static inline uint8_t get_position_index(enum Player player, uint8_t board_idx) { return piece_trackers[player].board_idx_position[board_idx]; }
+static inline void update_piece_tracker(enum Player player, uint8_t old_board_idx, uint8_t new_board_idx)
+{
+    uint8_t pos_idx = get_position_index(player, old_board_idx);
+    piece_trackers[player].positions[pos_idx] = new_board_idx;
+    piece_trackers[player].board_idx_position[old_board_idx] = EPT;
+    piece_trackers[player].board_idx_position[new_board_idx] = pos_idx;
+}
+static inline void remove_from_piece_tracker(enum Player player, uint8_t board_idx)
+{
+    uint8_t pos_idx = get_position_index(player, board_idx);
+    piece_trackers[player].positions[pos_idx] = EPT;
+    piece_trackers[player].board_idx_position[board_idx] = EPT;
+}
+static inline void add_to_piece_tracker(enum Player player, uint8_t board_idx)
+{
+    uint8_t pos_idx = 0;
+    while (piece_trackers[player].positions[pos_idx] != EPT)
+        pos_idx++;
+    piece_trackers[player].positions[pos_idx] = board_idx;
+    piece_trackers[player].board_idx_position[board_idx] = pos_idx;
+}
 
 #endif // KHET_LIB_H_INCLUDED
