@@ -143,7 +143,7 @@ int GameBoard::handle(int event) {
 
             const char *max_depth_value = max_depth_input->value();
             if (!max_depth_value || max_depth_value[0] == '\0') {
-                max_depth_input->value("10");
+                max_depth_input->value("25");
                 max_depth_value = max_depth_input->value();
             }
             int max_depth = std::atoi(max_depth_value);
@@ -196,6 +196,8 @@ int GameBoard::handle(int event) {
                 } else if (square_selected_num == 79) {
                     fireLaser(SILVER);
                 }
+                square_selected = false;
+                square_selected_num = -1;
                 break;
             }
         }

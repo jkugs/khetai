@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
     Fl_Box *max_depth_label = new Fl_Box(250, 10, 80, 30, "Max Depth:");
     PositiveIntInput *max_depth_input = new PositiveIntInput(325, 15, 30, 20);
-    max_depth_input->value("10");
+    max_depth_input->value("25");
     board->max_depth_input = max_depth_input;
 
     window->end();
