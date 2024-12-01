@@ -1,28 +1,23 @@
 #include "game_board_util.h"
 
-#include <iostream>
 #include <cstring>
+#include <iostream>
 
-std::vector<std::string> flatten_2d_vector_with_buffer(const std::vector<std::vector<std::string>> &vec2d)
-{
+std::vector<std::string> flatten_2d_vector_with_buffer(const std::vector<std::vector<std::string>> &vec2d) {
     size_t new_rows = vec2d.size() + 2;
     size_t new_cols = vec2d.empty() ? 0 : vec2d[0].size() + 2;
 
     std::vector<std::vector<std::string>> buffered_vec2d(new_rows, std::vector<std::string>(new_cols, "--"));
 
-    for (size_t i = 0; i < vec2d.size(); ++i)
-    {
-        for (size_t j = 0; j < vec2d[i].size(); ++j)
-        {
+    for (size_t i = 0; i < vec2d.size(); ++i) {
+        for (size_t j = 0; j < vec2d[i].size(); ++j) {
             buffered_vec2d[i + 1][j + 1] = vec2d[i][j];
         }
     }
 
     std::vector<std::string> flattened;
-    for (const auto &row : buffered_vec2d)
-    {
-        for (const auto &elem : row)
-        {
+    for (const auto &row : buffered_vec2d) {
+        for (const auto &elem : row) {
             flattened.push_back(elem);
         }
     }
@@ -30,11 +25,9 @@ std::vector<std::string> flatten_2d_vector_with_buffer(const std::vector<std::ve
     return flattened;
 }
 
-char **vector_to_c_array(const std::vector<std::string> &vec)
-{
+char **vector_to_c_array(const std::vector<std::string> &vec) {
     char **c_array = new char *[vec.size()];
-    for (size_t i = 0; i < vec.size(); ++i)
-    {
+    for (size_t i = 0; i < vec.size(); ++i) {
         c_array[i] = new char[vec[i].size() + 1];
         std::strcpy(c_array[i], vec[i].c_str());
     }
@@ -42,17 +35,14 @@ char **vector_to_c_array(const std::vector<std::string> &vec)
     return c_array;
 }
 
-void free_c_array(char **c_array, size_t size)
-{
-    for (size_t i = 0; i < size; ++i)
-    {
+void free_c_array(char **c_array, size_t size) {
+    for (size_t i = 0; i < size; ++i) {
         delete[] c_array[i];
     }
     delete[] c_array;
 }
 
-Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string>> &board_pieces, Player player, int max_depth, int max_time)
-{
+Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string>> &board_pieces, Player player, int max_depth, int max_time) {
     auto init_zobrist = ai_loader.get_init_zobrist();
     auto reset_undo = ai_loader.get_reset_undo();
     auto setup_board = ai_loader.get_setup_board();
@@ -80,8 +70,7 @@ Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string
     int depth = 1;
     Move best_move = (Move)0;
     Move current_move = (Move)0;
-    while (depth <= max_depth)
-    {
+    while (depth <= max_depth) {
         printf("\nDEPTH: %-3d->   ", depth);
         current_move = alphabeta_root(depth, player);
         printf("MOVE -> START: %d, END: %d, ROTATION: %d\n", get_start(current_move), get_end(current_move), get_rotation(current_move));
@@ -106,8 +95,7 @@ Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string
     return best_move;
 }
 
-void get_row_col(int index, int &row, int &col)
-{
+void get_row_col(int index, int &row, int &col) {
     int border_width = 1;
     int width_with_border = 10 + 2 * border_width;
 

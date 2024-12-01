@@ -3,8 +3,8 @@
 
 #include "ai_loader.h"
 
-#include <vector>
 #include <string>
+#include <vector>
 
 std::vector<std::string> flatten_2d_vector_with_buffer(const std::vector<std::vector<std::string>> &vec2d);
 char **vector_to_c_array(const std::vector<std::string> &vec);

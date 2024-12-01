@@ -1,22 +1,20 @@
 #include "game_board.h"
-#include "game_board_util.h"
 #include "../../khetai_lib.h"
+#include "game_board_util.h"
 
-#include <FL/fl_draw.H>
 #include <FL/Fl.H>
-#include <iostream>
+#include <FL/fl_draw.H>
 #include <cstring>
+#include <iostream>
 
 GameBoard::GameBoard(int X, int Y, int W, int H, const char *L)
     : Fl_Widget(X, Y, W, H, L),
-      ai_loader("./libkhetai.so")
-{
+      ai_loader("./libkhetai.so") {
     cell_width = w() / cols;
     cell_height = h() / rows;
 }
 
-void GameBoard::draw()
-{
+void GameBoard::draw() {
     // background
     fl_color(FL_WHITE);
     fl_rectf(x(), y(), w(), h());
@@ -25,15 +23,13 @@ void GameBoard::draw()
     fl_color(FL_BLACK);
 
     // vertical lines
-    for (int i = 0; i <= cols; ++i)
-    {
+    for (int i = 0; i <= cols; ++i) {
         int current_x = x() + (cell_width * i);
         fl_line(current_x, y(), current_x, y() + h());
     }
 
     // horizontal lines
-    for (int j = 0; j <= rows; ++j)
-    {
+    for (int j = 0; j <= rows; ++j) {
         int current_y = y() + (cell_height * j);
         fl_line(x(), current_y, x() + w(), current_y);
     }
@@ -42,51 +38,41 @@ void GameBoard::draw()
     drawInnerSquares();
 
     // highlight selected square
-    if (square_selected)
-    {
+    if (square_selected) {
         fl_color(FL_YELLOW);
         fl_rectf((x() + clicked_col * cell_width) + 1, (y() + clicked_row * cell_height) + 1, cell_width - 1, cell_height - 1);
     }
 
     // draw laser
-    if (laser_active)
-    {
+    if (laser_active) {
         fl_color(FL_RED);
-        for (auto &segment : laser_path)
-        {
+        for (auto &segment : laser_path) {
             fl_line(std::get<0>(segment), std::get<1>(segment), std::get<2>(segment), std::get<3>(segment));
         }
     }
 
     // draw pieces
-    for (int i = 0; i < rows; ++i)
-    {
-        for (int j = 0; j < cols; ++j)
-        {
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
             int piece_index = i * cols + j;
-            if (piece_images[piece_index] != nullptr)
-            {
+            if (piece_images[piece_index] != nullptr) {
                 piece_images[piece_index]->draw(x() + j * cell_width, y() + i * cell_height, cell_width, cell_height);
             }
         }
     }
 }
 
-void GameBoard::drawInnerSquares()
-{
+void GameBoard::drawInnerSquares() {
     static const Fl_Color SILVER = fl_rgb_color(160, 160, 160);
     static const Fl_Color DARK_RED = fl_rgb_color(178, 34, 34);
-    for (int row = 0; row < rows; ++row)
-    {
-        for (int col = 0; col < cols; ++col)
-        {
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
             int padding_x = cell_width / 6;
             int padding_y = cell_height / 6;
             int square_width = cell_width - (2 * padding_x);
             int square_height = cell_height - (2 * padding_y);
 
-            switch (move_permissions[row][col])
-            {
+            switch (move_permissions[row][col]) {
             case S:
                 fl_color(SILVER);
                 fl_line_style(FL_SOLID, 1);
@@ -111,13 +97,10 @@ void GameBoard::drawInnerSquares()
     fl_line_style(0);
 }
 
-int GameBoard::handle(int event)
-{
+int GameBoard::handle(int event) {
     // std::cout << "EVENT: " event << std::endl;
-    switch (event)
-    {
-    case FL_PUSH:
-    {
+    switch (event) {
+    case FL_PUSH: {
         int clicked_x = Fl::event_x() - x();
         int clicked_y = Fl::event_y() - y();
 
@@ -126,25 +109,17 @@ int GameBoard::handle(int event)
 
         int clicked_num = (clicked_row * cols) + clicked_col;
 
-        if (square_selected && square_selected_num == clicked_num)
-        {
+        if (square_selected && square_selected_num == clicked_num) {
             square_selected = false;
             square_selected_num = -1;
-        }
-        else if (square_selected && square_selected_num != clicked_num &&
-                 squareContainsPiece(square_selected_num) && clicked_num != 0 && clicked_num != 79)
-        {
-            if (squareContainsPiece(clicked_num))
-            {
+        } else if (square_selected && square_selected_num != clicked_num &&
+                   squareContainsPiece(square_selected_num) && clicked_num != 0 && clicked_num != 79) {
+            if (squareContainsPiece(clicked_num)) {
                 swapPieces(clicked_num);
-            }
-            else
-            {
+            } else {
                 moveSelectedPiece(clicked_num);
             }
-        }
-        else if (squareContainsPiece(clicked_num))
-        {
+        } else if (squareContainsPiece(clicked_num)) {
             square_selected = true;
             square_selected_num = clicked_num;
         }
@@ -152,39 +127,32 @@ int GameBoard::handle(int event)
         redraw();
         return 1;
     }
-    case FL_KEYUP:
-    {
+    case FL_KEYUP: {
         int key = Fl::event_key();
         int state = Fl::event_state();
 
-        if (key == 'r')
-        {
+        if (key == 'r') {
             resetPieces();
-        }
-        else if (key == FL_Enter)
-        {
+        } else if (key == FL_Enter) {
             const char *max_time_value = max_time_input->value();
-            if (!max_time_value || max_time_value[0] == '\0')
-            {
+            if (!max_time_value || max_time_value[0] == '\0') {
                 max_time_input->value("5");
                 max_time_value = max_time_input->value();
             }
             int max_time = std::atoi(max_time_value);
 
             const char *max_depth_value = max_depth_input->value();
-            if (!max_depth_value || max_depth_value[0] == '\0')
-            {
-                max_depth_input->value("10");
+            if (!max_depth_value || max_depth_value[0] == '\0') {
+                max_depth_input->value("25");
                 max_depth_value = max_depth_input->value();
             }
             int max_depth = std::atoi(max_depth_value);
-            if (max_depth < 2)
-            {
+            if (max_depth < 2) {
                 max_depth_input->value("2");
                 max_depth = 2;
             }
 
-            Move move = call_ai_move(ai_loader, board_pieces, Red, max_depth, max_time);
+            Move move = call_ai_move(ai_loader, board_pieces, Player::RED, max_depth, max_time);
             int start = get_start(move);
             int end = get_end(move);
             int rotation = get_rotation(move);
@@ -198,31 +166,21 @@ int GameBoard::handle(int event)
 
             square_selected_num = start_num;
 
-            if (board_pieces[end_row][end_col] == "--")
-            {
+            if (board_pieces[end_row][end_col] == "--") {
                 moveSelectedPiece(end_num);
-            }
-            else if (start_num != end_num && board_pieces[end_row][end_col] != "--")
-            {
+            } else if (start_num != end_num && board_pieces[end_row][end_col] != "--") {
                 swapPieces(end_num);
-            }
-            else if (start_num == end_num && rotation != 0)
-            {
+            } else if (start_num == end_num && rotation != 0) {
                 bool clockwise = rotation == 1;
                 rotateSelectedPiece(clockwise);
             }
 
             fireLaser(RED);
-        }
-        else if (key == 'k' && (state & FL_SHIFT))
-        {
+        } else if (key == 'k' && (state & FL_SHIFT)) {
             rebuildReloadKhetAILib();
             return 1;
-        }
-        else if (square_selected)
-        {
-            switch (key)
-            {
+        } else if (square_selected) {
+            switch (key) {
             case FL_Left:
                 rotateSelectedPiece(false);
                 break;
@@ -233,14 +191,13 @@ int GameBoard::handle(int event)
                 deletePiece();
                 break;
             case ' ':
-                if (square_selected_num == 0)
-                {
+                if (square_selected_num == 0) {
                     fireLaser(RED);
-                }
-                else if (square_selected_num == 79)
-                {
+                } else if (square_selected_num == 79) {
                     fireLaser(SILVER);
                 }
+                square_selected = false;
+                square_selected_num = -1;
                 break;
             }
         }
@@ -255,16 +212,12 @@ int GameBoard::handle(int event)
     return Fl_Widget::handle(event);
 }
 
-void GameBoard::init(const std::vector<std::vector<std::string>> &pieces)
-{
+void GameBoard::init(const std::vector<std::vector<std::string>> &pieces) {
     board_pieces = pieces;
 
-    for (const std::vector<std::string> &row : board_pieces)
-    {
-        for (const std::string &piece : row)
-        {
-            if (piece != "--")
-            {
+    for (const std::vector<std::string> &row : board_pieces) {
+        for (const std::string &piece : row) {
+            if (piece != "--") {
                 char piece_type = piece[0];
                 int direction = piece[1] - '0';
                 std::string filename;
@@ -275,19 +228,15 @@ void GameBoard::init(const std::vector<std::vector<std::string>> &pieces)
                 Fl_Image *resized_image = orig_image->copy(cell_width, cell_height);
                 delete orig_image;
                 piece_images.push_back(resized_image);
-            }
-            else
-            {
+            } else {
                 piece_images.push_back(nullptr);
             }
         }
     }
 }
 
-void GameBoard::resetPieces()
-{
-    for (Fl_Image *image : piece_images)
-    {
+void GameBoard::resetPieces() {
+    for (Fl_Image *image : piece_images) {
         delete image;
     }
     piece_images.clear();
@@ -308,13 +257,11 @@ void GameBoard::resetPieces()
     init(init_board);
 }
 
-void GameBoard::deletePiece()
-{
+void GameBoard::deletePiece() {
     if (square_selected_num == -1)
         return;
 
-    if (square_selected_num == 0 || square_selected_num == 79)
-    {
+    if (square_selected_num == 0 || square_selected_num == 79) {
         square_selected = false;
         square_selected_num = -1;
         return;
@@ -332,20 +279,17 @@ void GameBoard::deletePiece()
     square_selected_num = -1;
 }
 
-std::string GameBoard::getPieceFilename(char piece, int direction)
-{
+std::string GameBoard::getPieceFilename(char piece, int direction) {
     static const std::string directions[] = {"_n.png", "_e.png", "_s.png", "_w.png"};
 
-    if (piece == 'X' || piece == 'x')
-    {
+    if (piece == 'X' || piece == 'x') {
         return piece_map[piece] + ".png";
     }
 
     return piece_map[piece] + directions[direction];
 }
 
-void GameBoard::rotateSelectedPiece(bool clockwise)
-{
+void GameBoard::rotateSelectedPiece(bool clockwise) {
     if (square_selected_num == -1)
         return;
 
@@ -362,12 +306,9 @@ void GameBoard::rotateSelectedPiece(bool clockwise)
     int new_direction;
     std::string new_piece;
 
-    if (clockwise)
-    {
+    if (clockwise) {
         new_direction = rotate_right_map[current_direction];
-    }
-    else
-    {
+    } else {
         new_direction = rotate_left_map[current_direction];
     }
 
@@ -382,14 +323,12 @@ void GameBoard::rotateSelectedPiece(bool clockwise)
     piece_images[square_selected_num] = resized_image;
 }
 
-void GameBoard::swapPieces(int swap_square)
-{
+void GameBoard::swapPieces(int swap_square) {
     if (square_selected_num == -1)
         return;
 
     if (square_selected_num == 0 || square_selected_num == 79 ||
-        swap_square == 0 || swap_square == 79)
-    {
+        swap_square == 0 || swap_square == 79) {
         square_selected = true;
         square_selected_num = swap_square;
         return;
@@ -439,13 +378,11 @@ void GameBoard::swapPieces(int swap_square)
     square_selected_num = -1;
 }
 
-void GameBoard::moveSelectedPiece(int end_square)
-{
+void GameBoard::moveSelectedPiece(int end_square) {
     if (square_selected_num == -1)
         return;
 
-    if (square_selected_num == 0 || square_selected_num == 79)
-    {
+    if (square_selected_num == 0 || square_selected_num == 79) {
         square_selected = false;
         square_selected_num = -1;
         return;
@@ -478,8 +415,7 @@ void GameBoard::moveSelectedPiece(int end_square)
     square_selected_num = -1;
 }
 
-void GameBoard::fireLaser(Color color)
-{
+void GameBoard::fireLaser(Color color) {
     laser_active = true;
     laser_path.clear();
 
@@ -488,47 +424,38 @@ void GameBoard::fireLaser(Color color)
     int end_x;
     int end_y;
 
-    if (color == RED)
-    {
+    if (color == RED) {
         std::string piece_str = board_pieces[0][0];
         auto [piece_type, piece_orientation] = getPieceTypeAndOrientation(piece_str);
 
         start_x = x() + (cell_width / 2);
         start_y = y() + (cell_height / 2);
 
-        if (piece_orientation == ORIENT_EAST)
-        {
+        if (piece_orientation == ORIENT_EAST) {
 
             end_x = start_x + laser_step;
             end_y = start_y;
             laser_direction = EAST;
             laser_square_row = 0;
             laser_square_col = 0;
-        }
-        else if (piece_orientation == ORIENT_SOUTH)
-        {
+        } else if (piece_orientation == ORIENT_SOUTH) {
 
             end_x = start_x;
             end_y = start_y + laser_step;
             laser_direction = SOUTH;
             laser_square_row = 0;
             laser_square_col = 0;
-        }
-        else
-        {
+        } else {
             laser_active = false;
             return;
         }
-    }
-    else if (color == SILVER)
-    {
+    } else if (color == SILVER) {
         int current_row = rows - 1;
         int current_col = cols - 1;
         std::string piece_str = board_pieces[current_row][current_col];
         auto [piece_type, piece_orientation] = getPieceTypeAndOrientation(piece_str);
 
-        if (piece_orientation == ORIENT_WEST)
-        {
+        if (piece_orientation == ORIENT_WEST) {
             start_x = x() + (current_col * cell_width) + (cell_width / 2);
             start_y = y() + (current_row * cell_height) + (cell_height / 2);
             end_x = start_x - laser_step;
@@ -536,9 +463,7 @@ void GameBoard::fireLaser(Color color)
             laser_direction = WEST;
             laser_square_row = current_row;
             laser_square_col = current_col;
-        }
-        else if (piece_orientation == ORIENT_NORTH)
-        {
+        } else if (piece_orientation == ORIENT_NORTH) {
             start_x = x() + (current_col * cell_width) + (cell_width / 2);
             start_y = y() + (current_row * cell_height) + (cell_height / 2);
             end_x = start_x;
@@ -546,9 +471,7 @@ void GameBoard::fireLaser(Color color)
             laser_direction = NORTH;
             laser_square_row = current_row;
             laser_square_col = current_col;
-        }
-        else
-        {
+        } else {
             laser_active = false;
             return;
         }
@@ -557,16 +480,13 @@ void GameBoard::fireLaser(Color color)
     calculateLaserPathSquares();
     // print path:
     std::cout << "laser_path_squares = [";
-    for (size_t i = 0; i < laser_path_squares.size(); ++i)
-    {
-        std::apply([](auto &&...args)
-                   {
+    for (size_t i = 0; i < laser_path_squares.size(); ++i) {
+        std::apply([](auto &&...args) {
                        std::cout << '(';
                        ((std::cout << args << ", "), ...);
                        std::cout << '\b' << '\b' << ')'; },
                    laser_path_squares[i]);
-        if (i != laser_path_squares.size() - 1)
-        {
+        if (i != laser_path_squares.size() - 1) {
             std::cout << ", ";
         }
     }
@@ -583,10 +503,8 @@ void GameBoard::fireLaser(Color color)
     Fl::add_timeout(0.01, laser_timer_cb, this);
 }
 
-void GameBoard::updateLaserPosition()
-{
-    if (laser_y >= y() + (rows * cell_height) || laser_y <= y() || laser_x >= x() + (cols * cell_width) || laser_x <= x())
-    {
+void GameBoard::updateLaserPosition() {
+    if (laser_y >= y() + (rows * cell_height) || laser_y <= y() || laser_x >= x() + (cols * cell_width) || laser_x <= x()) {
         laser_active = false;
         laser_path.clear();
         redraw();
@@ -606,17 +524,14 @@ void GameBoard::updateLaserPosition()
          (laser_direction == SOUTH && laser_y > goal_y) ||
          (laser_direction == EAST && laser_x > goal_x) ||
          (laser_direction == WEST && laser_x < goal_x)) &&
-        (l_idx < laser_path_squares.size()))
-    {
+        (l_idx < laser_path_squares.size())) {
         laser_x = goal_x;
         laser_y = goal_y;
     }
 
     // determine next direction if we are at the middle of a square
-    if (laser_x == goal_x && laser_y == goal_y)
-    {
-        if (l_idx >= laser_path_squares.size() - 1)
-        {
+    if (laser_x == goal_x && laser_y == goal_y) {
+        if (l_idx >= laser_path_squares.size() - 1) {
             laser_active = false;
             laser_path.clear();
             redraw();
@@ -627,18 +542,14 @@ void GameBoard::updateLaserPosition()
         current_segment = laser_path_squares[l_idx];
         auto [cur_row, cur_col, end_row, end_col] = current_segment;
 
-        if (cur_row == end_row)
-        {
+        if (cur_row == end_row) {
             laser_direction = (cur_col < end_col) ? EAST : WEST;
-        }
-        else
-        {
+        } else {
             laser_direction = (cur_row < end_row) ? SOUTH : NORTH;
         }
     }
 
-    switch (laser_direction)
-    {
+    switch (laser_direction) {
     case NORTH:
         laser_y -= laser_step;
         break;
@@ -663,18 +574,15 @@ void GameBoard::updateLaserPosition()
     redraw();
 }
 
-void GameBoard::laser_timer_cb(void *data)
-{
+void GameBoard::laser_timer_cb(void *data) {
     GameBoard *gb = static_cast<GameBoard *>(data);
-    if (gb->laser_active)
-    {
+    if (gb->laser_active) {
         gb->updateLaserPosition();
         Fl::repeat_timeout(0.01, laser_timer_cb, data);
     }
 }
 
-void GameBoard::calculateLaserPathSquares()
-{
+void GameBoard::calculateLaserPathSquares() {
     laser_path_squares.clear();
 
     int current_row = laser_square_row;
@@ -682,15 +590,13 @@ void GameBoard::calculateLaserPathSquares()
     LaserDirection direction = laser_direction;
 
     bool calculating = true;
-    while (calculating)
-    {
+    while (calculating) {
         int start_row = current_row;
         int start_col = current_col;
         int end_row = current_row;
         int end_col = current_col;
 
-        switch (direction)
-        {
+        switch (direction) {
         case NORTH:
             end_row -= 1;
             break;
@@ -706,8 +612,7 @@ void GameBoard::calculateLaserPathSquares()
         }
 
         // out of bounds?
-        if (end_row < 0 || end_row >= rows || end_col < 0 || end_col >= cols)
-        {
+        if (end_row < 0 || end_row >= rows || end_col < 0 || end_col >= cols) {
             break;
         }
 
@@ -719,8 +624,7 @@ void GameBoard::calculateLaserPathSquares()
 
         std::string piece_str = board_pieces[current_row][current_col];
 
-        if (piece_str == "--")
-        {
+        if (piece_str == "--") {
             continue;
         }
 
@@ -728,8 +632,7 @@ void GameBoard::calculateLaserPathSquares()
         auto [piece_type, piece_orientation] = getPieceTypeAndOrientation(piece_str);
         auto reflection_result = reflections_map[direction][piece_type][piece_orientation];
 
-        switch (reflection_result)
-        {
+        switch (reflection_result) {
         case RESULT_ABSORBED:
             calculating = false;
             break;
@@ -755,8 +658,7 @@ void GameBoard::calculateLaserPathSquares()
     }
 }
 
-std::pair<GameBoard::PieceType, GameBoard::PieceOrientation> GameBoard::getPieceTypeAndOrientation(const std::string &piece_str)
-{
+std::pair<GameBoard::PieceType, GameBoard::PieceOrientation> GameBoard::getPieceTypeAndOrientation(const std::string &piece_str) {
 
     char piece_char = std::toupper(piece_str[0]);
     char orient_char = piece_str[1];
@@ -764,8 +666,7 @@ std::pair<GameBoard::PieceType, GameBoard::PieceOrientation> GameBoard::getPiece
     PieceType piece_type;
     PieceOrientation piece_orientation;
 
-    switch (piece_char)
-    {
+    switch (piece_char) {
     case 'P':
         piece_type = PYRAMID;
         break;
@@ -785,8 +686,7 @@ std::pair<GameBoard::PieceType, GameBoard::PieceOrientation> GameBoard::getPiece
         throw std::invalid_argument("Invalid piece type");
     }
 
-    switch (orient_char)
-    {
+    switch (orient_char) {
     case '0':
         piece_orientation = ORIENT_NORTH;
         break;
@@ -806,31 +706,25 @@ std::pair<GameBoard::PieceType, GameBoard::PieceOrientation> GameBoard::getPiece
     return std::make_pair(piece_type, piece_orientation);
 }
 
-bool GameBoard::squareContainsPiece(int square_num)
-{
+bool GameBoard::squareContainsPiece(int square_num) {
     int row = square_num / cols;
     int col = square_num % cols;
     return board_pieces[row][col] != "--";
 }
 
-void GameBoard::rebuildReloadKhetAILib()
-{
+void GameBoard::rebuildReloadKhetAILib() {
     std::cout << "\nRebuilding and reloading KhetAI lib..." << std::endl;
 
     int build_result = system("./build_khetai.sh");
-    if (build_result != 0)
-    {
+    if (build_result != 0) {
         std::cerr << "Failed to rebuild KhetAI lib" << std::endl;
         return;
     }
 
-    try
-    {
+    try {
         ai_loader.reload_library("./libkhetai.so");
         std::cout << "KhetAI lib reloaded successfully" << std::endl;
-    }
-    catch (const std::runtime_error &e)
-    {
+    } catch (const std::runtime_error &e) {
         std::cerr << "Failed to reload KhetAI lib: " << e.what() << std::endl;
     }
 }

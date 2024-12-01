@@ -1,14 +1,13 @@
 #ifndef AI_LOADER_H
 #define AI_LOADER_H
 
+#include "../../khetai_lib.h"
 #include <dlfcn.h>
 #include <stdexcept>
 #include <string>
-#include "../../khetai_lib.h"
 
-class AILoader
-{
-public:
+class AILoader {
+  public:
     AILoader(const std::string &lib_path);
     ~AILoader();
 
@@ -24,7 +23,7 @@ public:
     int (*get_get_rotation())(Move);
     void reload_library(const std::string &lib_path);
 
-private:
+  private:
     void *handle;
     void load_library(const std::string &lib_path);
     void *get_symbol(const std::string &symbol_name);
