@@ -34,22 +34,10 @@ enum Orientation {
     WEST
 };
 
-extern enum Player whose_turn;
-extern enum Player starter;
-extern int initial_depth;
-
 // north, east, south, west, diagonals
 static const int directions[8] = {-12, 1, 12, -1, (12 + 1), (12 - 1), (-12 + 1), (-12 - 1)};
 static const int rotations[2] = {1, -1};
 static const int sphinx_loc[2] = {106, 13};
-
-extern int pharaoh_loc[2];
-
-extern Square board[120];
-extern Move undo_moves[MAX_DEPTH];
-extern int undo_capture_indices[MAX_DEPTH];
-extern Square undo_capture_squares[MAX_DEPTH];
-extern int undo_index;
 
 static const int can_move[2][120] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -104,23 +92,6 @@ void print_board();
 #ifdef __cplusplus
 }
 #endif
-
-Square str_to_square(char *str);
-void print_piece(Square s);
-
-void find_valid_moves(Move *valid_moves, int *vi);
-void find_valid_anubis_pyramid_moves(int i, Move *valid_moves, int *vi);
-void find_valid_scarab_moves(int i, Move *valid_moves, int *vi);
-void find_valid_pharaoh_moves(int i, Move *valid_moves, int *vi);
-void find_valid_sphinx_moves(int i, Move *valid_moves, int *vi);
-
-int alphabeta(int depth, enum Player player, int alpha, int beta);
-int calculate_score();
-int distance_from_pharaoh(int i, int p);
-
-void undo_move();
-void fire_laser(uint64_t *hash);
-bool is_move_legal(Move move);
 
 static inline bool is_piece(Square s) { return s > 0; }
 
@@ -186,13 +157,6 @@ static const int reflections[4][5][4] = {
      {DEAD, DEAD, DEAD, DEAD},
      {ABSORBED, ABSORBED, ABSORBED, ABSORBED}}};
 
-extern uint64_t keys[0xFF][120];
-extern uint64_t hashes[MAX_DEPTH];
-extern uint64_t turn_key;
-extern int hashes_index;
-extern bool checkmate;
-
-uint64_t get_board_hash();
 static uint64_t seed = 1070372;
 static inline uint64_t random_number() {
     seed ^= seed >> 12;
@@ -216,7 +180,6 @@ typedef struct HashEntry {
 
 extern HashEntry table[TABLE_SIZE];
 static inline HashEntry *search_table(uint64_t key) { return &table[key % TABLE_SIZE]; };
-void insert_table(HashEntry *entry, uint64_t key, int depth, int flag, int score, Move move);
 
 #define EPT 0xFF
 typedef struct PieceTracker {
@@ -224,7 +187,6 @@ typedef struct PieceTracker {
     uint8_t board_idx_position[120];
 } PieceTracker;
 extern PieceTracker piece_trackers[2];
-void init_piece_trackers();
 
 static inline uint8_t get_board_index(enum Player player, uint8_t pos_idx) { return piece_trackers[player].positions[pos_idx]; }
 static inline uint8_t get_position_index(enum Player player, uint8_t board_idx) { return piece_trackers[player].board_idx_position[board_idx]; }
