@@ -4,13 +4,10 @@
 #include <time.h>
 
 static int convert_index(int i) {
-    int row = i / 12;
-    int col = i % 12;
+    int row = (i / 12) - 1;
+    int col = (i % 12) - 1;
 
-    int new_row = row - 1;
-    int new_col = col - 1;
-
-    return (new_row * 10) + new_col;
+    return (row * 10) + col;
 }
 
 VALUE move(VALUE self, VALUE board_array, VALUE _player, VALUE _max_depth, VALUE _max_time) {

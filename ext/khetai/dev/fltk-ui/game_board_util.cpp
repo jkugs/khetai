@@ -96,14 +96,6 @@ Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string
 }
 
 void get_row_col(int index, int &row, int &col) {
-    int border_width = 1;
-    int width_with_border = 10 + 2 * border_width;
-
-    int adjusted_index = index;
-
-    int row_with_border = adjusted_index / width_with_border;
-    int col_with_border = adjusted_index % width_with_border;
-
-    row = row_with_border - border_width;
-    col = col_with_border - border_width;
+    row = (index / 12) - 1;
+    col = (index % 12) - 1;
 }
