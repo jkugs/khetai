@@ -3,6 +3,16 @@
 #include <stdlib.h>
 #include <time.h>
 
+static int convert_index(int i) {
+    int row = i / 12;
+    int col = i % 12;
+
+    int new_row = row - 1;
+    int new_col = col - 1;
+
+    return (new_row * 10) + new_col;
+}
+
 VALUE move(VALUE self, VALUE board_array, VALUE _player, VALUE _max_depth, VALUE _max_time) {
     // verify parameters
     int player = NUM2INT(_player);
@@ -90,8 +100,8 @@ VALUE move(VALUE self, VALUE board_array, VALUE _player, VALUE _max_depth, VALUE
     make_move(best_move);
 
     VALUE out = rb_ary_new2(3);
-    rb_ary_store(out, 0, INT2NUM(get_start(best_move)));
-    rb_ary_store(out, 1, INT2NUM(get_end(best_move)));
+    rb_ary_store(out, 0, INT2NUM(convert_index(get_start(best_move))));
+    rb_ary_store(out, 1, INT2NUM(convert_index(get_end(best_move))));
     rb_ary_store(out, 2, INT2NUM(get_rotation(best_move)));
 
     return out;
