@@ -165,7 +165,8 @@ static inline uint64_t random_number() {
     return seed * 0x2545F4914F6CDD1DLL;
 }
 
-#define TABLE_SIZE 0x3FFFFF
+#define TABLE_SIZE 0x400000
+#define TABLE_MASK 0x3FFFFF
 
 #define EXACT 0
 #define LOWERBOUND 1
@@ -179,7 +180,7 @@ typedef struct HashEntry {
 } HashEntry;
 
 extern HashEntry table[TABLE_SIZE];
-static inline HashEntry *search_table(uint64_t key) { return &table[key % TABLE_SIZE]; };
+static inline HashEntry *search_table(uint64_t key) { return &table[key & TABLE_MASK]; };
 
 #define EPT 0xFF
 typedef struct PieceTracker {
