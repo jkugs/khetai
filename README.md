@@ -1,5 +1,7 @@
 # KhetAI
 
+An AI engine for the board game Khet. This gem provides move calculation for a specified color with configurable search depth and time limits.
+
 ## Installation
 
     $ gem install khetai
@@ -45,8 +47,20 @@ The representation of the board gets converted an array of 8-bit integers once i
 
 The internals of the gem are written in C, located in `ext/khetai`.
 
+## Development System Requirements
+
+To build the gem from source, you'll need:
+- Linux operating system
+- Ruby >= 2.0.0
+- GCC or compatible C compiler
+- Development headers (usually provided by ruby-dev or ruby-devel package)
+
 ## Build and Deploy Commands
 
+This project uses `asdf` as the version manager for Ruby. However, any Ruby version greater than `2.0.0` should work to compile this gem.
+
+    $ gem install bundler
+    $ bundle install
     $ bundle exec rake compile
     $ bundle exec rake build
     $ gem install pkg/khetai-<version>.gem
