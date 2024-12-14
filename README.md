@@ -50,7 +50,6 @@ The internals of the gem are written in C, located in `ext/khetai`.
 ## Development System Requirements
 
 To build the gem from source, you'll need:
-- Linux operating system
 - Ruby >= 2.0.0
 - GCC or compatible C compiler
 - Development headers (usually provided by ruby-dev or ruby-devel package)
