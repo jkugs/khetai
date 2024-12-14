@@ -134,6 +134,11 @@ int GameBoard::handle(int event) {
         if (key == 'r') {
             resetPieces();
         } else if (key == FL_Enter) {
+            square_selected = false;
+            square_selected_num = -1;
+            redraw();
+            Fl::flush();
+
             const char *max_time_value = max_time_input->value();
             if (!max_time_value || max_time_value[0] == '\0') {
                 max_time_input->value("5");
@@ -507,7 +512,6 @@ void GameBoard::updateLaserPosition() {
     if (laser_y >= y() + (rows * cell_height) || laser_y <= y() || laser_x >= x() + (cols * cell_width) || laser_x <= x()) {
         laser_active = false;
         laser_path.clear();
-        redraw();
         return;
     }
 
