@@ -65,7 +65,7 @@ class GameBoard : public Fl_Widget {
     int cell_width, cell_height;
     bool square_selected = false;
     bool laser_active = false;
-    int laser_step = 3;
+    int laser_step = 5;
     LaserDirection laser_direction;
     float laser_y, laser_x;
     bool remove_piece = false;

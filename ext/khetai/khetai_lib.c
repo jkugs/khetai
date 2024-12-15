@@ -154,7 +154,7 @@ int calculate_score() {
         enum Player player = j;
         for (int k = 0; k < 13; k++) {
             int i = get_board_index(player, k);
-            if (i != EPT) {
+            if (i != EMPTY) {
                 Square s = board[i];
                 int value = 0;
                 switch (get_piece(s)) {
@@ -217,15 +217,21 @@ void make_move(Move move) {
         // add starting piece to end location
         hash ^= keys[board[end]][end];
 
-        enum Player moving_player = get_owner(moving_piece);
-        update_piece_tracker(moving_player, start, end);
-
         // add ending piece to start location if swapping
         if (is_piece(board[start])) {
             hash ^= keys[board[start]][start];
 
             enum Player other_player = get_owner(board[start]);
-            update_piece_tracker(other_player, end, start);
+            if (get_owner(moving_piece) == other_player)
+                update_piece_tracker(other_player, end, start, true);
+            else {
+                update_piece_tracker(moving_piece, start, end, false);
+                update_piece_tracker(other_player, end, start, false);
+            }
+
+        } else {
+            enum Player moving_player = get_owner(moving_piece);
+            update_piece_tracker(moving_player, start, end, false);
         }
 
         if (get_piece(moving_piece) == PHARAOH)
@@ -309,12 +315,18 @@ void undo_move() {
         board[start] = board[end];
         board[end] = moving_piece;
 
-        enum Player moving_player = get_owner(moving_piece);
-        update_piece_tracker(moving_player, start, end);
-
         if (board[start] != 0) {
             enum Player other_player = get_owner(board[start]);
-            update_piece_tracker(other_player, end, start);
+
+            if (get_owner(moving_piece) == other_player)
+                update_piece_tracker(other_player, end, start, true);
+            else {
+                update_piece_tracker(moving_piece, start, end, false);
+                update_piece_tracker(other_player, end, start, false);
+            }
+        } else {
+            enum Player moving_player = get_owner(moving_piece);
+            update_piece_tracker(moving_player, start, end, false);
         }
 
         if (get_piece(moving_piece) == PHARAOH)
@@ -326,7 +338,7 @@ void undo_move() {
 void find_valid_moves(Move *valid_moves, int *vi) {
     for (int i = 0; i < 13; i++) {
         uint8_t board_pos = piece_trackers[whose_turn].positions[i];
-        if (board_pos != EPT) {
+        if (board_pos != EMPTY) {
             enum Piece piece = get_piece(board[board_pos]);
             switch (piece) {
             case ANUBIS:
@@ -367,7 +379,7 @@ void find_valid_scarab_moves(int i, Move *valid_moves, int *vi) {
     for (int j = 0; j < 8; j++) {
         int dest = i + directions[j];
         if (can_move[whose_turn][dest]) {
-            if (!is_piece(board[dest]) || (get_owner(board[dest]) != whose_turn && get_piece(board[dest]) != PHARAOH)) {
+            if (!is_piece(board[dest]) || (get_piece(board[dest]) != SCARAB && get_piece(board[dest]) != PHARAOH)) {
                 valid_moves[(*vi)++] = new_move(i, dest, 0);
             }
         }
@@ -415,8 +427,8 @@ uint64_t get_board_hash() {
 
 void init_piece_trackers() {
     for (int i = 0; i < 13; i++) {
-        piece_trackers[SILVER].positions[i] = EPT;
-        piece_trackers[RED].positions[i] = EPT;
+        piece_trackers[SILVER].positions[i] = EMPTY;
+        piece_trackers[RED].positions[i] = EMPTY;
     }
 
     int si = 0;
@@ -435,8 +447,8 @@ void init_piece_trackers() {
                 ri++;
             }
         } else {
-            piece_trackers[SILVER].board_idx_position[i] = EPT;
-            piece_trackers[RED].board_idx_position[i] = EPT;
+            piece_trackers[SILVER].board_idx_position[i] = EMPTY;
+            piece_trackers[RED].board_idx_position[i] = EMPTY;
         }
     }
 }
@@ -445,9 +457,9 @@ bool is_move_legal(Move move) {
     int start = get_start(move);
     int end = get_end(move);
     if (is_piece(board[start]) && get_owner(board[start]) == whose_turn) {
-        if (!is_piece(board[end]) || get_rotation(move) != 0)
+        if (!is_piece(board[end]) || (get_rotation(move) != 0 && start == end))
             return true;
-        else if (is_piece(board[end]) && get_piece(board[start]) == SCARAB && get_piece(board[end]) <= 3)
+        else if (is_piece(board[end]) && (get_piece(board[start]) == SCARAB && get_piece(board[end]) < 3))
             return true;
     }
     return false;

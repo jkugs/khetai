@@ -182,7 +182,10 @@ typedef struct HashEntry {
 extern HashEntry table[TABLE_SIZE];
 static inline HashEntry *search_table(uint64_t key) { return &table[key & TABLE_MASK]; };
 
-#define EPT 0xFF
+#define NO_SWAP 0
+#define SWAP_SAME 1
+#define SWAP_OTHER 2
+#define EMPTY 0xFF
 typedef struct PieceTracker {
     uint8_t positions[13];
     uint8_t board_idx_position[120];
@@ -191,20 +194,28 @@ extern PieceTracker piece_trackers[2];
 
 static inline uint8_t get_board_index(enum Player player, uint8_t pos_idx) { return piece_trackers[player].positions[pos_idx]; }
 static inline uint8_t get_position_index(enum Player player, uint8_t board_idx) { return piece_trackers[player].board_idx_position[board_idx]; }
-static inline void update_piece_tracker(enum Player player, uint8_t old_board_idx, uint8_t new_board_idx) {
+static inline void update_piece_tracker(enum Player player, uint8_t old_board_idx, uint8_t new_board_idx, bool swap) {
     uint8_t pos_idx = get_position_index(player, old_board_idx);
-    piece_trackers[player].positions[pos_idx] = new_board_idx;
-    piece_trackers[player].board_idx_position[old_board_idx] = EPT;
-    piece_trackers[player].board_idx_position[new_board_idx] = pos_idx;
+    if (!swap) {
+        piece_trackers[player].positions[pos_idx] = new_board_idx;
+        piece_trackers[player].board_idx_position[old_board_idx] = EMPTY;
+        piece_trackers[player].board_idx_position[new_board_idx] = pos_idx;
+    } else {
+        uint8_t other_pos_idx = get_position_index(player, new_board_idx);
+        piece_trackers[player].positions[pos_idx] = new_board_idx;
+        piece_trackers[player].positions[other_pos_idx] = old_board_idx;
+        piece_trackers[player].board_idx_position[new_board_idx] = pos_idx;
+        piece_trackers[player].board_idx_position[old_board_idx] = other_pos_idx;
+    }
 }
 static inline void remove_from_piece_tracker(enum Player player, uint8_t board_idx) {
     uint8_t pos_idx = get_position_index(player, board_idx);
-    piece_trackers[player].positions[pos_idx] = EPT;
-    piece_trackers[player].board_idx_position[board_idx] = EPT;
+    piece_trackers[player].positions[pos_idx] = EMPTY;
+    piece_trackers[player].board_idx_position[board_idx] = EMPTY;
 }
 static inline void add_to_piece_tracker(enum Player player, uint8_t board_idx) {
     uint8_t pos_idx = 0;
-    while (piece_trackers[player].positions[pos_idx] != EPT)
+    while (piece_trackers[player].positions[pos_idx] != EMPTY)
         pos_idx++;
     piece_trackers[player].positions[pos_idx] = board_idx;
     piece_trackers[player].board_idx_position[board_idx] = pos_idx;
