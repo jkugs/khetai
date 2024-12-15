@@ -5,10 +5,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#ifdef __cplusplus
-#include <ctime>
-#endif
-
 typedef uint8_t Square;
 typedef uint32_t Move;
 

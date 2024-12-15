@@ -166,11 +166,12 @@ int calculate_score() {
                     value += pyramid_score;
                     value += (rand() % 51) - 25;
                     break;
-                case SCARAB:
+                case SCARAB: {
                     int max_distance = 16;
                     int base_score = 1000;
                     value += (max_distance - distance_from_pharaoh(i, pharaoh_loc[opposite_player(player)])) * base_score / max_distance;
                     break;
+                }
                 case PHARAOH:
                     value += pharaoh_score;
                     break;
