@@ -211,31 +211,32 @@ void make_move(Move move) {
         if (is_piece(board[end]))
             hash ^= keys[board[end]][end];
 
-        Square moving_piece = board[start];
-        board[start] = board[end];
-        board[end] = moving_piece;
+        Square starting_square = board[start];
+        Square ending_square = board[end];
+        board[start] = ending_square;
+        board[end] = starting_square;
+
         // add starting piece to end location
-        hash ^= keys[board[end]][end];
+        hash ^= keys[starting_square][end];
 
-        // add ending piece to start location if swapping
-        if (is_piece(board[start])) {
-            hash ^= keys[board[start]][start];
+        if (!is_piece(ending_square)) {
+            enum Player moving_player = get_owner(starting_square);
+            update_piece_tracker(moving_player, start, end, false);
+        } else {
+            // add ending piece to start location if swapping
+            hash ^= keys[ending_square][start];
 
-            enum Player other_player = get_owner(board[start]);
-            if (get_owner(moving_piece) == other_player)
+            enum Player other_player = get_owner(ending_square);
+            if (get_owner(starting_square) == other_player)
                 update_piece_tracker(other_player, end, start, true);
             else {
-                update_piece_tracker(moving_piece, start, end, false);
+                update_piece_tracker(starting_square, start, end, false);
                 update_piece_tracker(other_player, end, start, false);
             }
-
-        } else {
-            enum Player moving_player = get_owner(moving_piece);
-            update_piece_tracker(moving_player, start, end, false);
         }
 
-        if (get_piece(moving_piece) == PHARAOH)
-            pharaoh_loc[get_owner(moving_piece)] = end;
+        if (get_piece(starting_square) == PHARAOH)
+            pharaoh_loc[get_owner(starting_square)] = end;
     }
 
     undo_moves[undo_index] = new_move(end, start, -rotation);
@@ -311,26 +312,27 @@ void undo_move() {
     if (rotation != 0) {
         board[start] = rotate(board[start], rotation);
     } else {
-        Square moving_piece = board[start];
-        board[start] = board[end];
-        board[end] = moving_piece;
+        Square starting_square = board[start];
+        Square ending_square = board[end];
+        board[start] = ending_square;
+        board[end] = starting_square;
 
-        if (board[start] != 0) {
-            enum Player other_player = get_owner(board[start]);
+        if (ending_square == 0) {
+            enum Player moving_player = get_owner(starting_square);
+            update_piece_tracker(moving_player, start, end, false);
+        } else {
+            enum Player other_player = get_owner(ending_square);
 
-            if (get_owner(moving_piece) == other_player)
+            if (get_owner(starting_square) == other_player)
                 update_piece_tracker(other_player, end, start, true);
             else {
-                update_piece_tracker(moving_piece, start, end, false);
+                update_piece_tracker(starting_square, start, end, false);
                 update_piece_tracker(other_player, end, start, false);
             }
-        } else {
-            enum Player moving_player = get_owner(moving_piece);
-            update_piece_tracker(moving_player, start, end, false);
         }
 
-        if (get_piece(moving_piece) == PHARAOH)
-            pharaoh_loc[get_owner(moving_piece)] = end;
+        if (get_piece(starting_square) == PHARAOH)
+            pharaoh_loc[get_owner(starting_square)] = end;
     }
     checkmate = false;
 }
