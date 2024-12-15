@@ -219,8 +219,8 @@ void make_move(Move move) {
         // add starting piece to end location
         hash ^= keys[starting_square][end];
 
+        enum Player moving_player = get_owner(starting_square);
         if (!is_piece(ending_square)) {
-            enum Player moving_player = get_owner(starting_square);
             update_piece_tracker(moving_player, start, end, false);
         } else {
             // add ending piece to start location if swapping
@@ -230,7 +230,7 @@ void make_move(Move move) {
             if (get_owner(starting_square) == other_player)
                 update_piece_tracker(other_player, end, start, true);
             else {
-                update_piece_tracker(starting_square, start, end, false);
+                update_piece_tracker(moving_player, start, end, false);
                 update_piece_tracker(other_player, end, start, false);
             }
         }
@@ -317,8 +317,8 @@ void undo_move() {
         board[start] = ending_square;
         board[end] = starting_square;
 
+        enum Player moving_player = get_owner(starting_square);
         if (ending_square == 0) {
-            enum Player moving_player = get_owner(starting_square);
             update_piece_tracker(moving_player, start, end, false);
         } else {
             enum Player other_player = get_owner(ending_square);
@@ -326,7 +326,7 @@ void undo_move() {
             if (get_owner(starting_square) == other_player)
                 update_piece_tracker(other_player, end, start, true);
             else {
-                update_piece_tracker(starting_square, start, end, false);
+                update_piece_tracker(moving_player, start, end, false);
                 update_piece_tracker(other_player, end, start, false);
             }
         }
