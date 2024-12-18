@@ -21,7 +21,11 @@ The KhetAI Test Harness provides a GUI for interacting with the KhetAI library. 
 
 ### Fire the Laser
 
-- `Space`: Fires the laser from whichever is selected. This is just used for visualization purposes.
+- `Space`: Fires the laser from whichever Sphinx is selected. This is just used for visualization purposes.
+
+### Remove Piece
+
+- `del`: Removes the piece that is currently selected.
 
 ### Request AI Move
 
