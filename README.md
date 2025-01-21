@@ -45,7 +45,7 @@ The representation of the board gets converted an array of 8-bit integers once i
 
 ## Development
 
-The internals of the gem are written in C, located in `ext/khetai`.
+The internals of the gem are written in C, located in the [ext/khetai](/ext/khetai) directory.
 
 ## Development System Requirements
 
