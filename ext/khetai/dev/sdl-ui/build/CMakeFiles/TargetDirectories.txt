@@ -1,0 +1,3 @@
+/home/kuglics/workspace/khetai/ext/khetai/dev/sdl-ui/build/CMakeFiles/khet-sdl.dir
+/home/kuglics/workspace/khetai/ext/khetai/dev/sdl-ui/build/CMakeFiles/edit_cache.dir
+/home/kuglics/workspace/khetai/ext/khetai/dev/sdl-ui/build/CMakeFiles/rebuild_cache.dir
