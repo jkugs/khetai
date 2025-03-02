@@ -6,11 +6,8 @@
 /pkg/
 /spec/reports/
 /tmp/
-/build/
 /scripts/
-/ext/khetai/dev/build/
-/ext/khetai/dev/sdl-ui/build/
-/ext/khetai/dev/fltk-ui/build/
+**/build/
 /ext/khetai/dev/fltk-ui/build_khetai/
 .vscode
 *.so
