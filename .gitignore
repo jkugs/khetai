@@ -9,6 +9,7 @@
 /build/
 /scripts/
 /ext/khetai/dev/build/
+/ext/khetai/dev/sdl-ui/build/
 /ext/khetai/dev/fltk-ui/build/
 /ext/khetai/dev/fltk-ui/build_khetai/
 .vscode
