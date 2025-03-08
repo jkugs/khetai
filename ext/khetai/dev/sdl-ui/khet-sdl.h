@@ -6,13 +6,13 @@
 #define ROWS 8
 #define COLS 10
 
-#define WINDOW_WIDTH  800
-#define WINDOW_HEIGHT (int)(WINDOW_WIDTH * 0.8)
-#define WINDOW_BUFFER 30
+#define WINDOW_WIDTH  (800)
+#define WINDOW_HEIGHT (WINDOW_WIDTH * 0.8)
+#define WINDOW_BUFFER (30)
 #define BOARD_WIDTH   (WINDOW_WIDTH - (WINDOW_BUFFER * 2))
-#define BOARD_HEIGHT  (int)(BOARD_WIDTH * 0.8)
+#define BOARD_HEIGHT  (BOARD_WIDTH * 0.8)
 #define SQUARE_SIZE   (BOARD_WIDTH / 10)
-#define PIECE_SIZE    (int)(SQUARE_SIZE * 0.8)
+#define PIECE_SIZE    (SQUARE_SIZE * 0.8)
 
 typedef struct {
     double x, y;
@@ -31,7 +31,8 @@ typedef enum {
     ANUBIS,
     PYRAMID,
     SCARAB,
-    PHARAOH
+    PHARAOH,
+    LASER
 } PieceType;
 
 typedef enum {
@@ -42,17 +43,21 @@ typedef enum {
 } Direction;
 
 typedef struct {
-    Point point;
-    Position position;
     PieceType piece_type;
     Color color;
     Direction direction;
 } Piece;
 
 typedef struct {
+    Point point;
+    Position position;
+    Piece *piece;
+} Square;
+
+typedef struct {
     SDL_Window *win;
     SDL_Renderer *ren;
-    Piece board[8][10];
+    Square board[8][10];
     Position clicked_pos;
     Position cur_clicked_pos;
     bool clicked;

@@ -2,20 +2,57 @@
 #include "khet-sdl.h"
 #include "drawing.h"
 #include <SDL3/SDL_main.h>
+#include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+char *init_pieces[8][10] = {
+    {"L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--"},
+    {"--", "--", "P2", "--", "--", "--", "--", "--", "--", "--"},
+    {"--", "--", "--", "p3", "--", "--", "--", "--", "--", "--"},
+    {"P0", "--", "p2", "--", "S2", "S3", "--", "P1", "--", "p3"},
+    {"P1", "--", "p3", "--", "s1", "s0", "--", "P0", "--", "p2"},
+    {"--", "--", "--", "--", "--", "--", "P1", "--", "--", "--"},
+    {"--", "--", "--", "--", "--", "--", "--", "p0", "--", "--"},
+    {"--", "--", "p3", "a0", "x0", "a0", "--", "--", "--", "l0"}};
 
 void init_board(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            Piece *p = &as->board[i][j];
-            p->color = RED;
-            p->direction = NORTH;
-            p->piece_type = PYRAMID;
-            p->position.row = i;
-            p->position.col = j;
-            p->point.x = (j * SQUARE_SIZE) + (WINDOW_BUFFER);
-            p->point.y = (i * SQUARE_SIZE) + (WINDOW_BUFFER);
+            Square *s = &as->board[i][j];
+            s->position.row = i;
+            s->position.col = j;
+            s->point.x = (j * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5;
+            s->point.y = (i * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5;
+
+            char *piece = init_pieces[i][j];
+            if (strcmp(piece, "--") == 0) {
+                s->piece = NULL;
+                continue;
+            }
+
+            s->piece = (Piece *)malloc(sizeof(Piece));
+
+            Piece *p = s->piece;
+            p->color = (isupper(piece[0])) ? RED : SILVER;
+
+            switch (toupper(piece[0])) {
+                case 'P': p->piece_type = PYRAMID; break;
+                case 'S': p->piece_type = SCARAB; break;
+                case 'A': p->piece_type = ANUBIS; break;
+                case 'X': p->piece_type = PHARAOH; break;
+                case 'L': p->piece_type = LASER; break;
+                default: break;
+            }
+
+            switch (piece[1]) {
+                case '0': p->direction = NORTH; break;
+                case '1': p->direction = EAST; break;
+                case '2': p->direction = SOUTH; break;
+                case '3': p->direction = WEST; break;
+                default: break;
+            }
         }
     }
 }
@@ -25,10 +62,6 @@ SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     SDL_SetRenderDrawColor(as->ren, 169, 169, 169, 255);
     SDL_RenderClear(as->ren);
     SDL_SetRenderDrawBlendMode(as->ren, SDL_BLENDMODE_BLEND);
-
-    SDL_SetRenderDrawColor(as->ren, 0, 0, 0, 255);
-    SDL_FRect square = {WINDOW_BUFFER, WINDOW_BUFFER, BOARD_WIDTH, BOARD_HEIGHT};
-    SDL_RenderRect(as->ren, &square);
 
     // New click registered
     if (as->clicked) {
@@ -45,19 +78,22 @@ SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     }
 
     // Highlight clicked square
-    if ((as->clicked_pos.row >= 0 && as->clicked_pos.col >= 0)) {
+    if (as->clicked_pos.row >= 0 && as->clicked_pos.col >= 0) {
+        // Yellow - highlight
         SDL_SetRenderDrawColor(as->ren, 255, 255, 0, 100);
         SDL_FRect highlight_square = {
-            (WINDOW_BUFFER + 1) + as->clicked_pos.col * SQUARE_SIZE,
-            (WINDOW_BUFFER + 1) + as->clicked_pos.row * SQUARE_SIZE,
-            SQUARE_SIZE - 2, SQUARE_SIZE - 2};
+            (WINDOW_BUFFER) + as->clicked_pos.col * SQUARE_SIZE,
+            (WINDOW_BUFFER) + as->clicked_pos.row * SQUARE_SIZE,
+            SQUARE_SIZE, SQUARE_SIZE};
         SDL_RenderFillRect(as->ren, &highlight_square);
         as->cur_clicked_pos.row = as->clicked_pos.row;
         as->cur_clicked_pos.col = as->clicked_pos.col;
     }
 
-    // Reset draw color to black for lines
+    // Black
     SDL_SetRenderDrawColor(as->ren, 0, 0, 0, 255);
+    SDL_FRect square = {WINDOW_BUFFER, WINDOW_BUFFER, BOARD_WIDTH, BOARD_HEIGHT};
+    SDL_RenderRect(as->ren, &square);
 
     // Draw vertical lines
     for (int i = 0; i <= 8; i++) {
@@ -75,10 +111,9 @@ SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     // Draw pieces
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            draw_pyramid(as, i, j);
-            // draw_pharaoh(as, i, j);
-            // draw_anubis(as, i, j);
-            // draw_scarab(as, i, j);
+            if (as->board[i][j].piece != NULL) {
+                draw_piece(as, i, j);
+            }
         }
     }
 

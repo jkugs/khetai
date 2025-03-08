@@ -1,3 +1,18 @@
+desktop:
 cmake -S . -B build
 cmake --build build/
 ./build/khet-sdl
+
+sdl3-wasm:
+git clone https://github.com/libsdl-org/SDL.git SDL3-wasm
+cd SDL3-wasm
+mkdir build-wasm
+cd build-wasm
+emcmake cmake .. -DSDL_TESTS=OFF
+emmake make -j4
+
+wasm:
+source ~/workspace/emsdk/emsdk_env.sh
+emcmake cmake -S . -B build-wasm -DSDL3_DIR=$PWD/SDL3-wasm/build-wasm
+emmake make -C build-wasm -j4
+emrun --no_browser --port 8080 build-wasm

@@ -7,7 +7,9 @@
 /spec/reports/
 /tmp/
 /scripts/
+**/SDL3-wasm/
 **/build/
+**/build-wasm/
 /ext/khetai/dev/fltk-ui/build_khetai/
 .vscode
 *.so

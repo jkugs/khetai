@@ -10,9 +10,11 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+void draw_piece(void *app_state_ptr, int row, int col);
 void draw_pyramid(void *app_state_ptr, int row, int col);
 void draw_scarab(void *app_state_ptr, int row, int col);
 void draw_anubis(void *app_state_ptr, int row, int col);
 void draw_pharaoh(void *app_state_ptr, int row, int col);
+void draw_laser(void *app_state_ptr, int row, int col);
 
 #endif
