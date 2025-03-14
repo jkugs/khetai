@@ -8,13 +8,15 @@ find_package(SDL3 REQUIRED)
 set(SOURCES
     khet-sdl.c
     drawing.c
+    ai.c
+    ../../khetai_lib.c
 )
 
 # Add the executable
 add_executable(khet-sdl ${SOURCES})
 
 # Include current directory for headers
-target_include_directories(khet-sdl PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(khet-sdl PRIVATE ${CMAKE_SOURCE_DIR} ../../)
 
 # Emscripten options for wasm target
 if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")

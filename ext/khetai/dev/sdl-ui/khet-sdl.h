@@ -23,44 +23,45 @@ typedef struct {
 } Position;
 
 typedef enum {
-    SILVER,
-    RED
+    SILVER_SDL,
+    RED_SDL
 } Color;
 
 typedef enum {
-    ANUBIS,
-    PYRAMID,
-    SCARAB,
-    PHARAOH,
-    LASER
-} PieceType;
+    ANUBIS_SDL,
+    PYRAMID_SDL,
+    SCARAB_SDL,
+    PHARAOH_SDL,
+    LASER_SDL
+} PieceType_SDL;
 
 typedef enum {
-    NORTH,
-    EAST,
-    SOUTH,
-    WEST
-} Direction;
+    NORTH_SDL,
+    EAST_SDL,
+    SOUTH_SDL,
+    WEST_SDL
+} Orientation_SDL;
 
 typedef struct {
-    PieceType piece_type;
+    PieceType_SDL piece_type;
     Color color;
-    Direction direction;
-} Piece;
+    Orientation_SDL orientation;
+} Piece_SDL;
 
 typedef struct {
     Point point;
     Position position;
-    Piece *piece;
-} Square;
+    Piece_SDL *piece;
+} Square_SDL;
 
 typedef struct {
     SDL_Window *win;
     SDL_Renderer *ren;
-    Square board[8][10];
+    Square_SDL board[8][10];
     Position clicked_pos;
     Position cur_clicked_pos;
     bool clicked;
+    bool selected;
 } AppState;
 
 #endif

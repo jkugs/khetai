@@ -1,6 +1,7 @@
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "khet-sdl.h"
 #include "drawing.h"
+#include "ai.h"
 #include <SDL3/SDL_main.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -20,7 +21,7 @@ void init_board(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            Square *s = &as->board[i][j];
+            Square_SDL *s = &as->board[i][j];
             s->position.row = i;
             s->position.col = j;
             s->point.x = (j * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5;
@@ -32,62 +33,93 @@ void init_board(void *app_state_ptr) {
                 continue;
             }
 
-            s->piece = (Piece *)malloc(sizeof(Piece));
+            s->piece = (Piece_SDL *)malloc(sizeof(Piece_SDL));
 
-            Piece *p = s->piece;
-            p->color = (isupper(piece[0])) ? RED : SILVER;
+            Piece_SDL *p = s->piece;
+            p->color = (isupper(piece[0])) ? RED_SDL : SILVER_SDL;
 
             switch (toupper(piece[0])) {
-                case 'P': p->piece_type = PYRAMID; break;
-                case 'S': p->piece_type = SCARAB; break;
-                case 'A': p->piece_type = ANUBIS; break;
-                case 'X': p->piece_type = PHARAOH; break;
-                case 'L': p->piece_type = LASER; break;
+                case 'P': p->piece_type = PYRAMID_SDL; break;
+                case 'S': p->piece_type = SCARAB_SDL; break;
+                case 'A': p->piece_type = ANUBIS_SDL; break;
+                case 'X': p->piece_type = PHARAOH_SDL; break;
+                case 'L': p->piece_type = LASER_SDL; break;
                 default: break;
             }
 
             switch (piece[1]) {
-                case '0': p->direction = NORTH; break;
-                case '1': p->direction = EAST; break;
-                case '2': p->direction = SOUTH; break;
-                case '3': p->direction = WEST; break;
+                case '0': p->orientation = NORTH_SDL; break;
+                case '1': p->orientation = EAST_SDL; break;
+                case '2': p->orientation = SOUTH_SDL; break;
+                case '3': p->orientation = WEST_SDL; break;
                 default: break;
             }
         }
     }
 }
 
+void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2) {
+    if (board[p2.row][p2.col].piece == NULL) {
+        board[p2.row][p2.col].piece = board[p1.row][p1.col].piece;
+        board[p1.row][p1.col].piece = NULL;
+    } else {
+        Piece_SDL *temp;
+        temp = board[p2.row][p2.col].piece;
+        board[p2.row][p2.col].piece = board[p1.row][p1.col].piece;
+        board[p1.row][p1.col].piece = temp;
+    }
+}
+
+void reset_selection(AppState *as) {
+    as->clicked_pos.row = -1;
+    as->clicked_pos.col = -1;
+    as->cur_clicked_pos.row = -1;
+    as->cur_clicked_pos.col = -1;
+    as->selected = false;
+}
+
+void process_click(void *app_state_ptr) {
+    AppState *as = (AppState *)app_state_ptr;
+
+    int clicked_row = as->clicked_pos.row;
+    int clicked_col = as->clicked_pos.col;
+
+    if (as->selected) {
+        if (as->cur_clicked_pos.row != clicked_row || as->cur_clicked_pos.col != clicked_col) {
+            move_piece(as->board, as->cur_clicked_pos, as->clicked_pos);
+        }
+        reset_selection(as);
+    } else if (as->board[clicked_row][clicked_col].piece != NULL) {
+        as->cur_clicked_pos.row = clicked_row;
+        as->cur_clicked_pos.col = clicked_col;
+        as->selected = true;
+    } else {
+        reset_selection(as);
+    }
+
+    as->clicked = false;
+}
+
 SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
+
+    if (as->clicked) {
+        process_click(as);
+    }
+
     SDL_SetRenderDrawColor(as->ren, 169, 169, 169, 255);
     SDL_RenderClear(as->ren);
     SDL_SetRenderDrawBlendMode(as->ren, SDL_BLENDMODE_BLEND);
 
-    // New click registered
-    if (as->clicked) {
-        if (as->cur_clicked_pos.row != as->clicked_pos.row || as->cur_clicked_pos.col != as->clicked_pos.col) {
-            as->cur_clicked_pos.row = as->clicked_pos.row;
-            as->cur_clicked_pos.col = as->clicked_pos.col;
-        } else {
-            as->clicked_pos.row = -1;
-            as->clicked_pos.col = -1;
-            as->cur_clicked_pos.row = -1;
-            as->cur_clicked_pos.col = -1;
-        }
-        as->clicked = false;
-    }
-
-    // Highlight clicked square
-    if (as->clicked_pos.row >= 0 && as->clicked_pos.col >= 0) {
+    // Highlight selected square
+    if (as->selected) {
         // Yellow - highlight
         SDL_SetRenderDrawColor(as->ren, 255, 255, 0, 100);
         SDL_FRect highlight_square = {
-            (WINDOW_BUFFER) + as->clicked_pos.col * SQUARE_SIZE,
-            (WINDOW_BUFFER) + as->clicked_pos.row * SQUARE_SIZE,
+            (WINDOW_BUFFER) + as->cur_clicked_pos.col * SQUARE_SIZE,
+            (WINDOW_BUFFER) + as->cur_clicked_pos.row * SQUARE_SIZE,
             SQUARE_SIZE, SQUARE_SIZE};
         SDL_RenderFillRect(as->ren, &highlight_square);
-        as->cur_clicked_pos.row = as->clicked_pos.row;
-        as->cur_clicked_pos.col = as->clicked_pos.col;
     }
 
     // Black
@@ -158,6 +190,22 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             as->clicked_pos.col = (mouse_x - WINDOW_BUFFER) / SQUARE_SIZE;
             as->clicked_pos.row = (mouse_y - WINDOW_BUFFER) / SQUARE_SIZE;
             as->clicked = true;
+        }
+    } else if (event->type == SDL_EVENT_KEY_UP) {
+        if (event->key.key == SDLK_RETURN) {
+            Move best_move = call_ai_move(as->board);
+            int start = get_start(best_move);
+            int end = get_end(best_move);
+            int rotation = get_rotation(best_move);
+
+            int start_row, start_col, end_row, end_col;
+            get_row_col(start, &start_row, &start_col);
+            get_row_col(end, &end_row, &end_col);
+
+            Position p1 = {start_row, start_col};
+            Position p2 = {end_row, end_col};
+
+            move_piece(as->board, p1, p2);
         }
     }
     return SDL_APP_CONTINUE;
