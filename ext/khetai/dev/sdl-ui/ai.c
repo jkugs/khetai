@@ -1,6 +1,6 @@
 #include "ai.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 Move call_ai_move(Square_SDL board[8][10]) {
     char *init_board[120];
@@ -26,7 +26,7 @@ Move call_ai_move(Square_SDL board[8][10]) {
                     case PYRAMID_SDL: piece_str[0] = piece->color == RED_SDL ? 'P' : 'p'; break;
                     case SCARAB_SDL: piece_str[0] = piece->color == RED_SDL ? 'S' : 's'; break;
                     case ANUBIS_SDL: piece_str[0] = piece->color == RED_SDL ? 'A' : 'a'; break;
-                    case PHARAOH_SDL: piece_str[0] = piece->color == RED_SDL ? 'X' : 'l'; break;
+                    case PHARAOH_SDL: piece_str[0] = piece->color == RED_SDL ? 'X' : 'x'; break;
                     case LASER_SDL: piece_str[0] = piece->color == RED_SDL ? 'L' : 'l'; break;
                     default: break;
                 }
@@ -52,7 +52,6 @@ Move call_ai_move(Square_SDL board[8][10]) {
     reset_undo();
     init_zobrist();
     srand((unsigned)time(NULL));
-
     setup_board(init_board);
 
     printf("\nstart:\n");
