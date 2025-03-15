@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char *init_pieces[8][10] = {
+static const char *const init_pieces[8][10] = {
     {"L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--"},
     {"--", "--", "P2", "--", "--", "--", "--", "--", "--", "--"},
     {"--", "--", "--", "p3", "--", "--", "--", "--", "--", "--"},
@@ -27,7 +27,7 @@ void init_board(void *app_state_ptr) {
             s->point.x = (j * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5;
             s->point.y = (i * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5;
 
-            char *piece = init_pieces[i][j];
+            const char *piece = init_pieces[i][j];
             if (strcmp(piece, "--") == 0) {
                 s->piece = NULL;
                 continue;
@@ -70,28 +70,54 @@ void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2) {
     }
 }
 
+void roate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise) {
+    Piece_SDL *p = board[pos.row][pos.col].piece;
+    switch (p->orientation) {
+    case NORTH_SDL: p->orientation = clockwise ? EAST_SDL : WEST_SDL; break;
+    case EAST_SDL: p->orientation = clockwise ? SOUTH_SDL : NORTH_SDL; break;
+    case SOUTH_SDL: p->orientation = clockwise ? WEST_SDL : EAST_SDL; break;
+    case WEST_SDL: p->orientation = clockwise ? NORTH_SDL : SOUTH_SDL; break;
+    default: break;
+    }
+}
+
 void reset_selection(AppState *as) {
     as->clicked_pos.row = -1;
     as->clicked_pos.col = -1;
     as->cur_clicked_pos.row = -1;
     as->cur_clicked_pos.col = -1;
     as->selected = false;
+
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
+            as->valid_squares[i][j] = 0;
+        }
+    }
 }
 
 void process_click(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
 
-    int clicked_row = as->clicked_pos.row;
-    int clicked_col = as->clicked_pos.col;
+    int row = as->clicked_pos.row;
+    int col = as->clicked_pos.col;
 
     if (as->selected) {
-        if (as->cur_clicked_pos.row != clicked_row || as->cur_clicked_pos.col != clicked_col) {
+        if (as->cur_clicked_pos.row != row || as->cur_clicked_pos.col != col) {
             move_piece(as->board, as->cur_clicked_pos, as->clicked_pos);
         }
         reset_selection(as);
-    } else if (as->board[clicked_row][clicked_col].piece != NULL) {
-        as->cur_clicked_pos.row = clicked_row;
-        as->cur_clicked_pos.col = clicked_col;
+    } else if (as->board[row][col].piece != NULL && as->board[row][col].piece->color == SILVER_SDL) {
+        as->cur_clicked_pos.row = row;
+        as->cur_clicked_pos.col = col;
+
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLS; j++) {
+                if (abs(i - row) <= 1 && abs(j - col) <= 1) {
+                    as->valid_squares[i][j] = 1;
+                }
+            }
+        }
+
         as->selected = true;
     } else {
         reset_selection(as);
@@ -107,49 +133,7 @@ SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
         process_click(as);
     }
 
-    SDL_SetRenderDrawColor(as->ren, 169, 169, 169, 255);
-    SDL_RenderClear(as->ren);
-    SDL_SetRenderDrawBlendMode(as->ren, SDL_BLENDMODE_BLEND);
-
-    // Highlight selected square
-    if (as->selected) {
-        // Yellow - highlight
-        SDL_SetRenderDrawColor(as->ren, 255, 255, 0, 100);
-        SDL_FRect highlight_square = {
-            (WINDOW_BUFFER) + as->cur_clicked_pos.col * SQUARE_SIZE,
-            (WINDOW_BUFFER) + as->cur_clicked_pos.row * SQUARE_SIZE,
-            SQUARE_SIZE, SQUARE_SIZE};
-        SDL_RenderFillRect(as->ren, &highlight_square);
-    }
-
-    // Black
-    SDL_SetRenderDrawColor(as->ren, 0, 0, 0, 255);
-    SDL_FRect square = {WINDOW_BUFFER, WINDOW_BUFFER, BOARD_WIDTH, BOARD_HEIGHT};
-    SDL_RenderRect(as->ren, &square);
-
-    // Draw vertical lines
-    for (int i = 0; i <= 8; i++) {
-        int x = (i * SQUARE_SIZE) + (WINDOW_BUFFER + SQUARE_SIZE);
-        int y = (WINDOW_BUFFER);
-        SDL_RenderLine(as->ren, x, y, x, (BOARD_HEIGHT + y) - 1);
-    }
-    // Draw horizontal lines
-    for (int i = 0; i <= 6; i++) {
-        int x = (WINDOW_BUFFER);
-        int y = (i * SQUARE_SIZE) + (WINDOW_BUFFER + SQUARE_SIZE);
-        SDL_RenderLine(as->ren, x, y, (BOARD_WIDTH + x) - 1, y);
-    }
-
-    // Draw pieces
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLS; j++) {
-            if (as->board[i][j].piece != NULL) {
-                draw_piece(as, i, j);
-            }
-        }
-    }
-
-    SDL_RenderPresent(as->ren);
+    draw(as);
     return SDL_APP_CONTINUE;
 }
 
@@ -192,6 +176,7 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             as->clicked = true;
         }
     } else if (event->type == SDL_EVENT_KEY_UP) {
+        // TODO: a move will be triggered by a valid move eventually...
         if (event->key.key == SDLK_RETURN) {
             Move best_move = call_ai_move(as->board);
             int start = get_start(best_move);
@@ -205,7 +190,12 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             Position p1 = {start_row, start_col};
             Position p2 = {end_row, end_col};
 
-            move_piece(as->board, p1, p2);
+            if (rotation != 0) {
+                bool clockwise = rotation == 1;
+                roate_piece(as->board, p1, clockwise);
+            } else {
+                move_piece(as->board, p1, p2);
+            }
         }
     }
     return SDL_APP_CONTINUE;

@@ -4,6 +4,7 @@ cmake --build build/
 ./build/khet-sdl
 
 sdl3-wasm:
+source ~/workspace/emsdk/emsdk_env.sh
 git clone https://github.com/libsdl-org/SDL.git SDL3-wasm
 cd SDL3-wasm
 mkdir build-wasm

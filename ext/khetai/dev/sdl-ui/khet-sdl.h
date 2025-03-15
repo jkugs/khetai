@@ -57,9 +57,10 @@ typedef struct {
 typedef struct {
     SDL_Window *win;
     SDL_Renderer *ren;
-    Square_SDL board[8][10];
+    Square_SDL board[ROWS][COLS];
     Position clicked_pos;
     Position cur_clicked_pos;
+    int valid_squares[ROWS][COLS];
     bool clicked;
     bool selected;
 } AppState;

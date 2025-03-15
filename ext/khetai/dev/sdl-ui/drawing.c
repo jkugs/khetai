@@ -1,6 +1,108 @@
 #include "drawing.h"
-#include "khet-sdl.h"
 #include <math.h>
+
+enum MovePermission {
+    S,
+    R,
+    B
+};
+
+static const int square_colors[8][10] = {
+    {B, S, B, B, B, B, B, B, R, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, S, B, B, B, B, B, B, R, B}};
+
+void draw(void *app_state_ptr) {
+    AppState *as = (AppState *)app_state_ptr;
+    SDL_SetRenderDrawColor(as->ren, 169, 169, 169, 255);
+    SDL_RenderClear(as->ren);
+    SDL_SetRenderDrawBlendMode(as->ren, SDL_BLENDMODE_BLEND);
+
+    // Highlight selected square
+    if (as->selected) {
+        // Yellow - highlight
+        SDL_SetRenderDrawColor(as->ren, 255, 255, 0, 100);
+        SDL_FRect highlight_square = {
+            (WINDOW_BUFFER) + as->cur_clicked_pos.col * SQUARE_SIZE,
+            (WINDOW_BUFFER) + as->cur_clicked_pos.row * SQUARE_SIZE,
+            SQUARE_SIZE, SQUARE_SIZE};
+        SDL_RenderFillRect(as->ren, &highlight_square);
+
+        // Highlight valid squares
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLS; j++) {
+                if (as->valid_squares[i][j] == 1 && (i != as->cur_clicked_pos.row || j != as->cur_clicked_pos.col)) {
+                    SDL_SetRenderDrawColor(as->ren, 153, 230, 153, 179);
+                    SDL_FRect valid_square = {
+                        (WINDOW_BUFFER) + j * SQUARE_SIZE,
+                        (WINDOW_BUFFER) + i * SQUARE_SIZE,
+                        SQUARE_SIZE, SQUARE_SIZE};
+                    SDL_RenderFillRect(as->ren, &valid_square);
+                }
+            }
+        }
+    }
+
+    // Black
+    SDL_SetRenderDrawColor(as->ren, 0, 0, 0, 255);
+    SDL_FRect square = {WINDOW_BUFFER, WINDOW_BUFFER, BOARD_WIDTH, BOARD_HEIGHT};
+    SDL_RenderRect(as->ren, &square);
+
+    // Draw vertical lines
+    for (int i = 0; i <= 8; i++) {
+        int x = (i * SQUARE_SIZE) + (WINDOW_BUFFER + SQUARE_SIZE);
+        int y = (WINDOW_BUFFER);
+        SDL_RenderLine(as->ren, x, y, x, (BOARD_HEIGHT + y) - 1);
+    }
+    // Draw horizontal lines
+    for (int i = 0; i <= 6; i++) {
+        int x = (WINDOW_BUFFER);
+        int y = (i * SQUARE_SIZE) + (WINDOW_BUFFER + SQUARE_SIZE);
+        SDL_RenderLine(as->ren, x, y, (BOARD_WIDTH + x) - 1, y);
+    }
+
+    // Draw inner squares and pieces
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
+            if (square_colors[i][j] == R) {
+                draw_inner_square(as, i, j, RED_COLOR);
+            } else if (square_colors[i][j] == S) {
+                draw_inner_square(as, i, j, SILVER_COLOR);
+            }
+
+            if (as->board[i][j].piece != NULL) {
+                draw_piece(as, i, j);
+            }
+        }
+    }
+
+    SDL_RenderPresent(as->ren);
+}
+
+void draw_inner_square(void *app_state_ptr, int row, int col, SDL_FColor color) {
+    AppState *as = (AppState *)app_state_ptr;
+    SDL_Renderer *ren = as->ren;
+    Point op = as->board[row][col].point;
+    Point cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
+
+    double inner_square_size = PIECE_SIZE * 0.8;
+    double half_size = inner_square_size * 0.5;
+    double x = cp.x - half_size;
+    double y = cp.y - half_size;
+
+    SDL_FRect square = {x, y, inner_square_size, inner_square_size};
+    Uint8 r = (Uint8)(color.r * 255);
+    Uint8 g = (Uint8)(color.g * 255);
+    Uint8 b = (Uint8)(color.b * 255);
+    Uint8 a = (Uint8)(color.a * 255);
+    SDL_SetRenderDrawColor(ren, r, g, b, a);
+    SDL_RenderRect(ren, &square);
+}
 
 void draw_piece(void *app_state_ptr, int row, int col) {
     AppState *as = (AppState *)app_state_ptr;
