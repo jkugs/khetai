@@ -5,13 +5,13 @@
 void draw_piece(void *app_state_ptr, int row, int col) {
     AppState *as = (AppState *)app_state_ptr;
 
-    switch(as->board[row][col].piece->piece_type) {
-        case PYRAMID_SDL: draw_pyramid(app_state_ptr, row, col); break;
-        case SCARAB_SDL: draw_scarab(app_state_ptr, row, col); break;
-        case ANUBIS_SDL: draw_anubis(app_state_ptr, row, col); break;
-        case PHARAOH_SDL: draw_pharaoh(app_state_ptr, row, col); break;
-        case LASER_SDL: draw_laser(app_state_ptr, row, col); break;
-        default: break;
+    switch (as->board[row][col].piece->piece_type) {
+    case PYRAMID_SDL: draw_pyramid(app_state_ptr, row, col); break;
+    case SCARAB_SDL: draw_scarab(app_state_ptr, row, col); break;
+    case ANUBIS_SDL: draw_anubis(app_state_ptr, row, col); break;
+    case PHARAOH_SDL: draw_pharaoh(app_state_ptr, row, col); break;
+    case LASER_SDL: draw_laser(app_state_ptr, row, col); break;
+    default: break;
     }
 }
 
@@ -51,15 +51,14 @@ void draw_laser(void *app_state_ptr, int row, int col) {
     Point original_vertices[3] = {
         {cp.x, cp.y - half_size},
         {cp.x - half_size, cp.y + half_size},
-        {cp.x + half_size, cp.y + half_size}
-    };
+        {cp.x + half_size, cp.y + half_size}};
 
     double angle = 0;
     switch (as->board[row][col].piece->orientation) {
-        case NORTH_SDL: angle = 0; break;
-        case EAST_SDL: angle = M_PI / 2; break;
-        case SOUTH_SDL: angle = M_PI; break;
-        case WEST_SDL: angle = 3 * M_PI / 2; break;
+    case NORTH_SDL: angle = 0; break;
+    case EAST_SDL: angle = M_PI / 2; break;
+    case SOUTH_SDL: angle = M_PI; break;
+    case WEST_SDL: angle = 3 * M_PI / 2; break;
     }
 
     double cos_a = cos(angle);
@@ -77,7 +76,6 @@ void draw_laser(void *app_state_ptr, int row, int col) {
     SDL_RenderGeometry(ren, NULL, vertices, 3, NULL, 0);
 }
 
-
 void draw_pyramid(void *app_state_ptr, int row, int col) {
     AppState *as = (AppState *)app_state_ptr;
     SDL_Renderer *ren = as->ren;
@@ -90,15 +88,14 @@ void draw_pyramid(void *app_state_ptr, int row, int col) {
     Point original_vertices[3] = {
         {cp.x - half_size, cp.y - half_size},
         {cp.x + half_size, cp.y + half_size},
-        {cp.x - half_size, cp.y + half_size}
-    };
+        {cp.x - half_size, cp.y + half_size}};
 
     double angle = 0;
     switch (as->board[row][col].piece->orientation) {
-        case NORTH_SDL: angle = 0; break;
-        case EAST_SDL: angle = M_PI / 2; break;
-        case SOUTH_SDL: angle = M_PI; break;
-        case WEST_SDL: angle = 3 * M_PI / 2; break;
+    case NORTH_SDL: angle = 0; break;
+    case EAST_SDL: angle = M_PI / 2; break;
+    case SOUTH_SDL: angle = M_PI; break;
+    case WEST_SDL: angle = 3 * M_PI / 2; break;
     }
 
     double cos_a = cos(angle);
@@ -185,30 +182,30 @@ void draw_anubis(void *app_state_ptr, int row, int col) {
     SDL_FPoint v1, v2, v3, v4;
     double half_size = PIECE_SIZE * 0.5;
     switch (as->board[row][col].piece->orientation) {
-        case NORTH_SDL:
-            v1 = (SDL_FPoint){cp.x - half_size, cp.y - half_size};
-            v2 = (SDL_FPoint){cp.x + half_size, cp.y - half_size};
-            v3 = (SDL_FPoint){cp.x + half_size, cp.y - half_size + thickness};
-            v4 = (SDL_FPoint){cp.x - half_size, cp.y - half_size + thickness};
-            break;
-        case EAST_SDL:
-            v1 = (SDL_FPoint){cp.x + half_size - thickness, cp.y - half_size};
-            v2 = (SDL_FPoint){cp.x + half_size, cp.y - half_size};
-            v3 = (SDL_FPoint){cp.x + half_size, cp.y + half_size};
-            v4 = (SDL_FPoint){cp.x + half_size - thickness, cp.y + half_size};
-            break;
-        case SOUTH_SDL:
-            v1 = (SDL_FPoint){cp.x - half_size, cp.y + half_size - thickness};
-            v2 = (SDL_FPoint){cp.x + half_size, cp.y + half_size - thickness};
-            v3 = (SDL_FPoint){cp.x + half_size, cp.y + half_size};
-            v4 = (SDL_FPoint){cp.x - half_size, cp.y + half_size};
-            break;
-        case WEST_SDL:
-            v1 = (SDL_FPoint){cp.x - half_size, cp.y - half_size};
-            v2 = (SDL_FPoint){cp.x - half_size + thickness, cp.y - half_size};
-            v3 = (SDL_FPoint){cp.x - half_size + thickness, cp.y + half_size};
-            v4 = (SDL_FPoint){cp.x - half_size, cp.y + half_size};
-            break;
+    case NORTH_SDL:
+        v1 = (SDL_FPoint){cp.x - half_size, cp.y - half_size};
+        v2 = (SDL_FPoint){cp.x + half_size, cp.y - half_size};
+        v3 = (SDL_FPoint){cp.x + half_size, cp.y - half_size + thickness};
+        v4 = (SDL_FPoint){cp.x - half_size, cp.y - half_size + thickness};
+        break;
+    case EAST_SDL:
+        v1 = (SDL_FPoint){cp.x + half_size - thickness, cp.y - half_size};
+        v2 = (SDL_FPoint){cp.x + half_size, cp.y - half_size};
+        v3 = (SDL_FPoint){cp.x + half_size, cp.y + half_size};
+        v4 = (SDL_FPoint){cp.x + half_size - thickness, cp.y + half_size};
+        break;
+    case SOUTH_SDL:
+        v1 = (SDL_FPoint){cp.x - half_size, cp.y + half_size - thickness};
+        v2 = (SDL_FPoint){cp.x + half_size, cp.y + half_size - thickness};
+        v3 = (SDL_FPoint){cp.x + half_size, cp.y + half_size};
+        v4 = (SDL_FPoint){cp.x - half_size, cp.y + half_size};
+        break;
+    case WEST_SDL:
+        v1 = (SDL_FPoint){cp.x - half_size, cp.y - half_size};
+        v2 = (SDL_FPoint){cp.x - half_size + thickness, cp.y - half_size};
+        v3 = (SDL_FPoint){cp.x - half_size + thickness, cp.y + half_size};
+        v4 = (SDL_FPoint){cp.x - half_size, cp.y + half_size};
+        break;
     }
 
     SDL_Vertex black_vertices[4] = {

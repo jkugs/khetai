@@ -23,19 +23,19 @@ Move call_ai_move(Square_SDL board[8][10]) {
 
             if (piece != NULL) {
                 switch (piece->piece_type) {
-                    case PYRAMID_SDL: piece_str[0] = piece->color == RED_SDL ? 'P' : 'p'; break;
-                    case SCARAB_SDL: piece_str[0] = piece->color == RED_SDL ? 'S' : 's'; break;
-                    case ANUBIS_SDL: piece_str[0] = piece->color == RED_SDL ? 'A' : 'a'; break;
-                    case PHARAOH_SDL: piece_str[0] = piece->color == RED_SDL ? 'X' : 'x'; break;
-                    case LASER_SDL: piece_str[0] = piece->color == RED_SDL ? 'L' : 'l'; break;
-                    default: break;
+                case PYRAMID_SDL: piece_str[0] = piece->color == RED_SDL ? 'P' : 'p'; break;
+                case SCARAB_SDL: piece_str[0] = piece->color == RED_SDL ? 'S' : 's'; break;
+                case ANUBIS_SDL: piece_str[0] = piece->color == RED_SDL ? 'A' : 'a'; break;
+                case PHARAOH_SDL: piece_str[0] = piece->color == RED_SDL ? 'X' : 'x'; break;
+                case LASER_SDL: piece_str[0] = piece->color == RED_SDL ? 'L' : 'l'; break;
+                default: break;
                 }
                 switch (piece->orientation) {
-                    case NORTH_SDL: piece_str[1] = '0'; break;
-                    case EAST_SDL: piece_str[1] = '1'; break;
-                    case SOUTH_SDL: piece_str[1] = '2'; break;
-                    case WEST_SDL: piece_str[1] = '3'; break;
-                    default: break;
+                case NORTH_SDL: piece_str[1] = '0'; break;
+                case EAST_SDL: piece_str[1] = '1'; break;
+                case SOUTH_SDL: piece_str[1] = '2'; break;
+                case WEST_SDL: piece_str[1] = '3'; break;
+                default: break;
                 }
                 piece_str[2] = '\0';
             } else {

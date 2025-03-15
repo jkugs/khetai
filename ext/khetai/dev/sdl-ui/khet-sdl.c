@@ -1,7 +1,7 @@
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "khet-sdl.h"
-#include "drawing.h"
 #include "ai.h"
+#include "drawing.h"
 #include <SDL3/SDL_main.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -39,20 +39,20 @@ void init_board(void *app_state_ptr) {
             p->color = (isupper(piece[0])) ? RED_SDL : SILVER_SDL;
 
             switch (toupper(piece[0])) {
-                case 'P': p->piece_type = PYRAMID_SDL; break;
-                case 'S': p->piece_type = SCARAB_SDL; break;
-                case 'A': p->piece_type = ANUBIS_SDL; break;
-                case 'X': p->piece_type = PHARAOH_SDL; break;
-                case 'L': p->piece_type = LASER_SDL; break;
-                default: break;
+            case 'P': p->piece_type = PYRAMID_SDL; break;
+            case 'S': p->piece_type = SCARAB_SDL; break;
+            case 'A': p->piece_type = ANUBIS_SDL; break;
+            case 'X': p->piece_type = PHARAOH_SDL; break;
+            case 'L': p->piece_type = LASER_SDL; break;
+            default: break;
             }
 
             switch (piece[1]) {
-                case '0': p->orientation = NORTH_SDL; break;
-                case '1': p->orientation = EAST_SDL; break;
-                case '2': p->orientation = SOUTH_SDL; break;
-                case '3': p->orientation = WEST_SDL; break;
-                default: break;
+            case '0': p->orientation = NORTH_SDL; break;
+            case '1': p->orientation = EAST_SDL; break;
+            case '2': p->orientation = SOUTH_SDL; break;
+            case '3': p->orientation = WEST_SDL; break;
+            default: break;
             }
         }
     }

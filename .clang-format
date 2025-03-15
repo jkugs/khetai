@@ -13,5 +13,5 @@ BraceWrapping:
   IndentBraces: false
 ColumnLimit: 0
 AlignConsecutiveMacros: true
-IndentCaseLabels: true
+IndentCaseLabels: false
 AllowShortCaseLabelsOnASingleLine: true
