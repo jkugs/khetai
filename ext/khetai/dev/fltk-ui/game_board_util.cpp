@@ -92,6 +92,8 @@ Move call_ai_move(AILoader &ai_loader, const std::vector<std::vector<std::string
     int end = get_end(best_move);
     int rotation = get_rotation(best_move);
     std::cout << "START: " << start << ", END: " << end << ", ROTATION: " << rotation << std::endl;
+    
+    free_c_array(c_board, 120);
     return best_move;
 }
 

@@ -83,9 +83,10 @@ Move call_ai_move(Square_SDL board[8][10]) {
     printf("\nend:\n");
     print_board();
 
-    for (int i = 0; i < 120; i++) {
-        if (init_board[i] != NULL && init_board[i] != "--") {
-            free(init_board[i]);
+    for (unsigned int i = 0; i < ROWS; i++) {
+        for (unsigned int j = 0; j < COLS; j++) {
+            int index = ((i + 1) * 12) + (j + 1);
+            free(init_board[index]);
         }
     }
 
