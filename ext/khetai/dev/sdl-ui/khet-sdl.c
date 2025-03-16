@@ -9,7 +9,16 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+static void start_ai_calculation(void *app_state_ptr);
 #endif
+
+static void init_board(void *app_state_ptr);
+static void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2);
+static void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise);
+static void apply_move(void *app_state_ptr, Move best_move);
+static void call_ai(void *app_state_ptr);
+static void reset_selection(AppState *as);
+static void process_click(void *app_state_ptr);
 
 static const char *const init_pieces[8][10] = {
     {"L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--"},
@@ -105,6 +114,11 @@ void apply_move(void *app_state_ptr, Move best_move) {
     } else {
         move_piece(as->board, p1, p2);
     }
+
+    // drain event queue
+    // TODO: address in wasm...
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {}
 }
 
 #ifdef __EMSCRIPTEN__
@@ -117,13 +131,12 @@ void start_ai_calculation(void *app_state_ptr) {
 
 void call_ai(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
-    
-    #ifdef __EMSCRIPTEN__
+#ifdef __EMSCRIPTEN__
     emscripten_async_call((em_arg_callback_func)start_ai_calculation, as, 32);
-    #else
+#else
     Move best_move = call_ai_move(as->board);
     apply_move(as, best_move);
-    #endif
+#endif
 }
 
 void reset_selection(AppState *as) {
