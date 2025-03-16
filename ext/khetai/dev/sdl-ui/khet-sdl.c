@@ -132,7 +132,7 @@ void start_ai_calculation(void *app_state_ptr) {
 void call_ai(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
 #ifdef __EMSCRIPTEN__
-    emscripten_async_call((em_arg_callback_func)start_ai_calculation, as, 32);
+    emscripten_async_call(start_ai_calculation, as, 32);
 #else
     Move best_move = call_ai_move(as->board);
     apply_move(as, best_move);
