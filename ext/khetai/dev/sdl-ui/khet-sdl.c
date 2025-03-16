@@ -172,8 +172,6 @@ SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     }
 
     draw(as);
-    // SDL_RenderPresent(as->ren);
-    // SDL_Delay(100);
 
     if (as->call_ai) {
         call_ai(as);
