@@ -14,6 +14,23 @@
 #define SQUARE_SIZE   (BOARD_WIDTH / 10)
 #define PIECE_SIZE    (SQUARE_SIZE * 0.8)
 
+enum MovePermission {
+    S,
+    R,
+    B
+};
+
+static const int square_colors[8][10] = {
+    {B, S, B, B, B, B, B, B, R, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, B, B, B, B, B, B, B, B, S},
+    {R, S, B, B, B, B, B, B, R, B}
+};
+
 typedef struct {
     double x, y;
 } Point;
@@ -59,10 +76,11 @@ typedef struct {
     SDL_Renderer *ren;
     Square_SDL board[ROWS][COLS];
     Position clicked_pos;
-    Position cur_clicked_pos;
+    Position selected_pos;
     int valid_squares[ROWS][COLS];
     bool clicked;
     bool selected;
+    bool call_ai;
 } AppState;
 
 #endif

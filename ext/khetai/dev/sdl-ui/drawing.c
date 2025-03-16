@@ -1,21 +1,21 @@
 #include "drawing.h"
 #include <math.h>
 
-enum MovePermission {
-    S,
-    R,
-    B
-};
+// enum MovePermission {
+//     S,
+//     R,
+//     B
+// };
 
-static const int square_colors[8][10] = {
-    {B, S, B, B, B, B, B, B, R, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, B, B, B, B, B, B, B, B, S},
-    {R, S, B, B, B, B, B, B, R, B}};
+// static const int square_colors[8][10] = {
+//     {B, S, B, B, B, B, B, B, R, S},
+//     {R, B, B, B, B, B, B, B, B, S},
+//     {R, B, B, B, B, B, B, B, B, S},
+//     {R, B, B, B, B, B, B, B, B, S},
+//     {R, B, B, B, B, B, B, B, B, S},
+//     {R, B, B, B, B, B, B, B, B, S},
+//     {R, B, B, B, B, B, B, B, B, S},
+//     {R, S, B, B, B, B, B, B, R, B}};
 
 void draw(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
@@ -28,15 +28,15 @@ void draw(void *app_state_ptr) {
         // Yellow - highlight
         SDL_SetRenderDrawColor(as->ren, 255, 255, 0, 100);
         SDL_FRect highlight_square = {
-            (WINDOW_BUFFER) + as->cur_clicked_pos.col * SQUARE_SIZE,
-            (WINDOW_BUFFER) + as->cur_clicked_pos.row * SQUARE_SIZE,
+            (WINDOW_BUFFER) + as->selected_pos.col * SQUARE_SIZE,
+            (WINDOW_BUFFER) + as->selected_pos.row * SQUARE_SIZE,
             SQUARE_SIZE, SQUARE_SIZE};
         SDL_RenderFillRect(as->ren, &highlight_square);
 
         // Highlight valid squares
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLS; j++) {
-                if (as->valid_squares[i][j] == 1 && (i != as->cur_clicked_pos.row || j != as->cur_clicked_pos.col)) {
+                if (as->valid_squares[i][j] == 1 && (i != as->selected_pos.row || j != as->selected_pos.col)) {
                     SDL_SetRenderDrawColor(as->ren, 153, 230, 153, 179);
                     SDL_FRect valid_square = {
                         (WINDOW_BUFFER) + j * SQUARE_SIZE,
