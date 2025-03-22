@@ -27,7 +27,7 @@ Move call_ai_move(Square_SDL board[8][10]) {
                 case SCARAB_SDL: piece_str[0] = piece->color == RED_SDL ? 'S' : 's'; break;
                 case ANUBIS_SDL: piece_str[0] = piece->color == RED_SDL ? 'A' : 'a'; break;
                 case PHARAOH_SDL: piece_str[0] = piece->color == RED_SDL ? 'X' : 'x'; break;
-                case LASER_SDL: piece_str[0] = piece->color == RED_SDL ? 'L' : 'l'; break;
+                case SPHINX_SDL: piece_str[0] = piece->color == RED_SDL ? 'L' : 'l'; break;
                 default: break;
                 }
                 switch (piece->orientation) {

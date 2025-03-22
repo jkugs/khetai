@@ -42,14 +42,14 @@ typedef struct {
 typedef enum {
     SILVER_SDL,
     RED_SDL
-} Color;
+} PlayerColor;
 
 typedef enum {
     ANUBIS_SDL,
     PYRAMID_SDL,
     SCARAB_SDL,
     PHARAOH_SDL,
-    LASER_SDL
+    SPHINX_SDL
 } PieceType_SDL;
 
 typedef enum {
@@ -61,7 +61,7 @@ typedef enum {
 
 typedef struct {
     PieceType_SDL piece_type;
-    Color color;
+    PlayerColor color;
     Orientation_SDL orientation;
 } Piece_SDL;
 
@@ -72,15 +72,32 @@ typedef struct {
 } Square_SDL;
 
 typedef struct {
+    SDL_FPoint p1;
+    SDL_FPoint p2;
+} LaserSegment;
+
+typedef struct {
+    LaserSegment segments[100];
+    Orientation_SDL direction;
+    SDL_FColor color;
+    int num_segments;
+    int speed;
+    bool reflect;
+    bool hit;
+} LaserAnimation;
+
+typedef struct {
     SDL_Window *win;
     SDL_Renderer *ren;
     Square_SDL board[ROWS][COLS];
     Position clicked_pos;
     Position selected_pos;
+    LaserAnimation laser;
     int valid_squares[ROWS][COLS];
     bool clicked;
     bool selected;
     bool call_ai;
+    bool drawing_laser;
 } AppState;
 
 #endif

@@ -1,24 +1,7 @@
 #include "drawing.h"
 #include <math.h>
 
-// enum MovePermission {
-//     S,
-//     R,
-//     B
-// };
-
-// static const int square_colors[8][10] = {
-//     {B, S, B, B, B, B, B, B, R, S},
-//     {R, B, B, B, B, B, B, B, B, S},
-//     {R, B, B, B, B, B, B, B, B, S},
-//     {R, B, B, B, B, B, B, B, B, S},
-//     {R, B, B, B, B, B, B, B, B, S},
-//     {R, B, B, B, B, B, B, B, B, S},
-//     {R, B, B, B, B, B, B, B, B, S},
-//     {R, S, B, B, B, B, B, B, R, B}};
-
-void draw(void *app_state_ptr) {
-    AppState *as = (AppState *)app_state_ptr;
+void draw(AppState *as) {
     SDL_SetRenderDrawColor(as->ren, 169, 169, 169, 255);
     SDL_RenderClear(as->ren);
     SDL_SetRenderDrawBlendMode(as->ren, SDL_BLENDMODE_BLEND);
@@ -84,8 +67,7 @@ void draw(void *app_state_ptr) {
     SDL_RenderPresent(as->ren);
 }
 
-void draw_inner_square(void *app_state_ptr, int row, int col, SDL_FColor color) {
-    AppState *as = (AppState *)app_state_ptr;
+void draw_inner_square(AppState *as, int row, int col, SDL_FColor color) {
     SDL_Renderer *ren = as->ren;
     Point op = as->board[row][col].point;
     Point cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
@@ -104,15 +86,13 @@ void draw_inner_square(void *app_state_ptr, int row, int col, SDL_FColor color) 
     SDL_RenderRect(ren, &square);
 }
 
-void draw_piece(void *app_state_ptr, int row, int col) {
-    AppState *as = (AppState *)app_state_ptr;
-
+void draw_piece(AppState *as, int row, int col) {
     switch (as->board[row][col].piece->piece_type) {
-    case PYRAMID_SDL: draw_pyramid(app_state_ptr, row, col); break;
-    case SCARAB_SDL: draw_scarab(app_state_ptr, row, col); break;
-    case ANUBIS_SDL: draw_anubis(app_state_ptr, row, col); break;
-    case PHARAOH_SDL: draw_pharaoh(app_state_ptr, row, col); break;
-    case LASER_SDL: draw_laser(app_state_ptr, row, col); break;
+    case PYRAMID_SDL: draw_pyramid(as, row, col); break;
+    case SCARAB_SDL: draw_scarab(as, row, col); break;
+    case ANUBIS_SDL: draw_anubis(as, row, col); break;
+    case PHARAOH_SDL: draw_pharaoh(as, row, col); break;
+    case SPHINX_SDL: draw_sphinx(as, row, col); break;
     default: break;
     }
 }
@@ -141,8 +121,7 @@ void draw_mirror(SDL_Renderer *ren, SDL_FPoint p1, SDL_FPoint p2, double thickne
     SDL_RenderGeometry(ren, NULL, mirror_vertices, 4, mirror_indices, 6);
 }
 
-void draw_laser(void *app_state_ptr, int row, int col) {
-    AppState *as = (AppState *)app_state_ptr;
+void draw_sphinx(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     Point op = as->board[row][col].point;
     Point cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
@@ -178,8 +157,7 @@ void draw_laser(void *app_state_ptr, int row, int col) {
     SDL_RenderGeometry(ren, NULL, vertices, 3, NULL, 0);
 }
 
-void draw_pyramid(void *app_state_ptr, int row, int col) {
-    AppState *as = (AppState *)app_state_ptr;
+void draw_pyramid(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     Point op = as->board[row][col].point;
     Point cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
@@ -220,8 +198,7 @@ void draw_pyramid(void *app_state_ptr, int row, int col) {
     draw_mirror(ren, v1, v2, thickness);
 }
 
-void draw_scarab(void *app_state_ptr, int row, int col) {
-    AppState *as = (AppState *)app_state_ptr;
+void draw_scarab(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     Point op = as->board[row][col].point;
     Point cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
@@ -260,8 +237,7 @@ void draw_scarab(void *app_state_ptr, int row, int col) {
     draw_mirror(ren, v3, v4, thickness);
 }
 
-void draw_anubis(void *app_state_ptr, int row, int col) {
-    AppState *as = (AppState *)app_state_ptr;
+void draw_anubis(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     Point op = as->board[row][col].point;
     Point p = {(op.x + (SQUARE_SIZE - PIECE_SIZE) * 0.5), (op.y + (SQUARE_SIZE - PIECE_SIZE) * 0.5)};
@@ -321,8 +297,7 @@ void draw_anubis(void *app_state_ptr, int row, int col) {
     SDL_RenderGeometry(ren, NULL, black_vertices, 4, black_indices, 6);
 }
 
-void draw_pharaoh(void *app_state_ptr, int row, int col) {
-    AppState *as = (AppState *)app_state_ptr;
+void draw_pharaoh(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     Point op = as->board[row][col].point;
     Point cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
@@ -358,4 +333,11 @@ void draw_pharaoh(void *app_state_ptr, int row, int col) {
     indices[num_indices - 1] = 1;
 
     SDL_RenderGeometry(ren, NULL, vertices, segments + 2, indices, num_indices);
+}
+
+void draw_laser_animation(AppState *as, LaserAnimation *laser_animation) {
+    for (int i = 0; i < laser_animation->num_segments; i++) {
+        SDL_FPoint p1 = laser_animation->segments[i].p1;
+        SDL_FPoint p2 = laser_animation->segments[i].p2;
+    }
 }

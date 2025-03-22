@@ -12,13 +12,18 @@
 static void start_ai_calculation(void *app_state_ptr);
 #endif
 
-static void init_board(void *app_state_ptr);
+// Higher level functions
+static void init_board(AppState *as);
+static void call_ai(AppState *as);
+static void reset_selection(AppState *as);
+static void process_click(AppState *as);
+static void fire_laser(AppState *as, PlayerColor color);
+static void calc_next_laser_step(AppState *as);
+
+// Functions to manipulate board state only
 static void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2);
 static void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise);
-static void apply_move(void *app_state_ptr, Move best_move);
-static void call_ai(void *app_state_ptr);
-static void reset_selection(AppState *as);
-static void process_click(void *app_state_ptr);
+static void apply_move(Square_SDL board[ROWS][COLS], Move best_move);
 
 static const char *const init_pieces[8][10] = {
     {"L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--"},
@@ -30,8 +35,7 @@ static const char *const init_pieces[8][10] = {
     {"--", "--", "--", "--", "--", "--", "--", "p0", "--", "--"},
     {"--", "--", "p3", "a0", "x0", "a0", "--", "--", "--", "l0"}};
 
-void init_board(void *app_state_ptr) {
-    AppState *as = (AppState *)app_state_ptr;
+void init_board(AppState *as) {
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
             Square_SDL *s = &as->board[i][j];
@@ -56,7 +60,7 @@ void init_board(void *app_state_ptr) {
             case 'S': p->piece_type = SCARAB_SDL; break;
             case 'A': p->piece_type = ANUBIS_SDL; break;
             case 'X': p->piece_type = PHARAOH_SDL; break;
-            case 'L': p->piece_type = LASER_SDL; break;
+            case 'L': p->piece_type = SPHINX_SDL; break;
             default: break;
             }
 
@@ -94,9 +98,7 @@ void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise) {
     }
 }
 
-void apply_move(void *app_state_ptr, Move best_move) {
-    AppState *as = (AppState *)app_state_ptr;
-
+void apply_move(Square_SDL board[ROWS][COLS], Move best_move) {
     int start = get_start(best_move);
     int end = get_end(best_move);
     int rotation = get_rotation(best_move);
@@ -110,15 +112,59 @@ void apply_move(void *app_state_ptr, Move best_move) {
 
     if (rotation != 0) {
         bool clockwise = rotation == 1;
-        rotate_piece(as->board, p1, clockwise);
+        rotate_piece(board, p1, clockwise);
     } else {
-        move_piece(as->board, p1, p2);
+        move_piece(board, p1, p2);
     }
 
     // drain event queue
     // TODO: address in wasm...
     SDL_Event event;
     while (SDL_PollEvent(&event)) {}
+}
+
+// Initializes the LaserAnimation along with its first segment
+void fire_laser(AppState *as, PlayerColor player) {
+    as->drawing_laser = true;
+    LaserAnimation *laser = &as->laser;
+    laser->color = RED_COLOR; // hard code?
+    laser->speed = 2;
+    int row, col;
+    if (player == RED_SDL) {
+        row = 0; col = 0;
+    } else {
+        row = 7; col = 9;
+    }
+    Square_SDL square = as->board[row][col];
+    laser->direction = square.piece->orientation;
+    double x1, y1, x2, y2;
+    SDL_FPoint p1, p2;
+    x1 = square.point.x + (SQUARE_SIZE * 0.5);
+    y1 = square.point.y + (SQUARE_SIZE * 0.5);
+    if (laser->direction == SOUTH_SDL) {
+        y1 += (PIECE_SIZE * 0.5);
+        p1 = (SDL_FPoint){x1, y1};
+        p2 = (SDL_FPoint){x1, y1 + laser->speed};
+    } else if (laser->direction == EAST_SDL) {
+        x1 += (PIECE_SIZE * 0.5);
+        p1 = (SDL_FPoint){x1, y1};
+        p2 = (SDL_FPoint){x1 + laser->speed, y1};
+    } else if (laser->direction == NORTH_SDL) {
+        y1 -= (PIECE_SIZE * 0.5);
+        p1 = (SDL_FPoint){x1, y1};
+        p2 = (SDL_FPoint){x1, y1 - laser->speed};
+    } else if (laser->direction == WEST_SDL) {
+        x1 -= (PIECE_SIZE * 0.5);
+        p1 = (SDL_FPoint){x1, y1};
+        p2 = (SDL_FPoint){x1 - laser->speed, y1};
+    }
+    laser->segments[0].p1 = p1;
+    laser->segments[0].p2 = p2;
+    laser->num_segments++;
+}
+
+void calc_next_laser_step(AppState *laser) {
+    
 }
 
 #ifdef __EMSCRIPTEN__
@@ -129,13 +175,14 @@ void start_ai_calculation(void *app_state_ptr) {
 }
 #endif
 
-void call_ai(void *app_state_ptr) {
-    AppState *as = (AppState *)app_state_ptr;
+void call_ai(AppState *as) {
 #ifdef __EMSCRIPTEN__
+    // Due to how wasm handles drawing, we need to delay
+    // the call to the ai to allow the board to update on screen
     emscripten_async_call(start_ai_calculation, as, 32);
 #else
     Move best_move = call_ai_move(as->board);
-    apply_move(as, best_move);
+    apply_move(as->board, best_move);
 #endif
 }
 
@@ -153,9 +200,7 @@ void reset_selection(AppState *as) {
     }
 }
 
-void process_click(void *app_state_ptr) {
-    AppState *as = (AppState *)app_state_ptr;
-
+void process_click(AppState *as) {
     int row = as->clicked_pos.row;
     int col = as->clicked_pos.col;
 
@@ -176,7 +221,7 @@ void process_click(void *app_state_ptr) {
         enum MovePermission perm = mp->color == RED_SDL ? R : S;
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLS; j++) {
-                if (abs(i - row) > 1 || abs(j - col) > 1 || mp->piece_type == LASER_SDL && (as->selected_pos.row != row || as->selected_pos.col != col)) {
+                if (abs(i - row) > 1 || abs(j - col) > 1 || mp->piece_type == SPHINX_SDL && (as->selected_pos.row != row || as->selected_pos.col != col)) {
                     continue;
                 }
 
@@ -186,7 +231,7 @@ void process_click(void *app_state_ptr) {
                 if (p == NULL) {
                     as->valid_squares[i][j] = can_move;
                 } else if (mp->piece_type == SCARAB_SDL) {
-                    if (p->piece_type != SCARAB_SDL && p->piece_type != PHARAOH_SDL && p->piece_type != LASER_SDL) {
+                    if (p->piece_type != SCARAB_SDL && p->piece_type != PHARAOH_SDL && p->piece_type != SPHINX_SDL) {
                         as->valid_squares[i][j] = can_move;
                     }
                 }
@@ -262,12 +307,14 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             if (as->selected) {
                 Piece_SDL *p = as->board[as->selected_pos.row][as->selected_pos.col].piece;
                 bool rotate_right = (event->key.key == SDLK_RIGHT);
-                if (p->piece_type != LASER_SDL || (rotate_right && p->orientation == WEST_SDL) || (!rotate_right && p->orientation == NORTH_SDL)) {
+                if (p->piece_type != SPHINX_SDL || (rotate_right && p->orientation == WEST_SDL) || (!rotate_right && p->orientation == NORTH_SDL)) {
                     rotate_piece(as->board, as->selected_pos, rotate_right);
                     reset_selection(as);
                     as->call_ai = true;
                 }
             }
+        } else if (event->key.key == SDLK_SPACE) {
+            // TODO: fire laser
         }
     }
     return SDL_APP_CONTINUE;
