@@ -13,6 +13,7 @@
 #define BOARD_HEIGHT  (BOARD_WIDTH * 0.8)
 #define SQUARE_SIZE   (BOARD_WIDTH / 10)
 #define PIECE_SIZE    (SQUARE_SIZE * 0.8)
+#define LASER_SPEED   250
 
 enum MovePermission {
     S,
@@ -32,17 +33,13 @@ static const int square_colors[8][10] = {
 };
 
 typedef struct {
-    double x, y;
-} Point;
-
-typedef struct {
     int row, col;
 } Position;
 
 typedef enum {
     SILVER_SDL,
     RED_SDL
-} PlayerColor;
+} PlayerColor_SDL;
 
 typedef enum {
     ANUBIS_SDL,
@@ -59,32 +56,46 @@ typedef enum {
     WEST_SDL
 } Orientation_SDL;
 
+typedef enum {
+    REFLECT,
+    ABSORB,
+    HIT
+} LaserInteraction;
+
+typedef struct {
+    SDL_FPoint p1, p2;
+    LaserInteraction interaction;
+} PieceSide;
+
 typedef struct {
     PieceType_SDL piece_type;
-    PlayerColor color;
+    PlayerColor_SDL color;
     Orientation_SDL orientation;
+    PieceSide sides[4];
 } Piece_SDL;
 
 typedef struct {
-    Point point;
+    SDL_FPoint point;
     Position position;
     Piece_SDL *piece;
 } Square_SDL;
 
 typedef struct {
-    SDL_FPoint p1;
-    SDL_FPoint p2;
+    SDL_FPoint p1, p2;
 } LaserSegment;
+
+typedef enum {
+    CONTINUE,
+    NEW_SEGMENT,
+    STOP
+} LaserNextStep;
 
 typedef struct {
     LaserSegment segments[100];
     Orientation_SDL direction;
-    SDL_FColor color;
     int num_segments;
-    int speed;
-    bool reflect;
-    bool hit;
-} LaserAnimation;
+    LaserNextStep next_step;
+} Laser;
 
 typedef struct {
     SDL_Window *win;
@@ -92,8 +103,10 @@ typedef struct {
     Square_SDL board[ROWS][COLS];
     Position clicked_pos;
     Position selected_pos;
-    LaserAnimation laser;
+    Laser laser;
+    Uint64 last_tick;
     int valid_squares[ROWS][COLS];
+    float delta_time;
     bool clicked;
     bool selected;
     bool call_ai;

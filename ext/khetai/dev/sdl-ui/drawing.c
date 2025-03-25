@@ -49,7 +49,7 @@ void draw(AppState *as) {
         SDL_RenderLine(as->ren, x, y, (BOARD_WIDTH + x) - 1, y);
     }
 
-    // Draw inner squares and pieces
+    // Draw inner squares
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
             if (square_colors[i][j] == R) {
@@ -57,7 +57,17 @@ void draw(AppState *as) {
             } else if (square_colors[i][j] == S) {
                 draw_inner_square(as, i, j, SILVER_COLOR);
             }
+        }
+    }
 
+    // Draw laser
+    if (as->drawing_laser) {
+        draw_laser_animation(as);
+    }
+
+    // Draw pieces
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
             if (as->board[i][j].piece != NULL) {
                 draw_piece(as, i, j);
             }
@@ -67,10 +77,43 @@ void draw(AppState *as) {
     SDL_RenderPresent(as->ren);
 }
 
+void draw_laser_animation(AppState *as) {
+    SDL_Renderer *ren = as->ren;
+    Laser *laser = &as->laser;
+    
+    for (int i = 0; i < laser->num_segments; i++) {
+        LaserSegment *segment = &laser->segments[i];
+        SDL_FPoint p1 = segment->p1;
+        SDL_FPoint p2 = segment->p2;
+
+        double edge_dx = p2.x - p1.x;
+        double edge_dy = p2.y - p1.y;
+        double edge_length = sqrt(edge_dx * edge_dx + edge_dy * edge_dy);
+    
+        // Normalize
+        double unit_x = edge_dx / edge_length;
+        double unit_y = edge_dy / edge_length;
+    
+        // Compute perpendicular offset
+        double perp_x = -unit_y * 1.0;
+        double perp_y = unit_x * 1.0;
+    
+        // Define laser segment quad
+        SDL_Vertex mirror_vertices[4] = {
+            {{p1.x - perp_x, p1.y - perp_y}, RED_COLOR, {0, 0}},
+            {{p2.x - perp_x, p2.y - perp_y}, RED_COLOR, {0, 0}},
+            {{p1.x + perp_x, p1.y + perp_y}, RED_COLOR, {0, 0}},
+            {{p2.x + perp_x, p2.y + perp_y}, RED_COLOR, {0, 0}}};
+    
+        int mirror_indices[6] = {0, 1, 2, 1, 3, 2};
+        SDL_RenderGeometry(ren, NULL, mirror_vertices, 4, mirror_indices, 6);
+    }
+}
+
 void draw_inner_square(AppState *as, int row, int col, SDL_FColor color) {
     SDL_Renderer *ren = as->ren;
-    Point op = as->board[row][col].point;
-    Point cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
+    SDL_FPoint op = as->board[row][col].point;
+    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
 
     double inner_square_size = PIECE_SIZE * 0.8;
     double half_size = inner_square_size * 0.5;
@@ -123,13 +166,13 @@ void draw_mirror(SDL_Renderer *ren, SDL_FPoint p1, SDL_FPoint p2, double thickne
 
 void draw_sphinx(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
-    Point op = as->board[row][col].point;
-    Point cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
+    SDL_FPoint op = as->board[row][col].point;
+    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
 
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
     double half_size = PIECE_SIZE * 0.5;
-    Point original_vertices[3] = {
+    SDL_FPoint original_vertices[3] = {
         {cp.x, cp.y - half_size},
         {cp.x - half_size, cp.y + half_size},
         {cp.x + half_size, cp.y + half_size}};
@@ -159,13 +202,13 @@ void draw_sphinx(AppState *as, int row, int col) {
 
 void draw_pyramid(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
-    Point op = as->board[row][col].point;
-    Point cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
+    SDL_FPoint op = as->board[row][col].point;
+    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
 
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
     double half_size = PIECE_SIZE * 0.5;
-    Point original_vertices[3] = {
+    SDL_FPoint original_vertices[3] = {
         {cp.x - half_size, cp.y - half_size},
         {cp.x + half_size, cp.y + half_size},
         {cp.x - half_size, cp.y + half_size}};
@@ -200,8 +243,8 @@ void draw_pyramid(AppState *as, int row, int col) {
 
 void draw_scarab(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
-    Point op = as->board[row][col].point;
-    Point cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
+    SDL_FPoint op = as->board[row][col].point;
+    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
     double width = PIECE_SIZE * 0.2;
@@ -239,8 +282,8 @@ void draw_scarab(AppState *as, int row, int col) {
 
 void draw_anubis(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
-    Point op = as->board[row][col].point;
-    Point p = {(op.x + (SQUARE_SIZE - PIECE_SIZE) * 0.5), (op.y + (SQUARE_SIZE - PIECE_SIZE) * 0.5)};
+    SDL_FPoint op = as->board[row][col].point;
+    SDL_FPoint p = {(op.x + (SQUARE_SIZE - PIECE_SIZE) * 0.5), (op.y + (SQUARE_SIZE - PIECE_SIZE) * 0.5)};
 
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
@@ -254,7 +297,7 @@ void draw_anubis(AppState *as, int row, int col) {
 
     SDL_RenderGeometry(ren, NULL, vertices, 4, indices, 6);
 
-    Point cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
+    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
     double thickness = 4.0;
 
     SDL_FPoint v1, v2, v3, v4;
@@ -299,8 +342,8 @@ void draw_anubis(AppState *as, int row, int col) {
 
 void draw_pharaoh(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
-    Point op = as->board[row][col].point;
-    Point cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
+    SDL_FPoint op = as->board[row][col].point;
+    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
     double radius = PIECE_SIZE * 0.5;
     int segments = 20;
 
@@ -333,11 +376,4 @@ void draw_pharaoh(AppState *as, int row, int col) {
     indices[num_indices - 1] = 1;
 
     SDL_RenderGeometry(ren, NULL, vertices, segments + 2, indices, num_indices);
-}
-
-void draw_laser_animation(AppState *as, LaserAnimation *laser_animation) {
-    for (int i = 0; i < laser_animation->num_segments; i++) {
-        SDL_FPoint p1 = laser_animation->segments[i].p1;
-        SDL_FPoint p2 = laser_animation->segments[i].p2;
-    }
 }

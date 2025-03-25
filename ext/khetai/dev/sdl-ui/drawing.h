@@ -21,6 +21,6 @@ void draw_scarab(AppState *as, int row, int col);
 void draw_anubis(AppState *as, int row, int col);
 void draw_pharaoh(AppState *as, int row, int col);
 void draw_sphinx(AppState *as, int row, int col);
-void draw_laser_animation(AppState *as, LaserAnimation *laser);
+void draw_laser_animation(AppState *as);
 
 #endif

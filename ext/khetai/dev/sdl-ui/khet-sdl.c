@@ -17,8 +17,8 @@ static void init_board(AppState *as);
 static void call_ai(AppState *as);
 static void reset_selection(AppState *as);
 static void process_click(AppState *as);
-static void fire_laser(AppState *as, PlayerColor color);
-static void calc_next_laser_step(AppState *as);
+static void fire_laser(AppState *as, PlayerColor_SDL color);
+static void calc_next_laser_step(Laser *laser, float delta_time);
 
 // Functions to manipulate board state only
 static void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2);
@@ -123,48 +123,88 @@ void apply_move(Square_SDL board[ROWS][COLS], Move best_move) {
     while (SDL_PollEvent(&event)) {}
 }
 
-// Initializes the LaserAnimation along with its first segment
-void fire_laser(AppState *as, PlayerColor player) {
+// Initializes the Laser along with its first segment
+void fire_laser(AppState *as, PlayerColor_SDL player) {
     as->drawing_laser = true;
-    LaserAnimation *laser = &as->laser;
-    laser->color = RED_COLOR; // hard code?
-    laser->speed = 2;
+    Laser *laser = &as->laser;
+    float distance = LASER_SPEED * as->delta_time;
     int row, col;
     if (player == RED_SDL) {
-        row = 0; col = 0;
+        row = 0;
+        col = 0;
     } else {
-        row = 7; col = 9;
+        row = 7;
+        col = 9;
     }
     Square_SDL square = as->board[row][col];
     laser->direction = square.piece->orientation;
+    Orientation_SDL direction = laser->direction;
     double x1, y1, x2, y2;
     SDL_FPoint p1, p2;
     x1 = square.point.x + (SQUARE_SIZE * 0.5);
     y1 = square.point.y + (SQUARE_SIZE * 0.5);
-    if (laser->direction == SOUTH_SDL) {
+    switch (direction) {
+    case SOUTH_SDL:
         y1 += (PIECE_SIZE * 0.5);
         p1 = (SDL_FPoint){x1, y1};
-        p2 = (SDL_FPoint){x1, y1 + laser->speed};
-    } else if (laser->direction == EAST_SDL) {
+        p2 = (SDL_FPoint){x1, y1 + distance};
+        break;
+    case EAST_SDL:
         x1 += (PIECE_SIZE * 0.5);
         p1 = (SDL_FPoint){x1, y1};
-        p2 = (SDL_FPoint){x1 + laser->speed, y1};
-    } else if (laser->direction == NORTH_SDL) {
+        p2 = (SDL_FPoint){x1 + distance, y1};
+        break;
+    case NORTH_SDL:
         y1 -= (PIECE_SIZE * 0.5);
         p1 = (SDL_FPoint){x1, y1};
-        p2 = (SDL_FPoint){x1, y1 - laser->speed};
-    } else if (laser->direction == WEST_SDL) {
+        p2 = (SDL_FPoint){x1, y1 - distance};
+        break;
+    case WEST_SDL:
         x1 -= (PIECE_SIZE * 0.5);
         p1 = (SDL_FPoint){x1, y1};
-        p2 = (SDL_FPoint){x1 - laser->speed, y1};
+        p2 = (SDL_FPoint){x1 - distance, y1};
+        break;
     }
     laser->segments[0].p1 = p1;
     laser->segments[0].p2 = p2;
     laser->num_segments++;
+    laser->next_step = CONTINUE;
 }
 
-void calc_next_laser_step(AppState *laser) {
-    
+void calc_next_laser_step(Laser *laser, float delta_time) {
+    float distance = LASER_SPEED * delta_time;
+    Orientation_SDL direction = laser->direction;
+
+    if (laser->next_step == NEW_SEGMENT) {
+        // TODO: calculate next direction
+    }
+
+    LaserSegment *segment = &laser->segments[laser->num_segments - 1];
+    SDL_FPoint end_p2;
+    switch (direction) {
+    case NORTH_SDL:
+        end_p2.x = segment->p2.x;
+        end_p2.y = segment->p2.y - distance;
+        break;
+    case EAST_SDL:
+        end_p2.x = segment->p2.x + distance;
+        end_p2.y = segment->p2.y;
+        break;
+    case SOUTH_SDL:
+        end_p2.x = segment->p2.x;
+        end_p2.y = segment->p2.y + distance;
+        break;
+    case WEST_SDL:
+        end_p2.x = segment->p2.x - distance;
+        end_p2.y = segment->p2.y;
+        break;
+    }
+
+    segment->p2.x = end_p2.x;
+    segment->p2.y = end_p2.y;
+
+    // check if we've crossed a piece line within square
+    // set interaction type
 }
 
 #ifdef __EMSCRIPTEN__
@@ -244,46 +284,6 @@ void process_click(AppState *as) {
     as->clicked = false;
 }
 
-SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
-    AppState *as = (AppState *)app_state_ptr;
-
-    if (as->clicked) {
-        process_click(as);
-    }
-
-    draw(as);
-
-    if (as->call_ai) {
-        call_ai(as);
-        as->call_ai = false;
-    }
-
-    return SDL_APP_CONTINUE;
-}
-
-SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
-    AppState *as = (AppState *)SDL_calloc(1, sizeof(AppState));
-    if (!as) {
-        return SDL_APP_FAILURE;
-    }
-
-    as->clicked_pos.row = -1;
-    as->clicked_pos.col = -1;
-    as->selected_pos.col = -1;
-    as->selected_pos.col = -1;
-
-    *app_state_ptr = as;
-
-    if (!SDL_CreateWindowAndRenderer("Khet", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &as->win, &as->ren)) {
-        printf("SDL_CreateWindowAndRenderer Error: %s\n", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-
-    init_board(as);
-
-    return SDL_APP_CONTINUE;
-}
-
 SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
     AppState *as = (AppState *)app_state_ptr;
     if (event->type == SDL_EVENT_QUIT) {
@@ -315,8 +315,65 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             }
         } else if (event->key.key == SDLK_SPACE) {
             // TODO: fire laser
+            fire_laser(as, SILVER_SDL);
         }
     }
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
+    AppState *as = (AppState *)app_state_ptr;
+
+    if (as->clicked) {
+        process_click(as);
+    }
+
+    Uint64 now = SDL_GetPerformanceCounter();
+    Uint64 freq = SDL_GetPerformanceFrequency();
+    as->delta_time = (float)(now - as->last_tick) / (float)freq;
+    as->last_tick = now;
+
+    if (as->drawing_laser) {
+        calc_next_laser_step(&as->laser, as->delta_time);
+    }
+
+    draw(as);
+
+    if (as->call_ai) {
+        call_ai(as);
+        as->call_ai = false;
+    }
+
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
+    AppState *as = (AppState *)SDL_calloc(1, sizeof(AppState));
+    if (!as) {
+        return SDL_APP_FAILURE;
+    }
+
+    as->clicked_pos.row = -1;
+    as->clicked_pos.col = -1;
+    as->selected_pos.col = -1;
+    as->selected_pos.col = -1;
+
+    *app_state_ptr = as;
+
+    if (!SDL_CreateWindowAndRenderer("Khet", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &as->win, &as->ren)) {
+        printf("SDL_CreateWindowAndRenderer Error: %s\n", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    if (SDL_SetRenderVSync(as->ren, SDL_RENDERER_VSYNC_ADAPTIVE) < 0) {
+        printf("Warning: Adaptive VSync not supported: %s\n", SDL_GetError());
+    }
+
+    init_board(as);
+
+    as->last_tick = SDL_GetPerformanceCounter();
+    as->delta_time = 0.0f;
+
     return SDL_APP_CONTINUE;
 }
 
