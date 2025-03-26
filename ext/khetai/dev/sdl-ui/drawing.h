@@ -10,7 +10,7 @@
 #define LIGHT_GREEN  ((SDL_FColor){0.6f, 0.9f, 0.6f, 0.7f})
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+#define M_PI 3.1415927f
 #endif
 
 void draw(AppState *as);

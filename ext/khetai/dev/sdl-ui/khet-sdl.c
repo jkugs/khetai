@@ -12,15 +12,15 @@
 static void start_ai_calculation(void *app_state_ptr);
 #endif
 
-// Higher level functions
 static void init_board(AppState *as);
 static void call_ai(AppState *as);
 static void reset_selection(AppState *as);
 static void process_click(AppState *as);
 static void fire_laser(AppState *as, PlayerColor_SDL color);
-static void calc_next_laser_step(Laser *laser, float delta_time);
 
-// Functions to manipulate board state only
+static void calc_next_laser_step(Laser *laser, float delta_time);
+static void calc_piece_sides(Square_SDL *square);
+
 static void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2);
 static void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise);
 static void apply_move(Square_SDL board[ROWS][COLS], Move best_move);
@@ -41,8 +41,8 @@ void init_board(AppState *as) {
             Square_SDL *s = &as->board[i][j];
             s->position.row = i;
             s->position.col = j;
-            s->point.x = (j * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5;
-            s->point.y = (i * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5;
+            s->point.x = (j * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5f;
+            s->point.y = (i * SQUARE_SIZE) + (WINDOW_BUFFER) + 0.5f;
 
             const char *piece = init_pieces[i][j];
             if (strcmp(piece, "--") == 0) {
@@ -71,7 +71,34 @@ void init_board(AppState *as) {
             case '3': p->orientation = WEST_SDL; break;
             default: break;
             }
+
+            // TODO: use this in drawing functions
+            p->cp = (SDL_FPoint){(s->point.x + SQUARE_SIZE * 0.5f), (s->point.y + SQUARE_SIZE * 0.5f)};
+
+            calc_piece_sides(s);
         }
+    }
+}
+
+void calc_piece_sides(Square_SDL *square) {
+    if (square->piece == NULL) {
+        return;
+    }
+
+    Piece_SDL *p = &square->piece;
+
+    switch (p->piece_type) {
+    case PYRAMID_SDL:
+        break;
+    case SCARAB_SDL:
+        break;
+    case ANUBIS_SDL:
+        break;
+    case PHARAOH_SDL:
+        break;
+    case SPHINX_SDL:
+        break;
+    default: break;
     }
 }
 
@@ -139,7 +166,7 @@ void fire_laser(AppState *as, PlayerColor_SDL player) {
     Square_SDL square = as->board[row][col];
     laser->direction = square.piece->orientation;
     Orientation_SDL direction = laser->direction;
-    double x1, y1, x2, y2;
+    float x1, y1, x2, y2;
     SDL_FPoint p1, p2;
     x1 = square.point.x + (SQUARE_SIZE * 0.5);
     y1 = square.point.y + (SQUARE_SIZE * 0.5);

@@ -86,17 +86,17 @@ void draw_laser_animation(AppState *as) {
         SDL_FPoint p1 = segment->p1;
         SDL_FPoint p2 = segment->p2;
 
-        double edge_dx = p2.x - p1.x;
-        double edge_dy = p2.y - p1.y;
-        double edge_length = sqrt(edge_dx * edge_dx + edge_dy * edge_dy);
+        float edge_dx = p2.x - p1.x;
+        float edge_dy = p2.y - p1.y;
+        float edge_length = sqrt(edge_dx * edge_dx + edge_dy * edge_dy);
     
         // Normalize
-        double unit_x = edge_dx / edge_length;
-        double unit_y = edge_dy / edge_length;
+        float unit_x = edge_dx / edge_length;
+        float unit_y = edge_dy / edge_length;
     
         // Compute perpendicular offset
-        double perp_x = -unit_y * 1.0;
-        double perp_y = unit_x * 1.0;
+        float perp_x = -unit_y * 1.0;
+        float perp_y = unit_x * 1.0;
     
         // Define laser segment quad
         SDL_Vertex mirror_vertices[4] = {
@@ -113,12 +113,12 @@ void draw_laser_animation(AppState *as) {
 void draw_inner_square(AppState *as, int row, int col, SDL_FColor color) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint op = as->board[row][col].point;
-    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
+    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5f), (op.y + SQUARE_SIZE * 0.5f)};
 
-    double inner_square_size = PIECE_SIZE * 0.8;
-    double half_size = inner_square_size * 0.5;
-    double x = cp.x - half_size;
-    double y = cp.y - half_size;
+    float inner_square_size = PIECE_SIZE * 0.8f;
+    float half_size = inner_square_size * 0.5f;
+    float x = cp.x - half_size;
+    float y = cp.y - half_size;
 
     SDL_FRect square = {x, y, inner_square_size, inner_square_size};
     Uint8 r = (Uint8)(color.r * 255);
@@ -140,18 +140,18 @@ void draw_piece(AppState *as, int row, int col) {
     }
 }
 
-void draw_mirror(SDL_Renderer *ren, SDL_FPoint p1, SDL_FPoint p2, double thickness) {
-    double edge_dx = p2.x - p1.x;
-    double edge_dy = p2.y - p1.y;
-    double edge_length = sqrt(edge_dx * edge_dx + edge_dy * edge_dy);
+void draw_mirror(SDL_Renderer *ren, SDL_FPoint p1, SDL_FPoint p2, float thickness) {
+    float edge_dx = p2.x - p1.x;
+    float edge_dy = p2.y - p1.y;
+    float edge_length = sqrt(edge_dx * edge_dx + edge_dy * edge_dy);
 
     // Normalize
-    double unit_x = edge_dx / edge_length;
-    double unit_y = edge_dy / edge_length;
+    float unit_x = edge_dx / edge_length;
+    float unit_y = edge_dy / edge_length;
 
     // Compute perpendicular offset
-    double perp_x = -unit_y * thickness;
-    double perp_y = unit_x * thickness;
+    float perp_x = -unit_y * thickness;
+    float perp_y = unit_x * thickness;
 
     // Define mirror quad
     SDL_Vertex mirror_vertices[4] = {
@@ -167,31 +167,31 @@ void draw_mirror(SDL_Renderer *ren, SDL_FPoint p1, SDL_FPoint p2, double thickne
 void draw_sphinx(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint op = as->board[row][col].point;
-    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
+    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5f), (op.y + SQUARE_SIZE * 0.5f)};
 
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
-    double half_size = PIECE_SIZE * 0.5;
+    float half_size = PIECE_SIZE * 0.5f;
     SDL_FPoint original_vertices[3] = {
         {cp.x, cp.y - half_size},
         {cp.x - half_size, cp.y + half_size},
         {cp.x + half_size, cp.y + half_size}};
 
-    double angle = 0;
+    float angle = 0.0f;
     switch (as->board[row][col].piece->orientation) {
-    case NORTH_SDL: angle = 0; break;
-    case EAST_SDL: angle = M_PI / 2; break;
+    case NORTH_SDL: angle = 0.0f; break;
+    case EAST_SDL: angle = M_PI / 2.0f; break;
     case SOUTH_SDL: angle = M_PI; break;
-    case WEST_SDL: angle = 3 * M_PI / 2; break;
+    case WEST_SDL: angle = 3.0f * M_PI / 2.0f; break;
     }
 
-    double cos_a = cos(angle);
-    double sin_a = sin(angle);
+    float cos_a = cos(angle);
+    float sin_a = sin(angle);
 
     SDL_Vertex vertices[3];
     for (int i = 0; i < 3; i++) {
-        double x = original_vertices[i].x - cp.x;
-        double y = original_vertices[i].y - cp.y;
+        float x = original_vertices[i].x - cp.x;
+        float y = original_vertices[i].y - cp.y;
         vertices[i].position.x = cp.x + (x * cos_a - y * sin_a);
         vertices[i].position.y = cp.y + (x * sin_a + y * cos_a);
         vertices[i].color = piece_color;
@@ -203,31 +203,31 @@ void draw_sphinx(AppState *as, int row, int col) {
 void draw_pyramid(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint op = as->board[row][col].point;
-    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5), (op.y + SQUARE_SIZE * 0.5)};
+    SDL_FPoint cp = {(op.x + SQUARE_SIZE * 0.5f), (op.y + SQUARE_SIZE * 0.5f)};
 
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
-    double half_size = PIECE_SIZE * 0.5;
+    float half_size = PIECE_SIZE * 0.5f;
     SDL_FPoint original_vertices[3] = {
         {cp.x - half_size, cp.y - half_size},
         {cp.x + half_size, cp.y + half_size},
         {cp.x - half_size, cp.y + half_size}};
 
-    double angle = 0;
+    float angle = 0.0f;
     switch (as->board[row][col].piece->orientation) {
-    case NORTH_SDL: angle = 0; break;
-    case EAST_SDL: angle = M_PI / 2; break;
+    case NORTH_SDL: angle = 0.0f; break;
+    case EAST_SDL: angle = M_PI / 2.0f; break;
     case SOUTH_SDL: angle = M_PI; break;
-    case WEST_SDL: angle = 3 * M_PI / 2; break;
+    case WEST_SDL: angle = 3.0f * M_PI / 2.0f; break;
     }
 
-    double cos_a = cos(angle);
-    double sin_a = sin(angle);
+    float cos_a = cos(angle);
+    float sin_a = sin(angle);
 
     SDL_Vertex vertices[3];
     for (int i = 0; i < 3; i++) {
-        double x = original_vertices[i].x - cp.x;
-        double y = original_vertices[i].y - cp.y;
+        float x = original_vertices[i].x - cp.x;
+        float y = original_vertices[i].y - cp.y;
         vertices[i].position.x = cp.x + (x * cos_a - y * sin_a);
         vertices[i].position.y = cp.y + (x * sin_a + y * cos_a);
         vertices[i].color = piece_color;
@@ -237,27 +237,27 @@ void draw_pyramid(AppState *as, int row, int col) {
 
     SDL_FPoint v1 = vertices[0].position;
     SDL_FPoint v2 = vertices[1].position;
-    double thickness = 2.0;
+    float thickness = 2.0f;
     draw_mirror(ren, v1, v2, thickness);
 }
 
 void draw_scarab(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint op = as->board[row][col].point;
-    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
+    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5f)), (op.y + (SQUARE_SIZE * 0.5f))};
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
-    double width = PIECE_SIZE * 0.2;
-    double height = PIECE_SIZE + (PIECE_SIZE * 0.2);
+    float width = PIECE_SIZE * 0.2f;
+    float height = PIECE_SIZE + (PIECE_SIZE * 0.2f);
 
-    double half_w = width * 0.5;
-    double half_h = height * 0.5;
+    float half_w = width * 0.5f;
+    float half_h = height * 0.5f;
 
     Orientation_SDL dir = as->board[row][col].piece->orientation;
-    double angle = (dir == NORTH_SDL || dir == SOUTH_SDL) ? -M_PI / 4 : M_PI / 4;
+    float angle = (dir == NORTH_SDL || dir == SOUTH_SDL) ? -M_PI / 4.0f : M_PI / 4.0f;
 
-    double cos_a = cos(angle);
-    double sin_a = sin(angle);
+    float cos_a = cos(angle);
+    float sin_a = sin(angle);
 
     SDL_Vertex vertices[4] = {
         {{cp.x + (-half_w * cos_a - -half_h * sin_a), cp.y + (-half_w * sin_a + -half_h * cos_a)}, piece_color, {0, 0}},
@@ -269,7 +269,7 @@ void draw_scarab(AppState *as, int row, int col) {
 
     SDL_RenderGeometry(ren, NULL, vertices, 4, indices, 6);
 
-    double thickness = 2.0;
+    float thickness = 2.0f;
 
     SDL_FPoint v1 = vertices[0].position;
     SDL_FPoint v2 = vertices[2].position;
@@ -283,7 +283,7 @@ void draw_scarab(AppState *as, int row, int col) {
 void draw_anubis(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint op = as->board[row][col].point;
-    SDL_FPoint p = {(op.x + (SQUARE_SIZE - PIECE_SIZE) * 0.5), (op.y + (SQUARE_SIZE - PIECE_SIZE) * 0.5)};
+    SDL_FPoint p = {(op.x + (SQUARE_SIZE - PIECE_SIZE) * 0.5f), (op.y + (SQUARE_SIZE - PIECE_SIZE) * 0.5f)};
 
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
@@ -297,11 +297,11 @@ void draw_anubis(AppState *as, int row, int col) {
 
     SDL_RenderGeometry(ren, NULL, vertices, 4, indices, 6);
 
-    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
-    double thickness = 4.0;
+    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5f)), (op.y + (SQUARE_SIZE * 0.5f))};
+    float thickness = 7.0f;
 
     SDL_FPoint v1, v2, v3, v4;
-    double half_size = PIECE_SIZE * 0.5;
+    float half_size = PIECE_SIZE * 0.5f;
     switch (as->board[row][col].piece->orientation) {
     case NORTH_SDL:
         v1 = (SDL_FPoint){cp.x - half_size, cp.y - half_size};
@@ -343,8 +343,8 @@ void draw_anubis(AppState *as, int row, int col) {
 void draw_pharaoh(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint op = as->board[row][col].point;
-    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5)), (op.y + (SQUARE_SIZE * 0.5))};
-    double radius = PIECE_SIZE * 0.5;
+    SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5f)), (op.y + (SQUARE_SIZE * 0.5f))};
+    float radius = PIECE_SIZE * 0.5f;
     int segments = 20;
 
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
@@ -356,7 +356,7 @@ void draw_pharaoh(AppState *as, int row, int col) {
 
     for (int i = 0; i < segments; i++) {
         int v = i + 1;
-        double angle = (2.0 * M_PI * i) / segments;
+        float angle = (2.0 * M_PI * i) / segments;
         vertices[v].position.x = cp.x + cos(angle) * radius;
         vertices[v].position.y = cp.y + sin(angle) * radius;
         vertices[v].color = piece_color;

@@ -13,7 +13,7 @@
 #define BOARD_HEIGHT  (BOARD_WIDTH * 0.8)
 #define SQUARE_SIZE   (BOARD_WIDTH / 10)
 #define PIECE_SIZE    (SQUARE_SIZE * 0.8)
-#define LASER_SPEED   250
+#define LASER_SPEED   250 // pixels per second
 
 enum MovePermission {
     S,
@@ -29,19 +29,18 @@ static const int square_colors[8][10] = {
     {R, B, B, B, B, B, B, B, B, S},
     {R, B, B, B, B, B, B, B, B, S},
     {R, B, B, B, B, B, B, B, B, S},
-    {R, S, B, B, B, B, B, B, R, B}
-};
+    {R, S, B, B, B, B, B, B, R, B}};
 
-typedef struct {
+typedef struct Position {
     int row, col;
 } Position;
 
-typedef enum {
+typedef enum PlayerColor_SDL {
     SILVER_SDL,
     RED_SDL
 } PlayerColor_SDL;
 
-typedef enum {
+typedef enum PieceType_SDL {
     ANUBIS_SDL,
     PYRAMID_SDL,
     SCARAB_SDL,
@@ -49,55 +48,56 @@ typedef enum {
     SPHINX_SDL
 } PieceType_SDL;
 
-typedef enum {
+typedef enum Orientation_SDL {
     NORTH_SDL,
     EAST_SDL,
     SOUTH_SDL,
     WEST_SDL
 } Orientation_SDL;
 
-typedef enum {
+typedef enum LaserInteraction {
     REFLECT,
     ABSORB,
     HIT
 } LaserInteraction;
 
-typedef struct {
+typedef struct PieceSide {
     SDL_FPoint p1, p2;
     LaserInteraction interaction;
 } PieceSide;
 
-typedef struct {
+typedef struct Piece_SDL {
     PieceType_SDL piece_type;
     PlayerColor_SDL color;
     Orientation_SDL orientation;
     PieceSide sides[4];
+    SDL_FPoint cp;
 } Piece_SDL;
 
-typedef struct {
+typedef struct Square_SDL {
     SDL_FPoint point;
     Position position;
     Piece_SDL *piece;
 } Square_SDL;
 
-typedef struct {
+typedef struct LaserSegment {
     SDL_FPoint p1, p2;
 } LaserSegment;
 
-typedef enum {
+typedef enum LaserNextStep {
     CONTINUE,
     NEW_SEGMENT,
     STOP
 } LaserNextStep;
 
-typedef struct {
+typedef struct Laser {
     LaserSegment segments[100];
     Orientation_SDL direction;
     int num_segments;
     LaserNextStep next_step;
 } Laser;
 
-typedef struct {
+typedef struct AppState {
     SDL_Window *win;
     SDL_Renderer *ren;
     Square_SDL board[ROWS][COLS];
