@@ -55,26 +55,23 @@ void init_board(AppState *as) {
             Piece_SDL *p = s->piece;
             p->color = (isupper(piece[0])) ? RED_SDL : SILVER_SDL;
 
+            // clang-format off
             switch (toupper(piece[0])) {
-            case 'P': p->piece_type = PYRAMID_SDL; break;
-            case 'S': p->piece_type = SCARAB_SDL; break;
-            case 'A': p->piece_type = ANUBIS_SDL; break;
-            case 'X': p->piece_type = PHARAOH_SDL; break;
-            case 'L': p->piece_type = SPHINX_SDL; break;
-            default: break;
-            }
+            case 'P': p->piece_type = PYRAMID_SDL; p->num_sides = 3; break;
+            case 'S': p->piece_type = SCARAB_SDL; p->num_sides = 4; break;
+            case 'A': p->piece_type = ANUBIS_SDL; p->num_sides = 4; break;
+            case 'X': p->piece_type = PHARAOH_SDL; p->num_sides = 4; break;
+            case 'L': p->piece_type = SPHINX_SDL; p->num_sides = 3; break;
+            } // clang-format on
 
             switch (piece[1]) {
             case '0': p->orientation = NORTH_SDL; break;
             case '1': p->orientation = EAST_SDL; break;
             case '2': p->orientation = SOUTH_SDL; break;
             case '3': p->orientation = WEST_SDL; break;
-            default: break;
             }
 
-            // TODO: use this in drawing functions
             p->cp = (SDL_FPoint){(s->point.x + SQUARE_SIZE * 0.5f), (s->point.y + SQUARE_SIZE * 0.5f)};
-
             calc_piece_sides(s);
         }
     }
@@ -85,20 +82,76 @@ void calc_piece_sides(Square_SDL *square) {
         return;
     }
 
-    Piece_SDL *p = &square->piece;
+    Piece_SDL *p = square->piece;
+    SDL_FPoint cp = p->cp;
 
+    // Assume all pieces are facing NORTH for creation.
+    // Always start at the top left and go clockwise.
     switch (p->piece_type) {
-    case PYRAMID_SDL:
+    case PYRAMID_SDL: {
+        float half = PIECE_SIZE * 0.5f;
+        SDL_FPoint p1 = {cp.x - half, cp.y - half};
+        SDL_FPoint p2 = {cp.x + half, cp.y + half};
+        SDL_FPoint p3 = {cp.x - half, cp.y + half};
+        p->sides[0] = (PieceSide){p1, p2, REFLECT};
+        p->sides[1] = (PieceSide){p2, p3, HIT};
+        p->sides[2] = (PieceSide){p3, p1, HIT};
         break;
-    case SCARAB_SDL:
+    }
+    case SCARAB_SDL: {
+        float width = PIECE_SIZE * 0.2f;
+        float height = PIECE_SIZE;
+        float half_w = width * 0.5f;
+        float half_h = height * 0.5f;
+        SDL_FPoint p1 = {cp.x - half_w, cp.y - half_h};
+        SDL_FPoint p2 = {cp.x + half_w, cp.y - half_h};
+        SDL_FPoint p3 = {cp.x + half_w, cp.y + half_h};
+        SDL_FPoint p4 = {cp.x - half_w, cp.y + half_h};
+        p->sides[0] = (PieceSide){p1, p2, HIT};
+        p->sides[1] = (PieceSide){p2, p3, REFLECT};
+        p->sides[2] = (PieceSide){p3, p4, HIT};
+        p->sides[3] = (PieceSide){p4, p1, REFLECT};
         break;
-    case ANUBIS_SDL:
+    }
+    case ANUBIS_SDL: {
+        float half = PIECE_SIZE * 0.5f;
+        SDL_FPoint p1 = {cp.x - half, cp.y - half};
+        SDL_FPoint p2 = {cp.x + half, cp.y - half};
+        SDL_FPoint p3 = {cp.x + half, cp.y + half};
+        SDL_FPoint p4 = {cp.x - half, cp.y + half};
+        p->sides[0] = (PieceSide){p1, p2, ABSORB};
+        p->sides[1] = (PieceSide){p2, p3, HIT};
+        p->sides[2] = (PieceSide){p3, p4, HIT};
+        p->sides[3] = (PieceSide){p4, p1, HIT};
         break;
-    case PHARAOH_SDL:
+    }
+    case PHARAOH_SDL: {
+        float half = PIECE_SIZE * 0.5f;
+        SDL_FPoint p1 = {cp.x - half, cp.y - half};
+        SDL_FPoint p2 = {cp.x + half, cp.y - half};
+        SDL_FPoint p3 = {cp.x + half, cp.y + half};
+        SDL_FPoint p4 = {cp.x - half, cp.y + half};
+        p->sides[0] = (PieceSide){p1, p2, HIT};
+        p->sides[1] = (PieceSide){p2, p3, HIT};
+        p->sides[2] = (PieceSide){p3, p4, HIT};
+        p->sides[3] = (PieceSide){p4, p1, HIT};
         break;
-    case SPHINX_SDL:
+    }
+    case SPHINX_SDL: {
+        float half = PIECE_SIZE * 0.5f;
+        SDL_FPoint p1 = {cp.x, cp.y - half};
+        SDL_FPoint p2 = {cp.x + half, cp.y + half};
+        SDL_FPoint p3 = {cp.x - half, cp.y + half};
+        p->sides[0] = (PieceSide){p1, p2, ABSORB};
+        p->sides[1] = (PieceSide){p2, p3, ABSORB};
+        p->sides[2] = (PieceSide){p3, p1, ABSORB};
         break;
-    default: break;
+    }
+    }
+
+    //TODO: rotate the piece sides correctly
+    for (int i = 0; i > p->num_sides; i++) {
+        // rotate(p->sides[i], p->orientation);
     }
 }
 

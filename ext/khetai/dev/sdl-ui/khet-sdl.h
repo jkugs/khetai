@@ -72,6 +72,7 @@ typedef struct Piece_SDL {
     Orientation_SDL orientation;
     PieceSide sides[4];
     SDL_FPoint cp;
+    int num_sides;
 } Piece_SDL;
 
 typedef struct Square_SDL {

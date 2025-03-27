@@ -248,7 +248,7 @@ void draw_scarab(AppState *as, int row, int col) {
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
     float width = PIECE_SIZE * 0.2f;
-    float height = PIECE_SIZE + (PIECE_SIZE * 0.2f);
+    float height = PIECE_SIZE;
 
     float half_w = width * 0.5f;
     float half_h = height * 0.5f;
