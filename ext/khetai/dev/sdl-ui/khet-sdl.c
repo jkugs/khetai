@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -20,6 +21,7 @@ static void fire_laser(AppState *as, PlayerColor_SDL color);
 
 static void calc_next_laser_step(Laser *laser, float delta_time);
 static void calc_piece_sides(Square_SDL *square);
+static void rotate_piece_side(PieceSide *p, SDL_FPoint cp, float angle);
 
 static void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2);
 static void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise);
@@ -149,10 +151,48 @@ void calc_piece_sides(Square_SDL *square) {
     }
     }
 
-    //TODO: rotate the piece sides correctly
+    // TODO: rotate the piece sides correctly
     for (int i = 0; i > p->num_sides; i++) {
         // rotate(p->sides[i], p->orientation);
+        float angle = 0;
+        switch (p->orientation) {
+        case NORTH_SDL:
+            break;
+        case EAST_SDL:
+            angle = M_PI / 2.0f;
+            rotate_piece_side(&p->sides[i], cp, angle);
+            break;
+        case SOUTH_SDL:
+            angle = M_PI ;
+            rotate_piece_side(&p->sides[i], cp, angle);
+            break;
+        case WEST_SDL:
+            angle = 3.0f * M_PI / 2.0f;
+            rotate_piece_side(&p->sides[i], cp, angle);
+            break;
+        }
     }
+}
+
+void rotate_piece_side(PieceSide *ps, SDL_FPoint cp, float angle) {
+    SDL_FPoint *p1 = &ps->p1;
+    SDL_FPoint *p2 = &ps->p2;
+
+    float cos_a = cos(angle);
+    float sin_a = sin(angle);
+
+    // Rotate each segment around the (0, 0) origin
+    // and then move them back to their true location.
+
+    float x1 = p1->x - cp.x;
+    float y1 = p1->y - cp.y;
+    p1->x = cp.x + (x1 * cos_a - y1 * sin_a);
+    p1->y = cp.y + (x1 * sin_a + y1 * cos_a);
+
+    float x2 = p2->x - cp.x;
+    float y2 = p2->y - cp.y;
+    p2->x = cp.x + (x2 * cos_a - y2 * sin_a);
+    p2->y = cp.y + (x2 * sin_a + y2 * cos_a);
 }
 
 void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2) {
@@ -165,6 +205,9 @@ void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2) {
         board[p2.row][p2.col].piece = board[p1.row][p1.col].piece;
         board[p1.row][p1.col].piece = temp;
     }
+
+    calc_piece_sides(&board[p1.row][p1.col]);
+    calc_piece_sides(&board[p2.row][p2.col]);
 }
 
 void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise) {
@@ -283,7 +326,9 @@ void calc_next_laser_step(Laser *laser, float delta_time) {
     segment->p2.x = end_p2.x;
     segment->p2.y = end_p2.y;
 
-    // check if we've crossed a piece line within square
+    // TODO:
+    // check if we've crossed a piece side
+    // clamp back to point on side
     // set interaction type
 }
 

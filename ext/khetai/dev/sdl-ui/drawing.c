@@ -247,8 +247,9 @@ void draw_scarab(AppState *as, int row, int col) {
     SDL_FPoint cp = {(op.x + (SQUARE_SIZE * 0.5f)), (op.y + (SQUARE_SIZE * 0.5f))};
     SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
 
-    float width = PIECE_SIZE * 0.2f;
-    float height = PIECE_SIZE;
+    float width = PIECE_SIZE * 0.12f;
+    //float height = PIECE_SIZE;
+    float height = PIECE_SIZE + (PIECE_SIZE * 0.1f);
 
     float half_w = width * 0.5f;
     float half_h = height * 0.5f;
@@ -269,7 +270,7 @@ void draw_scarab(AppState *as, int row, int col) {
 
     SDL_RenderGeometry(ren, NULL, vertices, 4, indices, 6);
 
-    float thickness = 2.0f;
+    float thickness = 1.5f;
 
     SDL_FPoint v1 = vertices[0].position;
     SDL_FPoint v2 = vertices[2].position;
