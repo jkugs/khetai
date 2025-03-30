@@ -331,10 +331,10 @@ void draw_anubis(AppState *as, int row, int col) {
     }
 
     SDL_Vertex black_vertices[4] = {
-        {{v1.x, v1.y}, BLACK_COLOR, {0, 0}}, // Top-left
-        {{v2.x, v2.y}, BLACK_COLOR, {0, 0}}, // Top-right
-        {{v3.x, v3.y}, BLACK_COLOR, {0, 0}}, // Bottom-right
-        {{v4.x, v4.y}, BLACK_COLOR, {0, 0}}  // Bottom-left
+        {{v1.x, v1.y}, BLACK_COLOR, {0, 0}},
+        {{v2.x, v2.y}, BLACK_COLOR, {0, 0}},
+        {{v3.x, v3.y}, BLACK_COLOR, {0, 0}},
+        {{v4.x, v4.y}, BLACK_COLOR, {0, 0}}
     };
 
     int black_indices[6] = {0, 1, 2, 0, 2, 3};

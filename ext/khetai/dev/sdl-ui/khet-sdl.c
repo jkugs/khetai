@@ -4,9 +4,9 @@
 #include "drawing.h"
 #include <SDL3/SDL_main.h>
 #include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -18,14 +18,18 @@ static void call_ai(AppState *as);
 static void reset_selection(AppState *as);
 static void process_click(AppState *as);
 static void fire_laser(AppState *as, PlayerColor_SDL color);
+static void calc_next_laser_step(AppState *as);
 
-static void calc_next_laser_step(Laser *laser, float delta_time);
 static void calc_piece_sides(Square_SDL *square);
-static void rotate_piece_side(PieceSide *p, SDL_FPoint cp, float angle);
+static void rotate_piece_side(PieceSide *ps, SDL_FPoint cp, float angle);
+static bool check_laser_piece_intersection(Piece_SDL *p, LaserSegment *ls, SDL_FPoint r, SDL_FPoint *intersection, PieceSide *crossed_side);
 
 static void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2);
 static void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise);
 static void apply_move(Square_SDL board[ROWS][COLS], Move best_move);
+
+static float cross(SDL_FPoint a, SDL_FPoint b);
+static SDL_FPoint normalize(SDL_FPoint v);
 
 static const char *const init_pieces[8][10] = {
     {"L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--"},
@@ -151,9 +155,7 @@ void calc_piece_sides(Square_SDL *square) {
     }
     }
 
-    // TODO: rotate the piece sides correctly
-    for (int i = 0; i > p->num_sides; i++) {
-        // rotate(p->sides[i], p->orientation);
+    for (int i = 0; i < p->num_sides; i++) {
         float angle = 0;
         switch (p->orientation) {
         case NORTH_SDL:
@@ -163,7 +165,7 @@ void calc_piece_sides(Square_SDL *square) {
             rotate_piece_side(&p->sides[i], cp, angle);
             break;
         case SOUTH_SDL:
-            angle = M_PI ;
+            angle = M_PI;
             rotate_piece_side(&p->sides[i], cp, angle);
             break;
         case WEST_SDL:
@@ -195,6 +197,8 @@ void rotate_piece_side(PieceSide *ps, SDL_FPoint cp, float angle) {
     p2->y = cp.y + (x2 * sin_a + y2 * cos_a);
 }
 
+// TODO: Move piece sides function.
+
 void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2) {
     if (board[p2.row][p2.col].piece == NULL) {
         board[p2.row][p2.col].piece = board[p1.row][p1.col].piece;
@@ -206,6 +210,8 @@ void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2) {
         board[p1.row][p1.col].piece = temp;
     }
 
+    // TODO: use move piece sides function. will use cp.
+    // will calc cp location over time.
     calc_piece_sides(&board[p1.row][p1.col]);
     calc_piece_sides(&board[p2.row][p2.col]);
 }
@@ -218,6 +224,12 @@ void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise) {
     case SOUTH_SDL: p->orientation = clockwise ? WEST_SDL : EAST_SDL; break;
     case WEST_SDL: p->orientation = clockwise ? NORTH_SDL : SOUTH_SDL; break;
     default: break;
+    }
+
+    // TODO: calc andgle over time.
+    for (int i = 0; i > p->num_sides; i++) {
+        float angle = clockwise ? (M_PI / 2.0f) : -(M_PI / 2.0f);
+        rotate_piece_side(&p->sides[i], p->cp, angle);
     }
 }
 
@@ -294,13 +306,17 @@ void fire_laser(AppState *as, PlayerColor_SDL player) {
     laser->next_step = CONTINUE;
 }
 
-void calc_next_laser_step(Laser *laser, float delta_time) {
-    float distance = LASER_SPEED * delta_time;
-    Orientation_SDL direction = laser->direction;
+void calc_next_laser_step(AppState *as) {
+    Laser *laser = &as->laser;
 
-    if (laser->next_step == NEW_SEGMENT) {
-        // TODO: calculate next direction
+    if (laser->next_step == STOP) {
+        // TODO: hit animation? hold for a second. remove piece and laser.
+    } else if (laser->next_step == OFF) {
+        // TODO: hold for a second. remove laser.
     }
+
+    float distance = LASER_SPEED * as->delta_time;
+    Orientation_SDL direction = laser->direction;
 
     LaserSegment *segment = &laser->segments[laser->num_segments - 1];
     SDL_FPoint end_p2;
@@ -326,10 +342,103 @@ void calc_next_laser_step(Laser *laser, float delta_time) {
     segment->p2.x = end_p2.x;
     segment->p2.y = end_p2.y;
 
-    // TODO:
+    SDL_FPoint p1 = segment->p1;
+    SDL_FPoint p2 = segment->p2;
+
     // check if we've crossed a piece side
-    // clamp back to point on side
-    // set interaction type
+
+    // calculate r == laser vector from origin
+    SDL_FPoint r = (SDL_FPoint){(p2.x - p1.x), (p2.y - p1.y)};
+
+    SDL_FPoint intersection;
+    PieceSide crossed_side;
+
+    bool crossed = false;
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
+            if (as->board[i][j].piece == NULL)
+                continue;
+
+            if (check_laser_piece_intersection(as->board[i][j].piece, segment, r, &intersection, &crossed_side)) {
+                crossed = true;
+                break;
+            }
+        }
+    }
+
+    // a piece side was crossed. clamp laser to intersection point.
+    // decide what to do next...
+    if (crossed) {
+        segment->p2 = intersection;
+        switch (crossed_side.interaction) {
+        case REFLECT:
+            SDL_FPoint s1 = crossed_side.p1;
+            SDL_FPoint s2 = crossed_side.p2;
+            SDL_FPoint s = {(s2.x - s1.x), (s2.y - s1.y)};
+            SDL_FPoint n = {-s.y, s.x};
+            float dot = r.x * n.x + r.y * n.y;
+            SDL_FPoint reflected = {r.x - 2 * dot * n.x, r.y - 2 * dot * n.y};
+            SDL_FPoint reflection_vector = normalize(reflected);
+            LaserSegment *new_segment = &laser->segments[laser->num_segments];
+            new_segment->p1 = intersection;
+            new_segment->p2 = (SDL_FPoint){intersection.x + (reflection_vector.x * 0.01f), intersection.y + (reflection_vector.y * 0.01f)};
+            laser->num_segments++;
+            if (fabsf(reflection_vector.x) > fabsf(reflection_vector.y)) {
+                laser->direction = (reflection_vector.x > 0) ? EAST_SDL : WEST_SDL;
+            } else {
+                laser->direction = (reflection_vector.y > 0) ? SOUTH_SDL : NORTH_SDL;
+            }
+            laser->next_step = CONTINUE;
+            break;
+        case HIT:
+            laser->next_step = STOP;
+            break;
+        case ABSORB:
+            break;
+        }
+    }
+}
+
+SDL_FPoint normalize(SDL_FPoint v) {
+    float length = sqrtf(v.x * v.x + v.y * v.y);
+    if (length == 0.0f)
+        return (SDL_FPoint){0.0f, 0.0f}; // avoid divide by zero
+    return (SDL_FPoint){v.x / length, v.y / length};
+}
+
+float cross(SDL_FPoint a, SDL_FPoint b) {
+    return a.x * b.y - a.y * b.x;
+}
+
+bool check_laser_piece_intersection(Piece_SDL *piece, LaserSegment *ls, SDL_FPoint r, SDL_FPoint *intersection, PieceSide *crossed_side) {
+    for (int i = 0; i < piece->num_sides; i++) {
+        SDL_FPoint q1 = piece->sides[i].p1;
+        SDL_FPoint q2 = piece->sides[i].p2;
+        SDL_FPoint s = (SDL_FPoint){(q2.x - q1.x), (q2.y - q1.y)};
+
+        float r_cross_s = cross(r, s);
+        if (r_cross_s == 0.0f)
+            continue;
+
+        // r = laser vector
+        // s = side vector
+        SDL_FPoint p = ls->p1; // laser start point
+        SDL_FPoint q = q1;     // side start point
+
+        SDL_FPoint qp = {(q.x - p.x), (q.y - p.y)};
+        float t = cross(qp, s) / r_cross_s;
+        float u = cross(qp, r) / r_cross_s;
+
+        // check for valid intersection
+        if (t >= 1e-5f && t <= 1 && u >= 0 && u <= 1) {
+            intersection->x = p.x + (t * r.x);
+            intersection->y = p.y + (t * r.y);
+            *crossed_side = piece->sides[i];
+            return true;
+        }
+    }
+
+    return false;
 }
 
 #ifdef __EMSCRIPTEN__
@@ -459,7 +568,7 @@ SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     as->last_tick = now;
 
     if (as->drawing_laser) {
-        calc_next_laser_step(&as->laser, as->delta_time);
+        calc_next_laser_step(as);
     }
 
     draw(as);

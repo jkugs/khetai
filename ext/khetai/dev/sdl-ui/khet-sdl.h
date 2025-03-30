@@ -87,7 +87,7 @@ typedef struct LaserSegment {
 
 typedef enum LaserNextStep {
     CONTINUE,
-    NEW_SEGMENT,
+    OFF,
     STOP
 } LaserNextStep;
 
