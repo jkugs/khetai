@@ -270,7 +270,7 @@ void draw_scarab(AppState *as, int row, int col) {
 
     SDL_RenderGeometry(ren, NULL, vertices, 4, indices, 6);
 
-    float thickness = 1.5f;
+    float thickness = 1.2f;
 
     SDL_FPoint v1 = vertices[0].position;
     SDL_FPoint v2 = vertices[2].position;

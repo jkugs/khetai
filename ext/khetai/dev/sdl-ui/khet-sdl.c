@@ -64,7 +64,7 @@ void init_board(AppState *as) {
             // clang-format off
             switch (toupper(piece[0])) {
             case 'P': p->piece_type = PYRAMID_SDL; p->num_sides = 3; break;
-            case 'S': p->piece_type = SCARAB_SDL; p->num_sides = 4; break;
+            case 'S': p->piece_type = SCARAB_SDL; p->num_sides = 1; break;
             case 'A': p->piece_type = ANUBIS_SDL; p->num_sides = 4; break;
             case 'X': p->piece_type = PHARAOH_SDL; p->num_sides = 4; break;
             case 'L': p->piece_type = SPHINX_SDL; p->num_sides = 3; break;
@@ -93,9 +93,9 @@ void calc_piece_sides(Square_SDL *square) {
 
     // Assume all pieces are facing NORTH for creation.
     // Always start at the top left and go clockwise.
+    float half = PIECE_SIZE * 0.5f;
     switch (p->piece_type) {
     case PYRAMID_SDL: {
-        float half = PIECE_SIZE * 0.5f;
         SDL_FPoint p1 = {cp.x - half, cp.y - half};
         SDL_FPoint p2 = {cp.x + half, cp.y + half};
         SDL_FPoint p3 = {cp.x - half, cp.y + half};
@@ -105,22 +105,12 @@ void calc_piece_sides(Square_SDL *square) {
         break;
     }
     case SCARAB_SDL: {
-        float width = PIECE_SIZE * 0.2f;
-        float height = PIECE_SIZE;
-        float half_w = width * 0.5f;
-        float half_h = height * 0.5f;
-        SDL_FPoint p1 = {cp.x - half_w, cp.y - half_h};
-        SDL_FPoint p2 = {cp.x + half_w, cp.y - half_h};
-        SDL_FPoint p3 = {cp.x + half_w, cp.y + half_h};
-        SDL_FPoint p4 = {cp.x - half_w, cp.y + half_h};
-        p->sides[0] = (PieceSide){p1, p2, HIT};
-        p->sides[1] = (PieceSide){p2, p3, REFLECT};
-        p->sides[2] = (PieceSide){p3, p4, HIT};
-        p->sides[3] = (PieceSide){p4, p1, REFLECT};
+        SDL_FPoint p1 = {cp.x - half, cp.y - half};
+        SDL_FPoint p2 = {cp.x + half, cp.y + half};
+        p->sides[0] = (PieceSide){p1, p2, REFLECT};
         break;
     }
     case ANUBIS_SDL: {
-        float half = PIECE_SIZE * 0.5f;
         SDL_FPoint p1 = {cp.x - half, cp.y - half};
         SDL_FPoint p2 = {cp.x + half, cp.y - half};
         SDL_FPoint p3 = {cp.x + half, cp.y + half};
@@ -132,7 +122,6 @@ void calc_piece_sides(Square_SDL *square) {
         break;
     }
     case PHARAOH_SDL: {
-        float half = PIECE_SIZE * 0.5f;
         SDL_FPoint p1 = {cp.x - half, cp.y - half};
         SDL_FPoint p2 = {cp.x + half, cp.y - half};
         SDL_FPoint p3 = {cp.x + half, cp.y + half};
@@ -144,7 +133,6 @@ void calc_piece_sides(Square_SDL *square) {
         break;
     }
     case SPHINX_SDL: {
-        float half = PIECE_SIZE * 0.5f;
         SDL_FPoint p1 = {cp.x, cp.y - half};
         SDL_FPoint p2 = {cp.x + half, cp.y + half};
         SDL_FPoint p3 = {cp.x - half, cp.y + half};
@@ -272,34 +260,35 @@ void fire_laser(AppState *as, PlayerColor_SDL player) {
         col = 9;
     }
     Square_SDL square = as->board[row][col];
-    laser->direction = square.piece->orientation;
-    Orientation_SDL direction = laser->direction;
     float x1, y1, x2, y2;
     SDL_FPoint p1, p2;
     x1 = square.point.x + (SQUARE_SIZE * 0.5);
     y1 = square.point.y + (SQUARE_SIZE * 0.5);
-    switch (direction) {
-    case SOUTH_SDL:
-        y1 += (PIECE_SIZE * 0.5);
-        p1 = (SDL_FPoint){x1, y1};
-        p2 = (SDL_FPoint){x1, y1 + distance};
+
+    SDL_FPoint dir;
+    switch (square.piece->orientation) {
+    case NORTH_SDL:
+        y1 -= (PIECE_SIZE * 0.5);
+        dir = (SDL_FPoint){0, -1};
         break;
     case EAST_SDL:
         x1 += (PIECE_SIZE * 0.5);
-        p1 = (SDL_FPoint){x1, y1};
-        p2 = (SDL_FPoint){x1 + distance, y1};
+        dir = (SDL_FPoint){1, 0};
         break;
-    case NORTH_SDL:
-        y1 -= (PIECE_SIZE * 0.5);
-        p1 = (SDL_FPoint){x1, y1};
-        p2 = (SDL_FPoint){x1, y1 - distance};
+    case SOUTH_SDL:
+        y1 += (PIECE_SIZE * 0.5);
+        dir = (SDL_FPoint){0, 1};
         break;
     case WEST_SDL:
         x1 -= (PIECE_SIZE * 0.5);
-        p1 = (SDL_FPoint){x1, y1};
-        p2 = (SDL_FPoint){x1 - distance, y1};
+        dir = (SDL_FPoint){-1, 0};
         break;
     }
+    laser->direction_vector = dir;
+
+    p1 = (SDL_FPoint){x1, y1};
+    p2 = (SDL_FPoint){(p1.x + laser->direction_vector.x * distance), (p1.y + laser->direction_vector.y * distance)};
+
     laser->segments[0].p1 = p1;
     laser->segments[0].p2 = p2;
     laser->num_segments++;
@@ -316,38 +305,17 @@ void calc_next_laser_step(AppState *as) {
     }
 
     float distance = LASER_SPEED * as->delta_time;
-    Orientation_SDL direction = laser->direction;
-
     LaserSegment *segment = &laser->segments[laser->num_segments - 1];
-    SDL_FPoint end_p2;
-    switch (direction) {
-    case NORTH_SDL:
-        end_p2.x = segment->p2.x;
-        end_p2.y = segment->p2.y - distance;
-        break;
-    case EAST_SDL:
-        end_p2.x = segment->p2.x + distance;
-        end_p2.y = segment->p2.y;
-        break;
-    case SOUTH_SDL:
-        end_p2.x = segment->p2.x;
-        end_p2.y = segment->p2.y + distance;
-        break;
-    case WEST_SDL:
-        end_p2.x = segment->p2.x - distance;
-        end_p2.y = segment->p2.y;
-        break;
-    }
 
-    segment->p2.x = end_p2.x;
-    segment->p2.y = end_p2.y;
+    segment->p2.x += laser->direction_vector.x * distance;
+    segment->p2.y += laser->direction_vector.y * distance;
 
     SDL_FPoint p1 = segment->p1;
     SDL_FPoint p2 = segment->p2;
 
     // check if we've crossed a piece side
 
-    // calculate r == laser vector from origin
+    // calculate r -> laser vector from origin
     SDL_FPoint r = (SDL_FPoint){(p2.x - p1.x), (p2.y - p1.y)};
 
     SDL_FPoint intersection;
@@ -372,22 +340,30 @@ void calc_next_laser_step(AppState *as) {
         segment->p2 = intersection;
         switch (crossed_side.interaction) {
         case REFLECT:
+            // get side vector and normal
             SDL_FPoint s1 = crossed_side.p1;
             SDL_FPoint s2 = crossed_side.p2;
-            SDL_FPoint s = {(s2.x - s1.x), (s2.y - s1.y)};
-            SDL_FPoint n = {-s.y, s.x};
-            float dot = r.x * n.x + r.y * n.y;
-            SDL_FPoint reflected = {r.x - 2 * dot * n.x, r.y - 2 * dot * n.y};
+            SDL_FPoint s = (SDL_FPoint){s2.x - s1.x, s2.y - s1.y};
+            SDL_FPoint n = normalize((SDL_FPoint){-s.y, s.x}); // 90° CCW normal
+
+            // normalize incoming laser direction
+            SDL_FPoint r_norm = normalize(r);
+
+            // reflect the laser
+            float dot = r_norm.x * n.x + r_norm.y * n.y;
+            SDL_FPoint reflected = (SDL_FPoint){
+                r_norm.x - 2 * dot * n.x,
+                r_norm.y - 2 * dot * n.y};
             SDL_FPoint reflection_vector = normalize(reflected);
+
+            // rtart new laser segment in the reflected direction
             LaserSegment *new_segment = &laser->segments[laser->num_segments];
             new_segment->p1 = intersection;
-            new_segment->p2 = (SDL_FPoint){intersection.x + (reflection_vector.x * 0.01f), intersection.y + (reflection_vector.y * 0.01f)};
+            new_segment->p2 = (SDL_FPoint){
+                intersection.x + reflection_vector.x * 0.01f,
+                intersection.y + reflection_vector.y * 0.01f};
             laser->num_segments++;
-            if (fabsf(reflection_vector.x) > fabsf(reflection_vector.y)) {
-                laser->direction = (reflection_vector.x > 0) ? EAST_SDL : WEST_SDL;
-            } else {
-                laser->direction = (reflection_vector.y > 0) ? SOUTH_SDL : NORTH_SDL;
-            }
+            laser->direction_vector = reflection_vector;
             laser->next_step = CONTINUE;
             break;
         case HIT:

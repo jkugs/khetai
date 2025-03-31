@@ -93,7 +93,7 @@ typedef enum LaserNextStep {
 
 typedef struct Laser {
     LaserSegment segments[100];
-    Orientation_SDL direction;
+    SDL_FPoint direction_vector;
     int num_segments;
     LaserNextStep next_step;
 } Laser;
