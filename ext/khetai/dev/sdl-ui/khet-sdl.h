@@ -13,7 +13,7 @@
 #define BOARD_HEIGHT  (BOARD_WIDTH * 0.8)
 #define SQUARE_SIZE   (BOARD_WIDTH / 10)
 #define PIECE_SIZE    (SQUARE_SIZE * 0.8)
-#define LASER_SPEED   250 // pixels per second
+#define LASER_SPEED   225 // pixels per second
 
 enum MovePermission {
     S,
@@ -86,9 +86,10 @@ typedef struct LaserSegment {
 } LaserSegment;
 
 typedef enum LaserNextStep {
+    IDLE,
     CONTINUE,
-    OFF,
-    STOP
+    OFF_BOARD,
+    STOP_AT_PIECE,
 } LaserNextStep;
 
 typedef struct Laser {
@@ -96,6 +97,7 @@ typedef struct Laser {
     SDL_FPoint direction_vector;
     int num_segments;
     LaserNextStep next_step;
+    float hold_timer;
 } Laser;
 
 typedef struct AppState {
@@ -111,6 +113,7 @@ typedef struct AppState {
     bool clicked;
     bool selected;
     bool call_ai;
+    bool call_fire_laser;
     bool drawing_laser;
 } AppState;
 

@@ -19,6 +19,7 @@ static void reset_selection(AppState *as);
 static void process_click(AppState *as);
 static void fire_laser(AppState *as, PlayerColor_SDL color);
 static void calc_next_laser_step(AppState *as);
+static void reset_laser(AppState *as);
 
 static void calc_piece_sides(Square_SDL *square);
 static void rotate_piece_side(PieceSide *ps, SDL_FPoint cp, float angle);
@@ -77,7 +78,6 @@ void init_board(AppState *as) {
             case '3': p->orientation = WEST_SDL; break;
             }
 
-            p->cp = (SDL_FPoint){(s->point.x + SQUARE_SIZE * 0.5f), (s->point.y + SQUARE_SIZE * 0.5f)};
             calc_piece_sides(s);
         }
     }
@@ -89,6 +89,7 @@ void calc_piece_sides(Square_SDL *square) {
     }
 
     Piece_SDL *p = square->piece;
+    p->cp = (SDL_FPoint){(square->point.x + SQUARE_SIZE * 0.5f), (square->point.y + SQUARE_SIZE * 0.5f)};
     SDL_FPoint cp = p->cp;
 
     // Assume all pieces are facing NORTH for creation.
@@ -185,7 +186,7 @@ void rotate_piece_side(PieceSide *ps, SDL_FPoint cp, float angle) {
     p2->y = cp.y + (x2 * sin_a + y2 * cos_a);
 }
 
-// TODO: Move piece sides function.
+// TODO: Move piece over time function
 
 void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2) {
     if (board[p2.row][p2.col].piece == NULL) {
@@ -214,9 +215,9 @@ void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise) {
     default: break;
     }
 
-    // TODO: calc andgle over time.
-    for (int i = 0; i > p->num_sides; i++) {
-        float angle = clockwise ? (M_PI / 2.0f) : -(M_PI / 2.0f);
+    // TODO: calc angle over time.
+    float angle = clockwise ? (M_PI / 2.0f) : -(M_PI / 2.0f);
+    for (int i = 0; i < p->num_sides; i++) {
         rotate_piece_side(&p->sides[i], p->cp, angle);
     }
 }
@@ -250,7 +251,9 @@ void apply_move(Square_SDL board[ROWS][COLS], Move best_move) {
 void fire_laser(AppState *as, PlayerColor_SDL player) {
     as->drawing_laser = true;
     Laser *laser = &as->laser;
+    laser->hold_timer = 0.0f;
     float distance = LASER_SPEED * as->delta_time;
+
     int row, col;
     if (player == RED_SDL) {
         row = 0;
@@ -259,6 +262,7 @@ void fire_laser(AppState *as, PlayerColor_SDL player) {
         row = 7;
         col = 9;
     }
+
     Square_SDL square = as->board[row][col];
     float x1, y1, x2, y2;
     SDL_FPoint p1, p2;
@@ -284,24 +288,32 @@ void fire_laser(AppState *as, PlayerColor_SDL player) {
         dir = (SDL_FPoint){-1, 0};
         break;
     }
-    laser->direction_vector = dir;
-
     p1 = (SDL_FPoint){x1, y1};
-    p2 = (SDL_FPoint){(p1.x + laser->direction_vector.x * distance), (p1.y + laser->direction_vector.y * distance)};
+    p2 = (SDL_FPoint){(p1.x + dir.x * distance), (p1.y + dir.y * distance)};
 
+    laser->direction_vector = dir;
     laser->segments[0].p1 = p1;
     laser->segments[0].p2 = p2;
     laser->num_segments++;
     laser->next_step = CONTINUE;
 }
 
+void reset_laser(AppState *as) {
+    as->laser.num_segments = 0;
+    as->laser.next_step = IDLE;
+    as->laser.hold_timer = 0.0f;
+    as->drawing_laser = false;
+}
+
 void calc_next_laser_step(AppState *as) {
     Laser *laser = &as->laser;
 
-    if (laser->next_step == STOP) {
-        // TODO: hit animation? hold for a second. remove piece and laser.
-    } else if (laser->next_step == OFF) {
-        // TODO: hold for a second. remove laser.
+    if (laser->next_step == OFF_BOARD || laser->next_step == STOP_AT_PIECE) {
+        laser->hold_timer += as->delta_time;
+        if (laser->hold_timer > 0.7f) {
+            reset_laser(as);
+        }
+        return;
     }
 
     float distance = LASER_SPEED * as->delta_time;
@@ -313,8 +325,14 @@ void calc_next_laser_step(AppState *as) {
     SDL_FPoint p1 = segment->p1;
     SDL_FPoint p2 = segment->p2;
 
-    // check if we've crossed a piece side
+    // check if we are off the board
+    if (p2.x > WINDOW_WIDTH | p2.x < 0 || p2.y > WINDOW_HEIGHT || p2.y < 0) {
+        laser->next_step = OFF_BOARD;
+        laser->hold_timer = 0.0f;
+        return;
+    }
 
+    // check if we've crossed a piece side
     // calculate r -> laser vector from origin
     SDL_FPoint r = (SDL_FPoint){(p2.x - p1.x), (p2.y - p1.y)};
 
@@ -344,32 +362,27 @@ void calc_next_laser_step(AppState *as) {
             SDL_FPoint s1 = crossed_side.p1;
             SDL_FPoint s2 = crossed_side.p2;
             SDL_FPoint s = (SDL_FPoint){s2.x - s1.x, s2.y - s1.y};
-            SDL_FPoint n = normalize((SDL_FPoint){-s.y, s.x}); // 90° CCW normal
+            SDL_FPoint n = normalize((SDL_FPoint){-s.y, s.x}); // 90 degrees ccw normalized
 
             // normalize incoming laser direction
             SDL_FPoint r_norm = normalize(r);
 
             // reflect the laser
             float dot = r_norm.x * n.x + r_norm.y * n.y;
-            SDL_FPoint reflected = (SDL_FPoint){
-                r_norm.x - 2 * dot * n.x,
-                r_norm.y - 2 * dot * n.y};
+            SDL_FPoint reflected = (SDL_FPoint){(r_norm.x - 2 * dot * n.x), (r_norm.y - 2 * dot * n.y)};
             SDL_FPoint reflection_vector = normalize(reflected);
 
-            // rtart new laser segment in the reflected direction
+            // start new laser segment in the reflected direction
             LaserSegment *new_segment = &laser->segments[laser->num_segments];
             new_segment->p1 = intersection;
-            new_segment->p2 = (SDL_FPoint){
-                intersection.x + reflection_vector.x * 0.01f,
-                intersection.y + reflection_vector.y * 0.01f};
+            new_segment->p2 = (SDL_FPoint){(intersection.x + reflection_vector.x * 0.01f), (intersection.y + reflection_vector.y * 0.01f)};
             laser->num_segments++;
             laser->direction_vector = reflection_vector;
             laser->next_step = CONTINUE;
             break;
         case HIT:
-            laser->next_step = STOP;
-            break;
         case ABSORB:
+            laser->next_step = STOP_AT_PIECE;
             break;
         }
     }
@@ -421,7 +434,8 @@ bool check_laser_piece_intersection(Piece_SDL *piece, LaserSegment *ls, SDL_FPoi
 void start_ai_calculation(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
     Move best_move = call_ai_move(as->board);
-    apply_move(as, best_move);
+    apply_move(as->board, best_move);
+    as->call_fire_laser = true;
 }
 #endif
 
@@ -433,6 +447,7 @@ void call_ai(AppState *as) {
 #else
     Move best_move = call_ai_move(as->board);
     apply_move(as->board, best_move);
+    as->call_fire_laser = true;
 #endif
 }
 
@@ -478,7 +493,7 @@ void process_click(AppState *as) {
                 Piece_SDL *p = as->board[i][j].piece;
                 bool can_move = (square_colors[i][j] == B || square_colors[i][j] == perm);
 
-                if (p == NULL) {
+                if (p == NULL && mp->piece_type != SPHINX_SDL) {
                     as->valid_squares[i][j] = can_move;
                 } else if (mp->piece_type == SCARAB_SDL) {
                     if (p->piece_type != SCARAB_SDL && p->piece_type != PHARAOH_SDL && p->piece_type != SPHINX_SDL) {
@@ -510,7 +525,6 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             as->clicked = true;
         }
     } else if (event->type == SDL_EVENT_KEY_UP) {
-        // TODO: a move will be triggered by a valid move eventually...
         if (event->key.key == SDLK_RETURN) {
             call_ai(as);
         } else if (event->key.key == SDLK_LEFT || event->key.key == SDLK_RIGHT) {
@@ -524,8 +538,9 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
                 }
             }
         } else if (event->key.key == SDLK_SPACE) {
-            // TODO: fire laser
-            fire_laser(as, SILVER_SDL);
+            if (!as->drawing_laser) {
+                fire_laser(as, SILVER_SDL);
+            }
         }
     }
     return SDL_APP_CONTINUE;
@@ -547,10 +562,22 @@ SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
         calc_next_laser_step(as);
     }
 
+    if (as->call_fire_laser) {
+        fire_laser(as, RED_SDL);
+        as->call_fire_laser = false;
+    }
+
     draw(as);
 
     if (as->call_ai) {
         call_ai(as);
+
+        // re-calculate delta_time and last_time because AI takes a while
+        Uint64 now = SDL_GetPerformanceCounter();
+        Uint64 freq = SDL_GetPerformanceFrequency();
+        as->delta_time = (float)(now - as->last_tick) / (float)freq;
+        as->last_tick = now;
+
         as->call_ai = false;
     }
 
