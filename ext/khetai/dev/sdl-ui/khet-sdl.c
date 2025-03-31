@@ -357,7 +357,7 @@ void calc_next_laser_step(AppState *as) {
     if (crossed) {
         segment->p2 = intersection;
         switch (crossed_side.interaction) {
-        case REFLECT:
+        case REFLECT: {
             // get side vector and normal
             SDL_FPoint s1 = crossed_side.p1;
             SDL_FPoint s2 = crossed_side.p2;
@@ -380,6 +380,7 @@ void calc_next_laser_step(AppState *as) {
             laser->direction_vector = reflection_vector;
             laser->next_step = CONTINUE;
             break;
+        }
         case HIT:
         case ABSORB:
             laser->next_step = STOP_AT_PIECE;
@@ -419,7 +420,7 @@ bool check_laser_piece_intersection(Piece_SDL *piece, LaserSegment *ls, SDL_FPoi
         float u = cross(qp, r) / r_cross_s;
 
         // check for valid intersection
-        if (t >= 1e-5f && t <= 1 && u >= 0 && u <= 1) {
+        if (t >= 1e-4f && t <= 1 && u >= 0 && u <= 1) {
             intersection->x = p.x + (t * r.x);
             intersection->y = p.y + (t * r.y);
             *crossed_side = piece->sides[i];
@@ -436,6 +437,12 @@ void start_ai_calculation(void *app_state_ptr) {
     Move best_move = call_ai_move(as->board);
     apply_move(as->board, best_move);
     as->call_fire_laser = true;
+
+    // re-calculate delta_time and last_time because AI takes a while
+    Uint64 now = SDL_GetPerformanceCounter();
+    Uint64 freq = SDL_GetPerformanceFrequency();
+    as->delta_time = (float)(now - as->last_tick) / (float)freq;
+    as->last_tick = now;
 }
 #endif
 
@@ -473,7 +480,7 @@ void process_click(AppState *as) {
         if (as->valid_squares[row][col] == 1) {
             move_piece(as->board, as->selected_pos, as->clicked_pos);
             reset_selection(as);
-            as->call_ai = true;
+            // as->call_ai = true;
         } else if (as->selected_pos.row == row && as->selected_pos.col == col) {
             reset_selection(as);
         }
@@ -534,7 +541,7 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
                 if (p->piece_type != SPHINX_SDL || (rotate_right && p->orientation == WEST_SDL) || (!rotate_right && p->orientation == NORTH_SDL)) {
                     rotate_piece(as->board, as->selected_pos, rotate_right);
                     reset_selection(as);
-                    as->call_ai = true;
+                    // as->call_ai = true;
                 }
             }
         } else if (event->key.key == SDLK_SPACE) {
@@ -548,15 +555,14 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
 
 SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
-
-    if (as->clicked) {
-        process_click(as);
-    }
-
     Uint64 now = SDL_GetPerformanceCounter();
     Uint64 freq = SDL_GetPerformanceFrequency();
     as->delta_time = (float)(now - as->last_tick) / (float)freq;
     as->last_tick = now;
+
+    if (as->clicked) {
+        process_click(as);
+    }
 
     if (as->drawing_laser) {
         calc_next_laser_step(as);
@@ -602,9 +608,14 @@ SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
         return SDL_APP_FAILURE;
     }
 
+#ifndef __EMSCRIPTEN__
     if (SDL_SetRenderVSync(as->ren, SDL_RENDERER_VSYNC_ADAPTIVE) < 0) {
         printf("Warning: Adaptive VSync not supported: %s\n", SDL_GetError());
     }
+#else
+    // Under Emscripten, vsync is managed by the browser via requestAnimationFrame
+    printf("Info: Skipping VSync setup under Emscripten.\n");
+#endif
 
     init_board(as);
 
