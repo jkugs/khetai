@@ -89,7 +89,8 @@ typedef enum LaserNextStep {
     IDLE,
     CONTINUE,
     OFF_BOARD,
-    STOP_AT_PIECE,
+    REMOVE_PIECE,
+    STOP_AT_PIECE
 } LaserNextStep;
 
 typedef struct Laser {
@@ -113,8 +114,9 @@ typedef struct AppState {
     bool clicked;
     bool selected;
     bool call_ai;
-    bool call_fire_laser;
+    bool call_fire_laser_ai;
     bool drawing_laser;
+    bool real_laser;
 } AppState;
 
 #endif
