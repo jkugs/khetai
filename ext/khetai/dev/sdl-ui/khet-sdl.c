@@ -19,6 +19,7 @@ static void reset_selection(AppState *as);
 static void process_click(AppState *as);
 static void fire_laser(AppState *as, PlayerColor_SDL color);
 static void calc_next_laser_step(AppState *as);
+static void reset_delta_time(AppState *as);
 static void reset_laser(AppState *as);
 
 static void calc_piece_sides(Square_SDL *square);
@@ -312,6 +313,7 @@ void fire_laser(AppState *as, PlayerColor_SDL player) {
 }
 
 void reset_laser(AppState *as) {
+    reset_delta_time(as);
     as->laser.num_segments = 0;
     as->laser.next_step = IDLE;
     as->laser.hold_timer = 0.0f;
@@ -468,10 +470,7 @@ void start_ai_calculation(void *app_state_ptr) {
     as->call_fire_laser_ai = true;
 
     // re-calculate delta_time and last_time because AI takes a while
-    Uint64 now = SDL_GetPerformanceCounter();
-    Uint64 freq = SDL_GetPerformanceFrequency();
-    as->delta_time = (float)(now - as->last_tick) / (float)freq;
-    as->last_tick = now;
+    reset_delta_time(as);
 }
 #endif
 
@@ -486,10 +485,7 @@ void call_ai(AppState *as) {
     as->call_fire_laser_ai = true;
 
     // re-calculate delta_time and last_time because AI takes a while
-    Uint64 now = SDL_GetPerformanceCounter();
-    Uint64 freq = SDL_GetPerformanceFrequency();
-    as->delta_time = (float)(now - as->last_tick) / (float)freq;
-    as->last_tick = now;
+    reset_delta_time(as);
 #endif
 }
 
@@ -553,6 +549,13 @@ void process_click(AppState *as) {
     as->clicked = false;
 }
 
+void reset_delta_time(AppState *as) {
+    Uint64 now = SDL_GetPerformanceCounter();
+    Uint64 freq = SDL_GetPerformanceFrequency();
+    as->delta_time = (float)(now - as->last_tick) / (float)freq;
+    as->last_tick = now;
+}
+
 SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
     AppState *as = (AppState *)app_state_ptr;
 
@@ -610,10 +613,7 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
 
 SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
-    Uint64 now = SDL_GetPerformanceCounter();
-    Uint64 freq = SDL_GetPerformanceFrequency();
-    as->delta_time = (float)(now - as->last_tick) / (float)freq;
-    as->last_tick = now;
+    reset_delta_time(as);
 
     if (as->clicked) {
         process_click(as);
@@ -667,9 +667,6 @@ SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
 #endif
 
     init_board(as);
-
-    as->last_tick = SDL_GetPerformanceCounter();
-    as->delta_time = 0.0f;
 
     return SDL_APP_CONTINUE;
 }
