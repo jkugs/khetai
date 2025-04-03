@@ -2,14 +2,14 @@
 #include <math.h>
 
 void draw(AppState *as) {
-    SDL_SetRenderDrawColor(as->ren, 169, 169, 169, 255);
+    SDL_SetRenderDrawColor(as->ren, 170, 170, 170, 255);
     SDL_RenderClear(as->ren);
     SDL_SetRenderDrawBlendMode(as->ren, SDL_BLENDMODE_BLEND);
 
     // Highlight selected square
     if (as->selected) {
         // Yellow - highlight
-        SDL_SetRenderDrawColor(as->ren, 255, 255, 0, 100);
+        SDL_SetRenderDrawColor(as->ren, 255, 230, 150, 150);
         SDL_FRect highlight_square = {
             (WINDOW_BUFFER) + as->selected_pos.col * SQUARE_SIZE,
             (WINDOW_BUFFER) + as->selected_pos.row * SQUARE_SIZE,
@@ -20,7 +20,7 @@ void draw(AppState *as) {
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLS; j++) {
                 if (as->valid_squares[i][j] == 1 && (i != as->selected_pos.row || j != as->selected_pos.col)) {
-                    SDL_SetRenderDrawColor(as->ren, 153, 230, 153, 179);
+                    SDL_SetRenderDrawColor(as->ren, 150, 230, 155, 150);
                     SDL_FRect valid_square = {
                         (WINDOW_BUFFER) + j * SQUARE_SIZE,
                         (WINDOW_BUFFER) + i * SQUARE_SIZE,
@@ -74,13 +74,23 @@ void draw(AppState *as) {
         }
     }
 
+    // Tinted overlays
+    // SDL_SetRenderDrawColor(as->ren, 200, 200, 255, 30);
+    SDL_SetRenderDrawColor(as->ren, 0, 0, 0, 40);
+    SDL_FRect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderFillRect(as->ren, &overlay);
+
+    if (as->game_over) {
+        draw_end_overlay(as);
+    }
+
     SDL_RenderPresent(as->ren);
 }
 
 void draw_laser_animation(AppState *as) {
     SDL_Renderer *ren = as->ren;
     Laser *laser = &as->laser;
-    
+
     for (int i = 0; i < laser->num_segments; i++) {
         LaserSegment *segment = &laser->segments[i];
         SDL_FPoint p1 = segment->p1;
@@ -89,22 +99,22 @@ void draw_laser_animation(AppState *as) {
         float edge_dx = p2.x - p1.x;
         float edge_dy = p2.y - p1.y;
         float edge_length = sqrt(edge_dx * edge_dx + edge_dy * edge_dy);
-    
+
         // Normalize
         float unit_x = edge_dx / edge_length;
         float unit_y = edge_dy / edge_length;
-    
+
         // Compute perpendicular offset
         float perp_x = -unit_y * 1.0;
         float perp_y = unit_x * 1.0;
-    
+
         // Define laser segment quad
         SDL_Vertex laser_vertices[4] = {
             {{p1.x - perp_x, p1.y - perp_y}, RED_COLOR, {0, 0}},
             {{p2.x - perp_x, p2.y - perp_y}, RED_COLOR, {0, 0}},
             {{p1.x + perp_x, p1.y + perp_y}, RED_COLOR, {0, 0}},
             {{p2.x + perp_x, p2.y + perp_y}, RED_COLOR, {0, 0}}};
-    
+
         int laser_indices[6] = {0, 1, 2, 1, 3, 2};
         SDL_RenderGeometry(ren, NULL, laser_vertices, 4, laser_indices, 6);
     }
@@ -326,8 +336,7 @@ void draw_anubis(AppState *as, int row, int col) {
         {{v1.x, v1.y}, BLACK_COLOR, {0, 0}},
         {{v2.x, v2.y}, BLACK_COLOR, {0, 0}},
         {{v3.x, v3.y}, BLACK_COLOR, {0, 0}},
-        {{v4.x, v4.y}, BLACK_COLOR, {0, 0}}
-    };
+        {{v4.x, v4.y}, BLACK_COLOR, {0, 0}}};
 
     int black_indices[6] = {0, 1, 2, 0, 2, 3};
     SDL_RenderGeometry(ren, NULL, black_vertices, 4, black_indices, 6);
@@ -367,4 +376,12 @@ void draw_pharaoh(AppState *as, int row, int col) {
     indices[num_indices - 1] = 1;
 
     SDL_RenderGeometry(ren, NULL, vertices, segments + 2, indices, num_indices);
+}
+
+void draw_end_overlay(AppState *as) {
+    SDL_Renderer *ren = as->ren;
+    SDL_SetRenderDrawColor(ren, 30, 30, 30, 175);
+    SDL_FRect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderFillRect(ren, &overlay);
+    SDL_RenderTexture(as->ren, as->play_again_button, NULL, &as->play_again_rect);
 }

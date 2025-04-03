@@ -104,6 +104,8 @@ typedef struct Laser {
 typedef struct AppState {
     SDL_Window *win;
     SDL_Renderer *ren;
+    SDL_Texture *play_again_button;
+    SDL_FRect play_again_rect;
     Square_SDL board[ROWS][COLS];
     Position clicked_pos;
     Position selected_pos;
@@ -117,6 +119,7 @@ typedef struct AppState {
     bool call_fire_laser_ai;
     bool drawing_laser;
     bool real_laser;
+    bool game_over;
 } AppState;
 
 #endif

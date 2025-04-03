@@ -2,6 +2,7 @@
 #include "khet-sdl.h"
 #include "ai.h"
 #include "drawing.h"
+#include "play-again.h"
 #include <SDL3/SDL_main.h>
 #include <ctype.h>
 #include <math.h>
@@ -334,6 +335,12 @@ void calc_next_laser_step(AppState *as) {
         laser->hold_timer += as->delta_time;
         if (laser->hold_timer > 0.7f) {
             Square_SDL *square = get_square_from_point(as->board, laser->segments[laser->num_segments - 1].p2);
+
+            if (square->piece->piece_type == PHARAOH_SDL) {
+                as->game_over = true;
+                return;
+            }
+
             remove_piece(as->board, square->position);
             as->real_laser = false;
             reset_laser(as);
@@ -564,6 +571,17 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
         return SDL_APP_SUCCESS;
 
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        if (as->game_over) {
+            SDL_FPoint p = {event->button.x, event->button.y};
+            if (SDL_PointInRectFloat(&p, &as->play_again_rect)){
+                as->real_laser = false;
+                reset_laser(as);
+                init_board(as);
+                as->game_over = false;
+            }
+            break;
+        }
+
         if (as->real_laser)
             break;
 
@@ -639,19 +657,21 @@ SDL_AppResult SDL_AppIterate(void *app_state_ptr) {
     return SDL_APP_CONTINUE;
 }
 
+void SDL_AppQuit(void *app_state_ptr, SDL_AppResult result) {
+    if (app_state_ptr != NULL) {
+        AppState *as = (AppState *)app_state_ptr;
+        SDL_DestroyRenderer(as->ren);
+        SDL_DestroyWindow(as->win);
+        SDL_free(as);
+    }
+}
+
 SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
     AppState *as = (AppState *)SDL_calloc(1, sizeof(AppState));
     if (!as) {
         return SDL_APP_FAILURE;
     }
-
-    as->clicked_pos.row = -1;
-    as->clicked_pos.col = -1;
-    as->selected_pos.col = -1;
-    as->selected_pos.col = -1;
-
     *app_state_ptr = as;
-    reset_laser(as);
 
     if (!SDL_CreateWindowAndRenderer("Khet", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &as->win, &as->ren)) {
         SDL_Log("SDL_CreateWindowAndRenderer Error: %s\n", SDL_GetError());
@@ -668,14 +688,26 @@ SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
 
     init_board(as);
 
-    return SDL_APP_CONTINUE;
-}
+    as->clicked_pos.row = -1;
+    as->clicked_pos.col = -1;
+    as->selected_pos.col = -1;
+    as->selected_pos.col = -1;
 
-void SDL_AppQuit(void *app_state_ptr, SDL_AppResult result) {
-    if (app_state_ptr != NULL) {
-        AppState *as = (AppState *)app_state_ptr;
-        SDL_DestroyRenderer(as->ren);
-        SDL_DestroyWindow(as->win);
-        SDL_free(as);
+    reset_laser(as);
+
+    SDL_IOStream *src = SDL_IOFromConstMem(play_again_bmp, play_again_bmp_len);
+    SDL_Surface *surf = SDL_LoadBMP_IO(src, 1);
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(as->ren, surf);
+    if (!tex) {
+        SDL_Log("Failed to create texture: %s", SDL_GetError());
     }
+    SDL_DestroySurface(surf);
+    as->play_again_button = tex;
+    float button_width = 200;
+    float button_height = 60;
+    float x = (WINDOW_WIDTH / 2) - (button_width / 2);
+    float y = (WINDOW_HEIGHT / 2) - (button_height + 75);
+    as->play_again_rect = (SDL_FRect){x, y, button_width, button_height};
+
+    return SDL_APP_CONTINUE;
 }
