@@ -110,10 +110,10 @@ void draw_laser_animation(AppState *as) {
 
         // Define laser segment quad
         SDL_Vertex laser_vertices[4] = {
-            {{p1.x - perp_x, p1.y - perp_y}, RED_COLOR, {0, 0}},
-            {{p2.x - perp_x, p2.y - perp_y}, RED_COLOR, {0, 0}},
-            {{p1.x + perp_x, p1.y + perp_y}, RED_COLOR, {0, 0}},
-            {{p2.x + perp_x, p2.y + perp_y}, RED_COLOR, {0, 0}}};
+            {{p1.x - perp_x, p1.y - perp_y}, LASER_COLOR, {0, 0}},
+            {{p2.x - perp_x, p2.y - perp_y}, LASER_COLOR, {0, 0}},
+            {{p1.x + perp_x, p1.y + perp_y}, LASER_COLOR, {0, 0}},
+            {{p2.x + perp_x, p2.y + perp_y}, LASER_COLOR, {0, 0}}};
 
         int laser_indices[6] = {0, 1, 2, 1, 3, 2};
         SDL_RenderGeometry(ren, NULL, laser_vertices, 4, laser_indices, 6);
