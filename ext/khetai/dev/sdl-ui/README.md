@@ -62,4 +62,6 @@ emmake make -j4
 
 [Enjoy](https://jkugs.github.io/)
 
-[![board](sdl-khet.png)](https://jkugs.github.io/)
+<a href="https://jkugs.github.io/">
+  <img src="sdl-khet.png" alt="board" width="400">
+</a>
