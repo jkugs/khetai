@@ -4,6 +4,10 @@
 
 A Khet game built with SDL3. Uses KhetAI for moves. Can be compiled for WebAssembly using Emscripten.
 
+### Note
+
+The laser animation runs in real time using 2D physics-based reflections and all of the pieces are drawn using `SDL_RenderGeometry` calls. This was mainly just to learn more about SDL and 2D rendering.
+
 ---
 
 ## Controls
