@@ -94,7 +94,7 @@ VALUE move(VALUE self, VALUE board_array, VALUE _player, VALUE _max_depth, VALUE
         current_move = alphabeta_root(depth, player);
         depth++;
     }
-    make_move(best_move); //remove?
+    make_move(best_move);
 
     VALUE out = rb_ary_new2(3);
     rb_ary_store(out, 0, INT2NUM(convert_index(get_start(best_move))));

@@ -9,9 +9,9 @@ A Khet game built with SDL3. Uses KhetAI for moves.
 ## Controls
 
 - **Mouse Click**: Select and move Silver pieces  
-- **← / → Arrow Keys**: Rotate selected Silver piece  
+- **← / → Arrow Keys**: Rotate selected Silver piece
+- **KhetAI**: Will automatically make a move after a Silver piece is moved
 - **Spacebar**: Manually fire laser  
-- **AI automatically fires laser after move**
 - **Enter**: Trigger an AI (Red) move
 
 ---
