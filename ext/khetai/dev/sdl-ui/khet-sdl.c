@@ -19,6 +19,7 @@ static void call_ai(AppState *as);
 static void reset_selection(AppState *as);
 static void process_click(AppState *as);
 static void fire_laser(AppState *as, PlayerColor_SDL color);
+static void rotate_selected_piece(AppState *as, bool clockwise);
 static void calc_next_laser_step(AppState *as);
 static void reset_delta_time(AppState *as);
 static void reset_laser(AppState *as);
@@ -29,8 +30,8 @@ static bool check_laser_piece_intersection(Piece_SDL *p, LaserSegment *ls, SDL_F
 
 static void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2);
 static void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise);
-static void apply_move(Square_SDL board[ROWS][COLS], Move best_move);
 static void remove_piece(Square_SDL board[ROWS][COLS], Position pos);
+static void apply_move(Square_SDL board[ROWS][COLS], Move best_move);
 static Square_SDL *get_square_from_point(Square_SDL board[ROWS][COLS], SDL_FPoint p);
 
 static float cross(SDL_FPoint a, SDL_FPoint b);
@@ -338,6 +339,7 @@ void calc_next_laser_step(AppState *as) {
 
             if (square->piece->piece_type == PHARAOH_SDL) {
                 as->game_over = true;
+                as->call_ai = false;
                 return;
             }
 
@@ -563,6 +565,23 @@ void reset_delta_time(AppState *as) {
     as->last_tick = now;
 }
 
+void rotate_selected_piece(AppState *as, bool clockwise) {
+    if (!as->selected)
+        return;
+    Piece_SDL *p = as->board[as->selected_pos.row][as->selected_pos.col].piece;
+    bool can_rotate_sphinx = p->piece_type == SPHINX_SDL &&
+                             ((clockwise && p->orientation == WEST_SDL) ||
+                              (!clockwise && p->orientation == NORTH_SDL));
+
+    if (p->piece_type != SPHINX_SDL || can_rotate_sphinx) {
+        rotate_piece(as->board, as->selected_pos, clockwise);
+        reset_selection(as);
+        as->real_laser = true;
+        fire_laser(as, SILVER_SDL);
+        as->call_ai = true;
+    }
+}
+
 SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
     AppState *as = (AppState *)app_state_ptr;
 
@@ -570,10 +589,30 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
     case SDL_EVENT_QUIT:
         return SDL_APP_SUCCESS;
 
+    case SDL_EVENT_FINGER_UP: {
+        float dx = event->tfinger.x - as->touch_start_x;
+        float dy = event->tfinger.y - as->touch_start_y;
+        if (dx > 0.1f) {
+            rotate_selected_piece(as, true);
+        } else if (dx < -0.1f) {
+            rotate_selected_piece(as, false);
+        } else if (dy < -0.1f) {
+            fire_laser(as, SILVER_SDL);
+        }
+        as->touch_start_x = -1.0f;
+        as->touch_start_y = -1.0f;
+        break;
+    }
+
+    case SDL_EVENT_FINGER_DOWN:
+        as->touch_start_x = event->tfinger.x;
+        as->touch_start_y = event->tfinger.y;
+        break;
+
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (as->game_over) {
             SDL_FPoint p = {event->button.x, event->button.y};
-            if (SDL_PointInRectFloat(&p, &as->play_again_rect)){
+            if (SDL_PointInRectFloat(&p, &as->play_again_rect)) {
                 as->real_laser = false;
                 reset_laser(as);
                 init_board(as);
@@ -596,6 +635,7 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             as->clicked = true;
         }
         break;
+
     case SDL_EVENT_KEY_UP:
         if (as->real_laser)
             break;
@@ -605,21 +645,7 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
         if (key == SDLK_RETURN) {
             call_ai(as);
         } else if (key == SDLK_LEFT || key == SDLK_RIGHT) {
-            if (as->selected) {
-                Piece_SDL *p = as->board[as->selected_pos.row][as->selected_pos.col].piece;
-                bool rotate_right = (key == SDLK_RIGHT);
-                bool can_rotate_sphinx = p->piece_type == SPHINX_SDL &&
-                                         ((rotate_right && p->orientation == WEST_SDL) ||
-                                          (!rotate_right && p->orientation == NORTH_SDL));
-
-                if (p->piece_type != SPHINX_SDL || can_rotate_sphinx) {
-                    rotate_piece(as->board, as->selected_pos, rotate_right);
-                    reset_selection(as);
-                    as->real_laser = true;
-                    fire_laser(as, SILVER_SDL);
-                    as->call_ai = true;
-                }
-            }
+            rotate_selected_piece(as, (key == SDLK_RIGHT));
         } else if (key == SDLK_SPACE) {
             fire_laser(as, SILVER_SDL);
         }
@@ -692,6 +718,7 @@ SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
     as->clicked_pos.col = -1;
     as->selected_pos.col = -1;
     as->selected_pos.col = -1;
+    as->touch_start_x = -1.0f;
 
     reset_laser(as);
 

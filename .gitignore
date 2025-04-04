@@ -10,7 +10,8 @@
 **/SDL3-wasm/
 **/build/
 **/build-wasm/
-/ext/khetai/dev/fltk-ui/build_khetai/
+**/build_khetai/
+/ext/khetai/dev/sdl-ui/commands.txt
 .vscode
 *.so
 *.o

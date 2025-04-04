@@ -112,6 +112,8 @@ typedef struct AppState {
     Laser laser;
     Uint64 last_tick;
     int valid_squares[ROWS][COLS];
+    float touch_start_x;
+    float touch_start_y;
     float delta_time;
     bool clicked;
     bool selected;
