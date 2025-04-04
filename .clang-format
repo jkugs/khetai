@@ -12,3 +12,7 @@ BraceWrapping:
   BeforeElse: false
   IndentBraces: false
 ColumnLimit: 0
+AlignConsecutiveMacros: true
+IndentCaseLabels: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty

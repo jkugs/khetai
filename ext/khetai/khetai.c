@@ -35,7 +35,7 @@ VALUE move(VALUE self, VALUE board_array, VALUE _player, VALUE _max_depth, VALUE
     if (array_size != 80) {
         rb_raise(rb_eArgError, "board_array must have exactly 80 elements");
     }
-    const char valid_pieces[] = {'L', 'A', 'X', 'P', 'S', 'p', 'a', 'x', 's', 'l'};
+    const char valid_pieces[] = {'L', 'A', 'X', 'P', 'S', 'l', 'a', 'x', 'p', 's'};
     size_t valid_pieces_count = 10;
     for (unsigned int i = 0; i < array_size; i++) {
         VALUE element = rb_ary_entry(board_array, i);
