@@ -78,6 +78,10 @@ To push a pre-built gem manually:
 
 There is a GUI test harness written in C++ using FLTK available in the [ext/khetai/dev/fltk-ui](/ext/khetai/dev/fltk-ui) directory.
 
+## SDL3 Implementation
+
+There is a SDL3 version of the UI available in the [ext/khetai/dev/sdl-ui](/ext/khetai/dev/sdl-ui) directory, which can be compiled for Desktop or WebAssembly.
+
 ### Why does this exist?
 
 As something to work on and learn from.
