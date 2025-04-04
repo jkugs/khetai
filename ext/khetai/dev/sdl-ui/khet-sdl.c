@@ -705,7 +705,7 @@ SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
     }
 
 #ifndef __EMSCRIPTEN__
-    if (SDL_SetRenderVSync(as->ren, SDL_RENDERER_VSYNC_ADAPTIVE) < 0) {
+    if (!SDL_SetRenderVSync(as->ren, SDL_RENDERER_VSYNC_ADAPTIVE)) {
         SDL_Log("Warning: Adaptive VSync not supported: %s\n", SDL_GetError());
     }
 #else
