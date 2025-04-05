@@ -1,5 +1,7 @@
 # KhetAI Test Harness
 
+## Overview
+
 The KhetAI Test Harness provides a GUI for interacting with the KhetAI library. It is built in C++ using the Fast Light Toolkit ([FLTK](https://www.fltk.org/)).
 
 To build, you will need FLTK installed, and then run `make`.
