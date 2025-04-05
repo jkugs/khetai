@@ -6,7 +6,7 @@ A Khet game built with SDL3. Uses KhetAI for moves. Can be compiled for WebAssem
 
 ### Note
 
-The laser animation runs in real time using 2D physics-based reflections and all of the pieces are drawn using `SDL_RenderGeometry` calls. This was mainly just to learn more about SDL and 2D rendering.
+The laser animation runs in real time using vector math, and all the pieces are drawn with `SDL_RenderGeometry` calls. It was done this way mostly out of curiosity
 
 ---
 
@@ -63,5 +63,5 @@ emmake make -j4
 [Enjoy](https://jkugs.github.io/)
 
 <a href="https://jkugs.github.io/">
-  <img src="sdl-khet.png" alt="board" width="400">
+  <img src="sdl-khet.png" alt="board" width="500">
 </a>
