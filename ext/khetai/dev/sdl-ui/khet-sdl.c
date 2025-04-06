@@ -516,17 +516,26 @@ void process_click(AppState *as) {
     int row = as->clicked_pos.row;
     int col = as->clicked_pos.col;
 
+    bool unselect = false;
+    bool moving = false;
+
     if (as->selected) {
         if (as->valid_squares[row][col] == 1) {
             move_piece(as->board, as->selected_pos, as->clicked_pos);
             reset_selection(as);
             as->real_laser = true;
             fire_laser(as, SILVER_SDL);
+            moving = true;
             as->call_ai = true;
         } else if (as->selected_pos.row == row && as->selected_pos.col == col) {
             reset_selection(as);
+            unselect = true;
+        } else {
+            reset_selection(as);
         }
-    } else if (as->board[row][col].piece != NULL && as->board[row][col].piece->color == SILVER_SDL) {
+    }
+    
+    if (as->board[row][col].piece != NULL && as->board[row][col].piece->color == SILVER_SDL && !as->swipe_gesture && !unselect && !moving) {
         as->selected_pos.row = row;
         as->selected_pos.col = col;
 
@@ -594,8 +603,10 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
         float dy = event->tfinger.y - as->touch_start_y;
         if (dx > 0.1f) {
             rotate_selected_piece(as, true);
+            as->swipe_gesture = true;
         } else if (dx < -0.1f) {
             rotate_selected_piece(as, false);
+            as->swipe_gesture = true;
         } else if (dy < -0.1f) {
             fire_laser(as, SILVER_SDL);
         }
@@ -609,7 +620,7 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
         as->touch_start_y = event->tfinger.y;
         break;
 
-    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
         if (as->game_over) {
             SDL_FPoint p = {event->button.x, event->button.y};
             if (SDL_PointInRectFloat(&p, &as->play_again_rect)) {
@@ -634,6 +645,7 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             as->clicked_pos.row = (y - WINDOW_BUFFER) / SQUARE_SIZE;
             as->clicked = true;
         }
+        as->swipe_gesture = false;
         break;
 
     case SDL_EVENT_KEY_UP:

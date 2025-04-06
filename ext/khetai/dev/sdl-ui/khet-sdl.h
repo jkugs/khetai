@@ -122,6 +122,7 @@ typedef struct AppState {
     bool drawing_laser;
     bool real_laser;
     bool game_over;
+    bool swipe_gesture;
 } AppState;
 
 #endif
