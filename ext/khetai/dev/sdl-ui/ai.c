@@ -58,24 +58,18 @@ Move call_ai_move(Square_SDL board[8][10]) {
     print_board();
 
     time_t start_time = time(NULL);
-    set_time_parameters(5, start_time);
+    set_time_parameters(MAX_TIME, start_time);
 
     int depth = 1;
     Move best_move = (Move)0;
     Move current_move = (Move)0;
-    // while ((time(NULL) - start_time < max_time) && (depth <= 25)) {
-    //     best_move = current_move;
-    //     current_move = alphabeta_root(depth, RED);
-    //     depth++;
-    // }
-    while (depth <= 25) {
-        printf("\nDEPTH: %-3d->   ", depth);
+    while ((time(NULL) - start_time < max_time) && (depth <= MAX_DEPTH)) {
+        best_move = current_move;
         current_move = alphabeta_root(depth, RED);
-        printf("MOVE -> START: %d, END: %d, ROTATION: %d\n", get_start(current_move), get_end(current_move), get_rotation(current_move));
-        if ((time(NULL) - start_time < max_time))
-            best_move = current_move;
-        else
-            break;
+        if ((time(NULL) - start_time < max_time)) {
+            printf("\nDEPTH: %-3d->   ", depth);
+            printf("MOVE [START: %d, END: %d, ROTATION: %d]\n", get_start(current_move), get_end(current_move), get_rotation(current_move));
+        }
         depth++;
     }
     make_move(best_move);
