@@ -534,7 +534,7 @@ void process_click(AppState *as) {
             reset_selection(as);
         }
     }
-    
+
     if (as->board[row][col].piece != NULL && as->board[row][col].piece->color == SILVER_SDL && !as->swipe_gesture && !unselect && !moving) {
         as->selected_pos.row = row;
         as->selected_pos.col = col;
