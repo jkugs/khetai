@@ -2,7 +2,7 @@
 #include "khet-sdl.h"
 #include "ai.h"
 #include "drawing.h"
-#include "play-again.h"
+#include "images/play-again.h"
 #include <SDL3/SDL_main.h>
 #include <ctype.h>
 #include <math.h>

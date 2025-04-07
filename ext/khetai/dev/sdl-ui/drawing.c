@@ -378,6 +378,13 @@ void draw_pharaoh(AppState *as, int row, int col) {
     SDL_RenderGeometry(ren, NULL, vertices, segments + 2, indices, num_indices);
 }
 
+void draw_thinking_overlay(AppState *as) {
+    SDL_Renderer *ren = as->ren;
+    SDL_SetRenderDrawColor(ren, 30, 30, 30, 175);
+    SDL_FRect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderFillRect(ren, &overlay);
+}
+
 void draw_end_overlay(AppState *as) {
     SDL_Renderer *ren = as->ren;
     SDL_SetRenderDrawColor(ren, 30, 30, 30, 175);

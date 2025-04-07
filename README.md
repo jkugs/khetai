@@ -41,7 +41,7 @@ move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
 Uses [SDL3](https://github.com/libsdl-org/SDL) for its rendering and input processing. The laser is animated in real time using vector math and the pieces are all drawn with `SDL_RenderGeometry` calls. It also runs in the browser via WebAssembly, compiled with Emscripten.
 
 <a href="https://jkugs.github.io/">
-  <img src="ext/khetai/dev/sdl-ui/sdl-khet.png" alt="board" width="500">
+  <img src="ext/khetai/dev/sdl-ui/images/sdl-khet.png" alt="board" width="500">
 </a>
 
 Playable here: [https://jkugs.github.io/](https://jkugs.github.io/)
