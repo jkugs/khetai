@@ -15,6 +15,9 @@ Example (via the Ruby gem):
 ```ruby
 require 'khetai'
 
+# initial board setup:
+# A = anubis, P = pyramid, S = scarab, X = pharaoh, L = sphinx
+# capital letters = red, lowercase letters = silver
 board = ["L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--",
          "--", "--", "P2", "--", "--", "--", "--", "--", "--", "--",
          "--", "--", "--", "p3", "--", "--", "--", "--", "--", "--",
