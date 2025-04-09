@@ -11,13 +11,13 @@ A Khet game built with SDL3. Uses KhetAI for moves. Can be compiled for WebAssem
 - **Mouse Click**: Select and move Silver piece
 - **Arrow ← → Keys**: Rotate selected Silver piece
 - **KhetAI**: Automatically makes a move after a Silver piece is moved or rotated
-- **Spacebar**: Manually fire laser (does _not_ affect game state)
+- **Spacebar or Tab**: Manually fire laser (does _not_ affect game state)
 - **Enter**: Trigger a Red (AI) move (does affect game state)
 
 ### Mobile
 
 - **Swipe Right or Left**: Turn selected Silver piece right or left
-- **Swipe Up**: Manually fire laser (does _not_ affect game state)
+- **Swipe Up or Down**: Manually fire laser (does _not_ affect game state)
 
 ---
 
