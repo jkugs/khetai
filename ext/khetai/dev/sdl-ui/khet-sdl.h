@@ -13,7 +13,7 @@
 #define BOARD_HEIGHT  (BOARD_WIDTH * 0.8)
 #define SQUARE_SIZE   (BOARD_WIDTH / 10)
 #define PIECE_SIZE    (SQUARE_SIZE * 0.8)
-#define LASER_SPEED   300 // pixels per second
+#define LASER_SPEED   275 // pixels per second
 
 enum MovePermission {
     S,
