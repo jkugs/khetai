@@ -102,28 +102,47 @@ typedef struct Laser {
 } Laser;
 
 typedef struct AppState {
+    // SDL handles
     SDL_Window *win;
     SDL_Renderer *ren;
+
+    // Overlays
     SDL_Texture *play_again_button;
     SDL_FRect play_again_rect;
-    Square_SDL board[ROWS][COLS];
-    Position clicked_pos;
-    Position selected_pos;
-    Laser laser;
+    SDL_Texture *eye_horus_overlay;
+    SDL_FRect eye_horus_rect;
+
+    // Timing
     Uint64 last_tick;
-    int valid_squares[ROWS][COLS];
+    float delta_time;
+
+    // Input
     float touch_start_x;
     float touch_start_y;
-    float delta_time;
     bool clicked;
+    bool swipe_gesture;
+
+    // Selection
+    Position clicked_pos;
+    Position selected_pos;
+    int valid_squares[ROWS][COLS];
     bool selected;
+
+    // AI state
+    Position last_ai_position;
+    Position new_ai_position;
     bool call_ai;
     bool call_fire_laser_ai;
     bool thinking;
+
+    // Laser
+    Laser laser;
     bool drawing_laser;
     bool real_laser;
+
+    // Game state
     bool game_over;
-    bool swipe_gesture;
+    Square_SDL board[ROWS][COLS];
 } AppState;
 
 #endif

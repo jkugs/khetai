@@ -2,37 +2,87 @@
 #include <math.h>
 
 void draw(AppState *as) {
-    SDL_SetRenderDrawColor(as->ren, 170, 170, 170, 255);
+    set_render_draw_color(as->ren, GRAY_COLOR);
     SDL_RenderClear(as->ren);
     SDL_SetRenderDrawBlendMode(as->ren, SDL_BLENDMODE_BLEND);
 
-    // Highlight selected square
     if (as->selected) {
-        // Yellow - highlight
-        SDL_SetRenderDrawColor(as->ren, 255, 230, 150, 150);
-        SDL_FRect highlight_square = {
-            (WINDOW_BUFFER) + as->selected_pos.col * SQUARE_SIZE,
-            (WINDOW_BUFFER) + as->selected_pos.row * SQUARE_SIZE,
-            SQUARE_SIZE, SQUARE_SIZE};
-        SDL_RenderFillRect(as->ren, &highlight_square);
+        draw_selected_valid_highlights(as);
+    }
 
-        // Highlight valid squares
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLS; j++) {
-                if (as->valid_squares[i][j] == 1 && (i != as->selected_pos.row || j != as->selected_pos.col)) {
-                    SDL_SetRenderDrawColor(as->ren, 150, 230, 155, 150);
-                    SDL_FRect valid_square = {
-                        (WINDOW_BUFFER) + j * SQUARE_SIZE,
-                        (WINDOW_BUFFER) + i * SQUARE_SIZE,
-                        SQUARE_SIZE, SQUARE_SIZE};
-                    SDL_RenderFillRect(as->ren, &valid_square);
-                }
+    draw_ai_move_highlights(as);
+    
+    draw_board_grid(as);
+
+    if (as->drawing_laser) {
+        draw_laser_animation(as);
+    }
+
+    draw_pieces(as);
+
+    // Tinted overlays
+    set_render_draw_color(as->ren, OVERLAY_COLOR);
+    SDL_FRect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderFillRect(as->ren, &overlay);
+
+    if (as->thinking) {
+        draw_thinking_overlay(as);
+    }
+
+    if (as->game_over) {
+        draw_end_overlay(as);
+    }
+
+    SDL_RenderPresent(as->ren);
+}
+
+void draw_selected_valid_highlights(AppState *as) {
+    // Yellow - highlight selected
+    set_render_draw_color(as->ren, LIGHT_YELLOW_COLOR);
+    SDL_FRect highlight_square = {
+        (WINDOW_BUFFER) + as->selected_pos.col * SQUARE_SIZE,
+        (WINDOW_BUFFER) + as->selected_pos.row * SQUARE_SIZE,
+        SQUARE_SIZE, SQUARE_SIZE};
+    SDL_RenderFillRect(as->ren, &highlight_square);
+
+    // Green - highlight valid squares
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
+            if (as->valid_squares[i][j] == 1 && (i != as->selected_pos.row || j != as->selected_pos.col)) {
+                set_render_draw_color(as->ren, LIGHT_GREEN_COLOR);
+                SDL_FRect valid_square = {
+                    (WINDOW_BUFFER) + j * SQUARE_SIZE,
+                    (WINDOW_BUFFER) + i * SQUARE_SIZE,
+                    SQUARE_SIZE, SQUARE_SIZE};
+                SDL_RenderFillRect(as->ren, &valid_square);
             }
         }
     }
+}
 
+void draw_ai_move_highlights(AppState *as) {
+    if (as->last_ai_position.row != -1 && as->last_ai_position.col != -1) {
+        set_render_draw_color(as->ren, LIGHT_RED_COLOR);
+        SDL_FRect highlight_square = {
+            (WINDOW_BUFFER) + as->last_ai_position.col * SQUARE_SIZE,
+            (WINDOW_BUFFER) + as->last_ai_position.row * SQUARE_SIZE,
+            SQUARE_SIZE, SQUARE_SIZE};
+        SDL_RenderFillRect(as->ren, &highlight_square);
+    }
+
+    if (as->new_ai_position.row != -1 && as->new_ai_position.col != -1) {
+        set_render_draw_color(as->ren, LIGHT_RED_COLOR);
+        SDL_FRect highlight_square = {
+            (WINDOW_BUFFER) + as->new_ai_position.col * SQUARE_SIZE,
+            (WINDOW_BUFFER) + as->new_ai_position.row * SQUARE_SIZE,
+            SQUARE_SIZE, SQUARE_SIZE};
+        SDL_RenderFillRect(as->ren, &highlight_square);
+    }
+}
+
+void draw_board_grid(AppState *as) {
     // Black
-    SDL_SetRenderDrawColor(as->ren, 0, 0, 0, 255);
+    set_render_draw_color(as->ren, BLACK_COLOR);
     SDL_FRect square = {WINDOW_BUFFER, WINDOW_BUFFER, BOARD_WIDTH, BOARD_HEIGHT};
     SDL_RenderRect(as->ren, &square);
 
@@ -53,19 +103,15 @@ void draw(AppState *as) {
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
             if (square_colors[i][j] == R) {
-                draw_inner_square(as, i, j, RED_COLOR);
+                draw_inner_square(as, i, j, RED_FCOLOR);
             } else if (square_colors[i][j] == S) {
-                draw_inner_square(as, i, j, SILVER_COLOR);
+                draw_inner_square(as, i, j, SILVER_FCOLOR);
             }
         }
     }
+}
 
-    // Draw laser
-    if (as->drawing_laser) {
-        draw_laser_animation(as);
-    }
-
-    // Draw pieces
+void draw_pieces(AppState *as) {
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
             if (as->board[i][j].piece != NULL) {
@@ -73,18 +119,6 @@ void draw(AppState *as) {
             }
         }
     }
-
-    // Tinted overlays
-    // SDL_SetRenderDrawColor(as->ren, 200, 200, 255, 30);
-    SDL_SetRenderDrawColor(as->ren, 0, 0, 0, 40);
-    SDL_FRect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
-    SDL_RenderFillRect(as->ren, &overlay);
-
-    if (as->game_over) {
-        draw_end_overlay(as);
-    }
-
-    SDL_RenderPresent(as->ren);
 }
 
 void draw_laser_animation(AppState *as) {
@@ -110,10 +144,10 @@ void draw_laser_animation(AppState *as) {
 
         // Define laser segment quad
         SDL_Vertex laser_vertices[4] = {
-            {{p1.x - perp_x, p1.y - perp_y}, LASER_COLOR, {0, 0}},
-            {{p2.x - perp_x, p2.y - perp_y}, LASER_COLOR, {0, 0}},
-            {{p1.x + perp_x, p1.y + perp_y}, LASER_COLOR, {0, 0}},
-            {{p2.x + perp_x, p2.y + perp_y}, LASER_COLOR, {0, 0}}};
+            {{p1.x - perp_x, p1.y - perp_y}, LASER_FCOLOR, {0, 0}},
+            {{p2.x - perp_x, p2.y - perp_y}, LASER_FCOLOR, {0, 0}},
+            {{p1.x + perp_x, p1.y + perp_y}, LASER_FCOLOR, {0, 0}},
+            {{p2.x + perp_x, p2.y + perp_y}, LASER_FCOLOR, {0, 0}}};
 
         int laser_indices[6] = {0, 1, 2, 1, 3, 2};
         SDL_RenderGeometry(ren, NULL, laser_vertices, 4, laser_indices, 6);
@@ -165,10 +199,10 @@ void draw_mirror(SDL_Renderer *ren, SDL_FPoint p1, SDL_FPoint p2, float thicknes
 
     // Define mirror quad
     SDL_Vertex mirror_vertices[4] = {
-        {{p1.x - perp_x, p1.y - perp_y}, MIRROR_COLOR, {0, 0}},
-        {{p2.x - perp_x, p2.y - perp_y}, MIRROR_COLOR, {0, 0}},
-        {{p1.x + perp_x, p1.y + perp_y}, MIRROR_COLOR, {0, 0}},
-        {{p2.x + perp_x, p2.y + perp_y}, MIRROR_COLOR, {0, 0}}};
+        {{p1.x - perp_x, p1.y - perp_y}, MIRROR_FCOLOR, {0, 0}},
+        {{p2.x - perp_x, p2.y - perp_y}, MIRROR_FCOLOR, {0, 0}},
+        {{p1.x + perp_x, p1.y + perp_y}, MIRROR_FCOLOR, {0, 0}},
+        {{p2.x + perp_x, p2.y + perp_y}, MIRROR_FCOLOR, {0, 0}}};
 
     int mirror_indices[6] = {0, 1, 2, 1, 3, 2};
     SDL_RenderGeometry(ren, NULL, mirror_vertices, 4, mirror_indices, 6);
@@ -177,7 +211,7 @@ void draw_mirror(SDL_Renderer *ren, SDL_FPoint p1, SDL_FPoint p2, float thicknes
 void draw_sphinx(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint cp = as->board[row][col].piece->cp;
-    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
+    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_FCOLOR : RED_FCOLOR;
 
     float half_size = PIECE_SIZE * 0.5f;
     SDL_FPoint original_vertices[3] = {
@@ -211,7 +245,7 @@ void draw_sphinx(AppState *as, int row, int col) {
 void draw_pyramid(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint cp = as->board[row][col].piece->cp;
-    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
+    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_FCOLOR : RED_FCOLOR;
 
     float half_size = PIECE_SIZE * 0.5f;
     SDL_FPoint original_vertices[3] = {
@@ -250,7 +284,7 @@ void draw_pyramid(AppState *as, int row, int col) {
 void draw_scarab(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint cp = as->board[row][col].piece->cp;
-    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
+    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_FCOLOR : RED_FCOLOR;
 
     float width = PIECE_SIZE * 0.12f;
     float height = PIECE_SIZE + (PIECE_SIZE * 0.1f);
@@ -289,7 +323,7 @@ void draw_anubis(AppState *as, int row, int col) {
     SDL_Renderer *ren = as->ren;
     SDL_FPoint cp = as->board[row][col].piece->cp;
     SDL_FPoint p = {(cp.x - (PIECE_SIZE * 0.5f)), (cp.y - (PIECE_SIZE * 0.5f))};
-    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
+    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_FCOLOR : RED_FCOLOR;
 
     SDL_Vertex vertices[4] = {
         {{p.x, p.y}, piece_color, {0, 0}},
@@ -333,10 +367,10 @@ void draw_anubis(AppState *as, int row, int col) {
     }
 
     SDL_Vertex black_vertices[4] = {
-        {{v1.x, v1.y}, BLACK_COLOR, {0, 0}},
-        {{v2.x, v2.y}, BLACK_COLOR, {0, 0}},
-        {{v3.x, v3.y}, BLACK_COLOR, {0, 0}},
-        {{v4.x, v4.y}, BLACK_COLOR, {0, 0}}};
+        {{v1.x, v1.y}, BLACK_FCOLOR, {0, 0}},
+        {{v2.x, v2.y}, BLACK_FCOLOR, {0, 0}},
+        {{v3.x, v3.y}, BLACK_FCOLOR, {0, 0}},
+        {{v4.x, v4.y}, BLACK_FCOLOR, {0, 0}}};
 
     int black_indices[6] = {0, 1, 2, 0, 2, 3};
     SDL_RenderGeometry(ren, NULL, black_vertices, 4, black_indices, 6);
@@ -347,13 +381,14 @@ void draw_pharaoh(AppState *as, int row, int col) {
     SDL_FPoint cp = as->board[row][col].piece->cp;
     float radius = PIECE_SIZE * 0.5f;
     int segments = 20;
-    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_COLOR : RED_COLOR;
+    SDL_FColor piece_color = as->board[row][col].piece->color == SILVER_SDL ? SILVER_FCOLOR : RED_FCOLOR;
 
     SDL_Vertex vertices[segments + 2];
     vertices[0].position.x = cp.x;
     vertices[0].position.y = cp.y;
     vertices[0].color = piece_color;
 
+    // Define all perimeter points needed for a circle
     for (int i = 0; i < segments; i++) {
         int v = i + 1;
         float angle = (2.0 * M_PI * i) / segments;
@@ -367,6 +402,7 @@ void draw_pharaoh(AppState *as, int row, int col) {
     int num_indices = segments * 3;
     int indices[num_indices];
 
+    // Connect center and perimeter points into triangle segments
     for (int i = 0; i < segments; i++) {
         indices[i * 3] = 0;
         indices[i * 3 + 1] = i + 1;
@@ -380,15 +416,20 @@ void draw_pharaoh(AppState *as, int row, int col) {
 
 void draw_thinking_overlay(AppState *as) {
     SDL_Renderer *ren = as->ren;
-    SDL_SetRenderDrawColor(ren, 30, 30, 30, 175);
+    set_render_draw_color(as->ren, DARK_OVERLAY_COLOR);
     SDL_FRect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
     SDL_RenderFillRect(ren, &overlay);
+    SDL_RenderTexture(as->ren, as->eye_horus_overlay, NULL, &as->eye_horus_rect);
 }
 
 void draw_end_overlay(AppState *as) {
     SDL_Renderer *ren = as->ren;
-    SDL_SetRenderDrawColor(ren, 30, 30, 30, 175);
+    set_render_draw_color(as->ren, DARK_OVERLAY_COLOR);
     SDL_FRect overlay = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
     SDL_RenderFillRect(ren, &overlay);
     SDL_RenderTexture(as->ren, as->play_again_button, NULL, &as->play_again_rect);
+}
+
+void set_render_draw_color(SDL_Renderer *ren, SDL_Color color) {
+    SDL_SetRenderDrawColor(ren, color.r, color.g, color.b, color.a);
 }

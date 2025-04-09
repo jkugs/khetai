@@ -2,6 +2,7 @@
 #include "khet-sdl.h"
 #include "ai.h"
 #include "drawing.h"
+#include "images/eye-horus.h"
 #include "images/play-again.h"
 #include <SDL3/SDL_main.h>
 #include <ctype.h>
@@ -31,7 +32,7 @@ static bool check_laser_piece_intersection(Piece_SDL *p, LaserSegment *ls, SDL_F
 static void move_piece(Square_SDL board[ROWS][COLS], Position p1, Position p2);
 static void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise);
 static void remove_piece(Square_SDL board[ROWS][COLS], Position pos);
-static void apply_move(Square_SDL board[ROWS][COLS], Move best_move);
+static void apply_move(AppState *as, Move best_move);
 static Square_SDL *get_square_from_point(Square_SDL board[ROWS][COLS], SDL_FPoint p);
 
 static float cross(SDL_FPoint a, SDL_FPoint b);
@@ -237,7 +238,7 @@ void rotate_piece(Square_SDL board[ROWS][COLS], Position pos, bool clockwise) {
     }
 }
 
-void apply_move(Square_SDL board[ROWS][COLS], Move best_move) {
+void apply_move(AppState *as, Move best_move) {
     int start = get_start(best_move);
     int end = get_end(best_move);
     int rotation = get_rotation(best_move);
@@ -249,11 +250,18 @@ void apply_move(Square_SDL board[ROWS][COLS], Move best_move) {
     Position p1 = {start_row, start_col};
     Position p2 = {end_row, end_col};
 
+    as->last_ai_position = p1;
+    if (start_row != end_row || start_col != end_col) {
+        as->new_ai_position = p2;
+    }
+
+    as->thinking = false;
+
     if (rotation != 0) {
         bool clockwise = rotation == 1;
-        rotate_piece(board, p1, clockwise);
+        rotate_piece(as->board, p1, clockwise);
     } else {
-        move_piece(board, p1, p2);
+        move_piece(as->board, p1, p2);
     }
 
     // drain event queue
@@ -328,6 +336,10 @@ void calc_next_laser_step(AppState *as) {
     if (laser->next_step == OFF_BOARD || laser->next_step == STOP_AT_PIECE) {
         laser->hold_timer += as->delta_time;
         if (laser->hold_timer > 0.7f) {
+            if (as->call_ai) {
+                as->thinking = true;
+            }
+
             as->real_laser = false;
             reset_laser(as);
         }
@@ -335,6 +347,10 @@ void calc_next_laser_step(AppState *as) {
     } else if (laser->next_step == REMOVE_PIECE) {
         laser->hold_timer += as->delta_time;
         if (laser->hold_timer > 0.7f) {
+            if (as->call_ai) {
+                as->thinking = true;
+            }
+
             Square_SDL *square = get_square_from_point(as->board, laser->segments[laser->num_segments - 1].p2);
 
             if (square->piece->piece_type == PHARAOH_SDL) {
@@ -475,7 +491,7 @@ bool check_laser_piece_intersection(Piece_SDL *piece, LaserSegment *ls, SDL_FPoi
 void start_ai_calculation(void *app_state_ptr) {
     AppState *as = (AppState *)app_state_ptr;
     Move best_move = call_ai_move(as->board);
-    apply_move(as->board, best_move);
+    apply_move(as, best_move);
     as->call_fire_laser_ai = true;
 
     // re-calculate delta_time and last_time because AI takes a while
@@ -490,7 +506,7 @@ void call_ai(AppState *as) {
     emscripten_async_call(start_ai_calculation, as, 32);
 #else
     Move best_move = call_ai_move(as->board);
-    apply_move(as->board, best_move);
+    apply_move(as, best_move);
     as->call_fire_laser_ai = true;
 
     // re-calculate delta_time and last_time because AI takes a while
@@ -515,6 +531,8 @@ void reset_selection(AppState *as) {
 void process_click(AppState *as) {
     int row = as->clicked_pos.row;
     int col = as->clicked_pos.col;
+    as->last_ai_position = (Position){-1, -1};
+    as->new_ai_position = (Position){-1, -1};
 
     bool unselect = false;
     bool moving = false;
@@ -563,7 +581,7 @@ void process_click(AppState *as) {
         as->selected = true;
     }
 
-    // click has been processed... reset it to false
+    // Click has been processed. Reset it to false.
     as->clicked = false;
 }
 
@@ -609,6 +627,8 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             as->swipe_gesture = true;
         } else if (dy < -0.1f) {
             fire_laser(as, SILVER_SDL);
+        } else if (dy > 0.1f) {
+            fire_laser(as, RED_SDL);
         }
         as->touch_start_x = -1.0f;
         as->touch_start_y = -1.0f;
@@ -628,6 +648,8 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
                 reset_laser(as);
                 init_board(as);
                 as->game_over = false;
+                as->last_ai_position = (Position){-1, -1};
+                as->new_ai_position = (Position){-1, -1};
             }
             break;
         }
@@ -660,6 +682,8 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
             rotate_selected_piece(as, (key == SDLK_RIGHT));
         } else if (key == SDLK_SPACE) {
             fire_laser(as, SILVER_SDL);
+        } else if (key == SDLK_TAB) {
+            fire_laser(as, RED_SDL);
         }
         break;
     }
@@ -731,22 +755,36 @@ SDL_AppResult SDL_AppInit(void **app_state_ptr, int argc, char *argv[]) {
     as->selected_pos.col = -1;
     as->selected_pos.col = -1;
     as->touch_start_x = -1.0f;
+    as->last_ai_position = (Position){-1, -1};
+    as->new_ai_position = (Position){-1, -1};
 
     reset_laser(as);
 
-    SDL_IOStream *src = SDL_IOFromConstMem(play_again_bmp, play_again_bmp_len);
-    SDL_Surface *surf = SDL_LoadBMP_IO(src, 1);
-    SDL_Texture *tex = SDL_CreateTextureFromSurface(as->ren, surf);
-    if (!tex) {
+    SDL_IOStream *pa_src = SDL_IOFromConstMem(play_again_bmp, play_again_bmp_len);
+    SDL_Surface *pa_surf = SDL_LoadBMP_IO(pa_src, 1);
+    SDL_Texture *pa_tex = SDL_CreateTextureFromSurface(as->ren, pa_surf);
+    if (!pa_tex) {
         SDL_Log("Failed to create texture: %s", SDL_GetError());
     }
-    SDL_DestroySurface(surf);
-    as->play_again_button = tex;
+    SDL_DestroySurface(pa_surf);
+    as->play_again_button = pa_tex;
     float button_width = 200;
     float button_height = 60;
     float x = (WINDOW_WIDTH / 2) - (button_width / 2);
     float y = (WINDOW_HEIGHT / 2) - (button_height + 75);
     as->play_again_rect = (SDL_FRect){x, y, button_width, button_height};
+
+    SDL_IOStream *eh_src = SDL_IOFromConstMem(eye_horus_bmp, eye_horus_bmp_len);
+    SDL_Surface *eh_surf = SDL_LoadBMP_IO(eh_src, 1);
+    SDL_Texture *eh_tex = SDL_CreateTextureFromSurface(as->ren, eh_surf);
+    if (!eh_tex) {
+        SDL_Log("Failed to create texture: %s", SDL_GetError());
+    }
+    SDL_DestroySurface(eh_surf);
+    as->eye_horus_overlay = eh_tex;
+    x = (WINDOW_WIDTH / 2) - 100;
+    y = (WINDOW_HEIGHT / 2) - 100;
+    as->eye_horus_rect = (SDL_FRect){x, y, 200, 200};
 
     return SDL_APP_CONTINUE;
 }
