@@ -677,7 +677,8 @@ SDL_AppResult SDL_AppEvent(void *app_state_ptr, SDL_Event *event) {
         SDL_Keycode key = event->key.key;
 
         if (key == SDLK_RETURN) {
-            call_ai(as);
+            as->call_ai = true;
+            as->thinking = true;
         } else if (key == SDLK_LEFT || key == SDLK_RIGHT) {
             rotate_selected_piece(as, (key == SDLK_RIGHT));
         } else if (key == SDLK_SPACE) {
