@@ -356,6 +356,7 @@ void calc_next_laser_step(AppState *as) {
             if (square->piece->piece_type == PHARAOH_SDL) {
                 as->game_over = true;
                 as->call_ai = false;
+                as->thinking = false;
                 return;
             }
 
