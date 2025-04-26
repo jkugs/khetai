@@ -18,6 +18,7 @@ require 'khetai'
 # initial board setup:
 # A = anubis, P = pyramid, S = scarab, X = pharaoh, L = sphinx
 # capital letters = red, lowercase letters = silver
+# numbers = 1 north, 2 east, 3 south, 4 west
 board = ["L2", "--", "--", "--", "A2", "X2", "A2", "P1", "--", "--",
          "--", "--", "P2", "--", "--", "--", "--", "--", "--", "--",
          "--", "--", "--", "p3", "--", "--", "--", "--", "--", "--",
@@ -33,6 +34,7 @@ max_search_time = 5     # in seconds
 
 move = KhetAI.move(board, whose_turn, max_search_depth, max_search_time)
 #=> [start_index, end_index, rotation]
+# rotation = 0 none, 1 clockwise, -1 counterclockwise
 ```
 
 ---
