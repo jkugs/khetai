@@ -6,13 +6,13 @@
 #define ROWS 8
 #define COLS 10
 
-#define WINDOW_WIDTH  (800)
-#define WINDOW_HEIGHT (WINDOW_WIDTH * 0.8)
-#define WINDOW_BUFFER (30)
-#define BOARD_WIDTH   (WINDOW_WIDTH - (WINDOW_BUFFER * 2))
-#define BOARD_HEIGHT  (BOARD_WIDTH * 0.8)
-#define SQUARE_SIZE   (BOARD_WIDTH / 10)
-#define PIECE_SIZE    (SQUARE_SIZE * 0.8)
+#define WINDOW_WIDTH  (800.0f)
+#define WINDOW_HEIGHT (WINDOW_WIDTH * 0.8f)
+#define WINDOW_BUFFER (30.0f)
+#define BOARD_WIDTH   (WINDOW_WIDTH - (WINDOW_BUFFER * 2.0f))
+#define BOARD_HEIGHT  (BOARD_WIDTH * 0.8f)
+#define SQUARE_SIZE   (BOARD_WIDTH / 10.0f)
+#define PIECE_SIZE    (SQUARE_SIZE * 0.8f)
 #define LASER_SPEED   275 // pixels per second
 
 enum MovePermission {
