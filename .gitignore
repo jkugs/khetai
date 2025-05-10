@@ -11,6 +11,9 @@
 **/build/
 **/build-wasm/
 **/build_khetai/
+**/.cache/
+**/.clangd
+**/compile_commands.json
 /ext/khetai/dev/sdl-ui/commands.txt
 .vscode
 *.so
