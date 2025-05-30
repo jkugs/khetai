@@ -323,7 +323,6 @@ void fire_laser(AppState *as, PlayerColor_SDL player) {
 }
 
 void reset_laser(AppState *as) {
-    reset_delta_time(as);
     as->laser.num_segments = 0;
     as->laser.next_step = IDLE;
     as->laser.hold_timer = 0.0f;
