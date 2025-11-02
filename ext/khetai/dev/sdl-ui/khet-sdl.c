@@ -7,7 +7,6 @@
 #include <SDL3/SDL_main.h>
 #include <ctype.h>
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef __EMSCRIPTEN__
