@@ -21,7 +21,11 @@ A Khet game built with SDL3. Uses KhetAI for moves. Can be compiled for WebAssem
 
 ---
 
-### Building & Running: Desktop
+## Building & Running
+
+All commands should be run from inside the `sdl-ui` directory.
+
+### Desktop
 
 ```bash
 cmake -S . -B build
@@ -29,7 +33,7 @@ cmake --build build/
 ./build/khet-sdl
 ```
 
-### Building & Running: WASM
+### WASM
 
 ```bash
 source ~/path/to/emsdk/emsdk_env.sh
