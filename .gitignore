@@ -16,6 +16,7 @@
 **/compile_commands.json
 /ext/khetai/dev/sdl-ui/commands.txt
 .vscode
+.zed
 *.so
 *.o
 khet
