@@ -86,7 +86,7 @@ This project uses `asdf` as the version manager for Ruby. However, any Ruby vers
     $ bundle exec rake build
     $ gem install pkg/khetai-<version>.gem
 
-Once tested and verified, bump the version number in [lib/khetai/version.rb](lib/khetai/version.rb) and commit changes.
+Once tested and verified, bump the version number in [lib/khetai/version.rb](lib/khetai/version.rb), then run `bundle install` to update `Gemfile.lock`, and commit changes.
 
 To release and push to rubygems.org:
 
