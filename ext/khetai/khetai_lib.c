@@ -87,11 +87,8 @@ int alphabeta(int depth, enum Player player, int alpha, int beta) {
     Move valid_moves[NUM_VALID_MOVES] = {0};
     int vi = 0;
 
-    int table_depth = initial_depth - depth;
     HashEntry *entry = search_table(hashes[hashes_index]);
-    if (entry->key == hashes[hashes_index] && entry->depth > table_depth && is_move_legal(entry->move)) {
-        valid_moves[vi++] = entry->move;
-
+    if (entry->key == hashes[hashes_index] && entry->depth >= depth) {
         if (entry->flag == EXACT)
             return entry->score;
         else if (entry->flag == LOWERBOUND && entry->score > alpha)
@@ -101,6 +98,9 @@ int alphabeta(int depth, enum Player player, int alpha, int beta) {
 
         if (alpha >= beta)
             return entry->score;
+
+        if (is_move_legal(entry->move))
+            valid_moves[vi++] = entry->move;
     }
 
     find_valid_moves(valid_moves, &vi);
@@ -130,14 +130,14 @@ int alphabeta(int depth, enum Player player, int alpha, int beta) {
     else if (best_score >= beta)
         flag = LOWERBOUND;
 
-    insert_table(entry, hashes[hashes_index], table_depth, flag, best_score, best_move);
+    insert_table(entry, hashes[hashes_index], depth, flag, best_score, best_move);
     return best_score;
 }
 
-void insert_table(HashEntry *entry, uint64_t key, int table_depth, int flag, int score, Move move) {
-    if (entry->key == 0 || table_depth > entry->depth) {
+void insert_table(HashEntry *entry, uint64_t key, int depth, int flag, int score, Move move) {
+    if (entry->key == 0 || depth >= entry->depth) {
         entry->key = key;
-        entry->depth = table_depth;
+        entry->depth = depth;
         entry->flag = flag;
         entry->score = score;
         entry->move = move;
