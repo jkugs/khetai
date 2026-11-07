@@ -65,3 +65,19 @@ emmake make -j4
 <a href="https://jkugs.github.io/">
   <img src="images/sdl-khet.png" alt="board" width="500">
 </a>
+
+
+---
+
+## Deploying to Vercel
+
+Vercel cannot build this (it needs emscripten), so deploy the prebuilt static output:
+
+```bash
+./build-web.sh                        # builds WASM, assembles dist/ from web/ + build-wasm/
+python3 -m http.server 8000 -d dist   # optional local check
+npx vercel deploy dist --prod
+```
+
+`build-web.sh` expects emsdk at `~/workspace/emsdk` (override with `EMSDK_ENV`). The page shell
+(`index.html`, cursor, icon) lives in `web/`.

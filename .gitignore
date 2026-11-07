@@ -20,3 +20,8 @@
 *.so
 *.o
 khet
+/ext/khetai/dev/sdl-ui/dist/
+.vercel/
+.env
+.env.*
+!.env.example
