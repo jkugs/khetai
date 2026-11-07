@@ -60,9 +60,9 @@ emmake make -j4
 
 ---
 
-[Enjoy](https://jkugs.github.io/)
+[Enjoy](https://khetai-blond.vercel.app)
 
-<a href="https://jkugs.github.io/">
+<a href="https://khetai-blond.vercel.app">
   <img src="images/sdl-khet.png" alt="board" width="500">
 </a>
 
